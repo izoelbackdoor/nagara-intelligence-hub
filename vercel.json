@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "name": "nagara-intelligence-hub",
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "api/**/*.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/inbox/send", "dest": "/api/inbox/send.js" },
+    { "src": "/api/inbox/webhook-wa", "dest": "/api/inbox/webhook-wa.js" },
+    { "src": "/api/inbox/send-email", "dest": "/api/inbox/send-email.js" },
+    { "src": "/api/inbox/ai-draft", "dest": "/api/inbox/ai-draft.js" },
+    { "src": "/api/robot/signal", "dest": "/api/robot/signal.js" },
+    { "src": "/api/(.*)\\.js", "dest": "/api/$1.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
