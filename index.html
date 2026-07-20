@@ -4796,8 +4796,10 @@
   // Claude API Key — isi setelah top up kredit di console.anthropic.com
   window.CLAUDE_API_KEY = localStorage.getItem('nagara_claude_key') || '';
 
-  const AIRTABLE_TOKEN = 'AIRTABLE_PAT_ISI_DI_ENV';
+  const AIRTABLE_TOKEN = 'AIRTABLE_PAT_ISI_DI_ENV'; // hanya dipakai di mode lokal
   const AIRTABLE_BASE  = 'appvbSejYUoQODvDT';
+  // Gunakan proxy Vercel jika bukan file lokal
+  const _AT_PROXY = window.location.protocol !== 'file:' ? '/api/airtable/proxy' : null;
   const AT_TABLES = {
     briefing : 'tblSABMnmhuuDq0pW',
     auditLog : 'tbl5eCBJXp4leIiMr',
@@ -4805,18 +4807,28 @@
   };
 
   async function fetchAirtable(tableId, params = {}) {
-    const url = new URL(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${tableId}`);
     const defaults = { pageSize: 20, sort: [{ field: 'Tanggal', direction: 'desc' }] };
     const merged = Object.assign({}, defaults, params);
-    if (merged.sort) url.searchParams.set('sort[0][field]', merged.sort[0].field);
-    if (merged.sort) url.searchParams.set('sort[0][direction]', merged.sort[0].direction);
-    if (merged.pageSize) url.searchParams.set('pageSize', merged.pageSize);
-    if (merged.filterByFormula) url.searchParams.set('filterByFormula', merged.filterByFormula);
-    const res = await fetch(url.toString(), {
-      headers: { Authorization: 'Bearer ' + AIRTABLE_TOKEN }
-    });
-    if (!res.ok) throw new Error(`Airtable error ${res.status}: ${await res.text()}`);
-    return res.json();
+    if (_AT_PROXY) {
+      // Via Vercel proxy (production)
+      const url = new URL(_AT_PROXY, window.location.origin);
+      url.searchParams.set('table', tableId);
+      if (merged.sort) { url.searchParams.set('sort[0][field]', merged.sort[0].field); url.searchParams.set('sort[0][direction]', merged.sort[0].direction); }
+      if (merged.pageSize) url.searchParams.set('pageSize', merged.pageSize);
+      if (merged.filterByFormula) url.searchParams.set('filterByFormula', merged.filterByFormula);
+      const res = await fetch(url.toString());
+      if (!res.ok) throw new Error(`Airtable error ${res.status}: ${await res.text()}`);
+      return res.json();
+    } else {
+      // Lokal — langsung ke Airtable
+      const url = new URL(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${tableId}`);
+      if (merged.sort) { url.searchParams.set('sort[0][field]', merged.sort[0].field); url.searchParams.set('sort[0][direction]', merged.sort[0].direction); }
+      if (merged.pageSize) url.searchParams.set('pageSize', merged.pageSize);
+      if (merged.filterByFormula) url.searchParams.set('filterByFormula', merged.filterByFormula);
+      const res = await fetch(url.toString(), { headers: { Authorization: 'Bearer ' + AIRTABLE_TOKEN } });
+      if (!res.ok) throw new Error(`Airtable error ${res.status}: ${await res.text()}`);
+      return res.json();
+    }
   }
 
   function fmtDate(isoStr) {
@@ -6078,12 +6090,32 @@
   }
 
   async function inboxAirtable(path, opts = {}) {
-    const res = await fetch(`https://api.airtable.com/v0/${INBOX_BASE}/${path}`, {
-      ...opts,
-      headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
+    if (_AT_PROXY) {
+      // Via Vercel proxy — parse path menjadi table + params + recordId
+      const [tablePart, ...rest] = path.split('?');
+      const tableSegments = tablePart.split('/');
+      const table = tableSegments[0];
+      const recordId = tableSegments[1] || '';
+      const url = new URL(_AT_PROXY, window.location.origin);
+      url.searchParams.set('table', table);
+      url.searchParams.set('baseId', INBOX_BASE);
+      if (recordId) url.searchParams.set('recordId', recordId);
+      // Forward query params
+      if (rest.length) {
+        const fwd = new URLSearchParams(rest.join('?'));
+        fwd.forEach((v, k) => url.searchParams.set(k, v));
+      }
+      const res = await fetch(url.toString(), { method: opts.method || 'GET', body: opts.body, headers: { 'Content-Type': 'application/json' } });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    } else {
+      const res = await fetch(`https://api.airtable.com/v0/${INBOX_BASE}/${path}`, {
+        ...opts,
+        headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    }
   }
 
   let inboxLastMsgMap = {}; // noWA/email → ISO timestamp percakapan terakhir

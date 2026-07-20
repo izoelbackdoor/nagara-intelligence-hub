@@ -10,6 +10,7 @@
     { "src": "/api/inbox/webhook-wa", "dest": "/api/inbox/webhook-wa.js" },
     { "src": "/api/inbox/send-email", "dest": "/api/inbox/send-email.js" },
     { "src": "/api/inbox/ai-draft", "dest": "/api/inbox/ai-draft.js" },
+    { "src": "/api/airtable/proxy", "dest": "/api/airtable/proxy.js" },
     { "src": "/api/openwa/proxy", "dest": "/api/openwa/proxy.js" },
     { "src": "/api/robot/signal", "dest": "/api/robot/signal.js" },
     { "src": "/api/inbox/webhook-openwa", "dest": "/api/inbox/webhook-openwa.js" },
