@@ -4520,6 +4520,25 @@
             <div style="font-family:monospace;font-size:11px;color:var(--text3);letter-spacing:0.05em;">••••••••••••••••••••••••••••••••••</div>
             <div style="font-size:10px;color:var(--text3);margin-top:4px;">WhatsApp Blast · terhubung</div>
           </div>
+          <!-- OpenWA -->
+          <div style="padding:12px;background:var(--bg3);border-radius:8px;border:1px solid rgba(34,201,122,0.2);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div style="font-size:12px;font-weight:600;color:var(--text1);">OpenWA (Self-hosted)</div>
+              <span id="openwa-status-badge" class="badge badge-green" style="display:none;">Terhubung</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <input id="openwa-url-input" type="text" placeholder="URL OpenWA, mis: http://localhost:2785" style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--text1);outline:none;font-family:monospace;" onfocus="this.style.borderColor='#22c97a'" onblur="this.style.borderColor='var(--border)'">
+              <input id="openwa-key-input" type="password" placeholder="API Key OpenWA" style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--text1);outline:none;font-family:monospace;" onfocus="this.style.borderColor='#22c97a'" onblur="this.style.borderColor='var(--border)'">
+              <input id="openwa-session-input" type="text" placeholder="Session name, mis: default" style="background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--text1);outline:none;" onfocus="this.style.borderColor='#22c97a'" onblur="this.style.borderColor='var(--border)'">
+              <div style="display:flex;gap:6px;">
+                <button onclick="openWASave()" style="flex:1;background:#22c97a;color:#000;border:none;border-radius:6px;padding:7px 0;font-size:11px;font-weight:700;cursor:pointer;">Simpan</button>
+                <button onclick="openWATest()" style="flex:1;background:var(--bg1);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:7px 0;font-size:11px;font-weight:600;cursor:pointer;">Test Koneksi</button>
+                <button onclick="openWAClear()" style="background:var(--bg1);color:var(--text3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:11px;cursor:pointer;" title="Hapus config">✕</button>
+              </div>
+              <div id="openwa-status-msg" style="font-size:10px;color:var(--text3);"></div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">Webhook URL untuk OpenWA:<br><span style="font-family:monospace;color:#22c97a;font-size:10px;" id="openwa-webhook-url"></span></div>
+          </div>
         </div>
       </div>
 
@@ -5963,6 +5982,7 @@
 
   // ── Keamanan page ──
   function loadSecurityPage() {
+    openWARefreshUI();
     // Login history
     const history = JSON.parse(localStorage.getItem('nagara_login_history') || '[]');
     const listEl = document.getElementById('login-history-list');
@@ -6524,13 +6544,20 @@
     const filePayload = inboxAttachedFile ? { fileName: inboxAttachedFile.name, fileMime: inboxAttachedFile.mime, fileData: inboxAttachedFile.data } : {};
     try {
       if (c.noWA) {
-        const res = await fetch('/api/inbox/send', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ noWA: c.noWA, pesan: text || '', namaKontak: c.nama, ...filePayload })
-        });
-        const data = await res.json();
-        if (!data.ok) alert('Gagal kirim WA: ' + (data.error || 'Unknown error'));
+        const owaCfg = openWAGetConfig();
+        if (owaCfg.url && owaCfg.apiKey) {
+          // Kirim via OpenWA (langsung dari browser)
+          await openWASendMessage(c.noWA, text || '', filePayload);
+        } else {
+          // Fallback: Fonnte via Vercel API
+          const res = await fetch('/api/inbox/send', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ noWA: c.noWA, pesan: text || '', namaKontak: c.nama, ...filePayload })
+          });
+          const data = await res.json();
+          if (!data.ok) alert('Gagal kirim WA: ' + (data.error || 'Unknown error'));
+        }
       } else if (c.email) {
         const res = await fetch('/api/inbox/send-email', {
           method: 'POST',
@@ -7483,6 +7510,101 @@ Berikan jawaban yang spesifik, actionable, dan berbasis data. Gunakan Bahasa Ind
   }
 
   // ─── ANTHROPIC KEY MANAGEMENT ────────────────────────────────────
+  // ── OpenWA Integration ──────────────────────────────────────────
+  const OPENWA_URL_KEY     = 'nagara_openwa_url';
+  const OPENWA_KEY_KEY     = 'nagara_openwa_key';
+  const OPENWA_SESSION_KEY = 'nagara_openwa_session';
+
+  function openWAGetConfig() {
+    return {
+      url:     localStorage.getItem(OPENWA_URL_KEY)     || '',
+      apiKey:  localStorage.getItem(OPENWA_KEY_KEY)     || '',
+      session: localStorage.getItem(OPENWA_SESSION_KEY) || 'default',
+    };
+  }
+
+  function openWARefreshUI() {
+    const cfg = openWAGetConfig();
+    const urlEl = document.getElementById('openwa-url-input');
+    const keyEl = document.getElementById('openwa-key-input');
+    const sesEl = document.getElementById('openwa-session-input');
+    const badge = document.getElementById('openwa-status-badge');
+    const webhookEl = document.getElementById('openwa-webhook-url');
+    if (urlEl) urlEl.value = cfg.url;
+    if (keyEl && cfg.apiKey) keyEl.value = cfg.apiKey;
+    if (sesEl) sesEl.value = cfg.session;
+    if (badge) badge.style.display = cfg.url && cfg.apiKey ? 'inline-flex' : 'none';
+    const webhookBase = window.location.protocol === 'file:' ? 'https://nagara-intelligence-hub.vercel.app' : window.location.origin;
+    if (webhookEl) webhookEl.textContent = webhookBase + '/api/inbox/webhook-openwa';
+  }
+
+  function openWASave() {
+    const url = document.getElementById('openwa-url-input')?.value.trim().replace(/\/$/, '');
+    const key = document.getElementById('openwa-key-input')?.value.trim();
+    const ses = document.getElementById('openwa-session-input')?.value.trim() || 'default';
+    if (!url || !key) { alert('URL dan API Key wajib diisi.'); return; }
+    localStorage.setItem(OPENWA_URL_KEY, url);
+    localStorage.setItem(OPENWA_KEY_KEY, key);
+    localStorage.setItem(OPENWA_SESSION_KEY, ses);
+    openWARefreshUI();
+    const msg = document.getElementById('openwa-status-msg');
+    if (msg) { msg.style.color = '#22c97a'; msg.textContent = '✓ Config tersimpan.'; setTimeout(() => msg.textContent='', 3000); }
+  }
+
+  async function openWATest() {
+    const cfg = openWAGetConfig();
+    const msg = document.getElementById('openwa-status-msg');
+    if (!cfg.url || !cfg.apiKey) { if(msg) { msg.style.color='#ff5c5c'; msg.textContent='URL dan API Key belum diisi.'; } return; }
+    if (msg) { msg.style.color='var(--text3)'; msg.textContent='Mengecek koneksi...'; }
+    try {
+      const proxyBase = window.location.protocol === 'file:' ? 'https://nagara-intelligence-hub.vercel.app' : window.location.origin;
+      const r = await fetch(`${proxyBase}/api/openwa/proxy?path=/api/health`, {
+        headers: { 'X-OpenWA-URL': cfg.url, 'X-OpenWA-Key': cfg.apiKey }
+      });
+      const d = await r.json();
+      if (msg) {
+        if (r.ok) { msg.style.color='#22c97a'; msg.textContent=`✓ Terhubung — OpenWA v${d.version || ''}`; }
+        else       { msg.style.color='#ff5c5c'; msg.textContent=`✗ Error ${r.status}: ${d.message||'Unknown'}`; }
+      }
+    } catch(e) {
+      if (msg) { msg.style.color='#ff5c5c'; msg.textContent=`✗ Tidak bisa terhubung: ${e.message}`; }
+    }
+  }
+
+  function openWAClear() {
+    localStorage.removeItem(OPENWA_URL_KEY);
+    localStorage.removeItem(OPENWA_KEY_KEY);
+    localStorage.removeItem(OPENWA_SESSION_KEY);
+    const urlEl = document.getElementById('openwa-url-input');
+    const keyEl = document.getElementById('openwa-key-input');
+    const sesEl = document.getElementById('openwa-session-input');
+    if (urlEl) urlEl.value = '';
+    if (keyEl) keyEl.value = '';
+    if (sesEl) sesEl.value = '';
+    openWARefreshUI();
+  }
+
+  // Kirim pesan via OpenWA langsung dari browser
+  async function openWASendMessage(noWA, text, filePayload) {
+    const cfg = openWAGetConfig();
+    if (!cfg.url || !cfg.apiKey) throw new Error('OpenWA belum dikonfigurasi');
+    // Format nomor: pastikan tanpa + dan pakai format internasional
+    const to = noWA.replace(/[^0-9]/g, '');
+    const body = { to, content: { text } };
+    if (filePayload && filePayload.fileData) {
+      body.content = { media: { data: filePayload.fileData, mimetype: filePayload.fileMime, filename: filePayload.fileName }, caption: text };
+    }
+    const proxyBase = window.location.protocol === 'file:' ? 'https://nagara-intelligence-hub.vercel.app' : window.location.origin;
+    const r = await fetch(`${proxyBase}/api/openwa/proxy?path=/api/sessions/${cfg.session}/messages/send`, {
+      method: 'POST',
+      headers: { 'X-OpenWA-URL': cfg.url, 'X-OpenWA-Key': cfg.apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.message || `HTTP ${r.status}`);
+    return d;
+  }
+
   function anthropicRefreshUI() {
     const key = localStorage.getItem('nagara_claude_key') || '';
     window.CLAUDE_API_KEY = key;
