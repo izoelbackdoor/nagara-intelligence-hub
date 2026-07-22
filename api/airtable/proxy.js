@@ -58,13 +58,17 @@ module.exports = async (req, res) => {
   let basePath = `/v0/${baseId}/${encodeURIComponent(table)}`;
   if (recordId) basePath += `/${recordId}`;
 
-  // Forward query params (filter, sort, fields, offset, maxRecords, etc.) except 'table' and 'recordId'
-  const params = new URLSearchParams();
-  for (const [k, v] of Object.entries(req.query)) {
-    if (k !== 'table' && k !== 'recordId') params.append(k, v);
-  }
-  const qs = params.toString();
+  // Forward raw query string — exclude proxy-only params (table, recordId, baseId)
+  // Use raw query string from URL to preserve bracket notation (sort[0][field]) intact
+  const rawUrl = new URL(req.url, 'http://localhost');
+  const fwd = new URLSearchParams();
+  const skip = new Set(['table', 'recordId', 'baseId']);
+  rawUrl.searchParams.forEach((v, k) => { if (!skip.has(k)) fwd.append(k, v); });
+  const qs = fwd.toString();
   const fullPath = qs ? `${basePath}?${qs}` : basePath;
+
+  // Prevent Vercel CDN from caching proxy responses (avoids stale 304s)
+  res.setHeader('Cache-Control', 'no-store');
 
   try {
     const result = await airtableRequest(req.method, fullPath, req.body || null);
