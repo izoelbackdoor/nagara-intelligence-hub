@@ -56,6 +56,93 @@
     return businessUnit;
   }
 
+  function validationColumn(product) {
+    return product.validationStatus || 'Belum Ditentukan';
+  }
+
+  function groupByValidationStatus(products) {
+    var groups = { 'Akan Datang': [], 'Aktif': [], 'Arsip': [], 'Belum Ditentukan': [] };
+    products.forEach(function (p) {
+      var col = validationColumn(p);
+      if (!groups[col]) groups[col] = [];
+      groups[col].push(p);
+    });
+    return groups;
+  }
+
+  function groupByStatus(products) {
+    var groups = { 'Idea': [], 'In Progress': [], 'Live/Deployed': [], 'On Hold': [], 'Needs Info': [] };
+    products.forEach(function (p) {
+      var col = p.status || 'Lainnya';
+      if (!groups[col]) groups[col] = [];
+      groups[col].push(p);
+    });
+    return groups;
+  }
+
+  function daysSince(isoDate, now) {
+    now = now || new Date();
+    var then = new Date(isoDate);
+    var diffMs = now.getTime() - then.getTime();
+    return Math.max(0, Math.floor(diffMs / 86400000));
+  }
+
+  function daysUntil(isoDate, now) {
+    now = now || new Date();
+    var target = new Date(isoDate);
+    var diffMs = target.getTime() - now.getTime();
+    return Math.ceil(diffMs / 86400000);
+  }
+
+  function aggregateOverview(products) {
+    var counts = { aktif: 0, akanDatang: 0, liveDeployed: 0, belumDitentukan: 0 };
+    products.forEach(function (p) {
+      var col = validationColumn(p);
+      if (col === 'Aktif') counts.aktif++;
+      if (col === 'Akan Datang') counts.akanDatang++;
+      if (col === 'Belum Ditentukan') counts.belumDitentukan++;
+      if (p.status === 'Live/Deployed') counts.liveDeployed++;
+    });
+    return counts;
+  }
+
+  function unitCounts(products) {
+    var counts = {};
+    BUSINESS_UNITS.forEach(function (u) { counts[u] = 0; });
+    products.forEach(function (p) {
+      var unit = mergedBusinessUnit(p.businessUnit);
+      if (counts.hasOwnProperty(unit)) counts[unit]++;
+    });
+    return counts;
+  }
+
+  function unitHealth(products, unitName) {
+    var unitProducts = products.filter(function (p) {
+      return mergedBusinessUnit(p.businessUnit) === unitName;
+    });
+    if (unitProducts.length === 0) return 'neutral';
+    var hasOnHold = unitProducts.some(function (p) { return p.status === 'On Hold'; });
+    if (hasOnHold) return 'red';
+    var hasNeedsInfo = unitProducts.some(function (p) { return p.status === 'Needs Info'; });
+    if (hasNeedsInfo) return 'yellow';
+    return 'green';
+  }
+
+  function modeDate(products) {
+    var counts = {};
+    var best = null;
+    var bestCount = 0;
+    products.forEach(function (p) {
+      if (!p.tanggalReview) return;
+      counts[p.tanggalReview] = (counts[p.tanggalReview] || 0) + 1;
+      if (counts[p.tanggalReview] > bestCount) {
+        bestCount = counts[p.tanggalReview];
+        best = p.tanggalReview;
+      }
+    });
+    return best;
+  }
+
   var PortfolioData = {
     FIELD: FIELD,
     VALIDATION_COLUMNS: VALIDATION_COLUMNS,
@@ -64,6 +151,15 @@
     parseRecord: parseRecord,
     parseRecords: parseRecords,
     mergedBusinessUnit: mergedBusinessUnit,
+    validationColumn: validationColumn,
+    groupByValidationStatus: groupByValidationStatus,
+    groupByStatus: groupByStatus,
+    daysSince: daysSince,
+    daysUntil: daysUntil,
+    aggregateOverview: aggregateOverview,
+    unitCounts: unitCounts,
+    unitHealth: unitHealth,
+    modeDate: modeDate,
   };
 
   if (typeof module !== 'undefined' && module.exports) {

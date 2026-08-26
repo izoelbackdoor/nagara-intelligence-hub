@@ -57,3 +57,106 @@ test('mergedBusinessUnit folds NADI Client Portfolio into NADI', () => {
   assert.equal(PortfolioData.mergedBusinessUnit('NGI Internal'), 'NGI Internal');
   assert.equal(PortfolioData.mergedBusinessUnit(''), '');
 });
+
+function product(overrides) {
+  return Object.assign({
+    id: 'rec', createdTime: '2026-07-21T00:00:00.000Z', name: 'X',
+    businessUnit: 'NADI', type: '', status: 'Idea', features: '', techStack: '',
+    link: '', notes: '', validationStatus: 'Akan Datang', kriteriaNaikStatus: '',
+    tanggalReview: '2026-11-25',
+  }, overrides || {});
+}
+
+test('groupByValidationStatus buckets blank validationStatus as Belum Ditentukan', () => {
+  const groups = PortfolioData.groupByValidationStatus([
+    product({ validationStatus: 'Aktif' }),
+    product({ validationStatus: '' }),
+    product({ validationStatus: 'Akan Datang' }),
+  ]);
+  assert.equal(groups['Aktif'].length, 1);
+  assert.equal(groups['Belum Ditentukan'].length, 1);
+  assert.equal(groups['Akan Datang'].length, 1);
+  assert.equal(groups['Arsip'].length, 0);
+});
+
+test('groupByStatus buckets by the Status field', () => {
+  const groups = PortfolioData.groupByStatus([
+    product({ status: 'Idea' }),
+    product({ status: 'Needs Info' }),
+    product({ status: 'Needs Info' }),
+  ]);
+  assert.equal(groups['Idea'].length, 1);
+  assert.equal(groups['Needs Info'].length, 2);
+  assert.equal(groups['On Hold'].length, 0);
+});
+
+test('daysSince computes whole days between createdTime and now', () => {
+  const now = new Date('2026-08-26T00:00:00.000Z');
+  const days = PortfolioData.daysSince('2026-07-21T02:20:34.000Z', now);
+  assert.equal(days, 35);
+});
+
+test('daysUntil computes whole days between now and a future date, rounding up', () => {
+  const now = new Date('2026-08-26T00:00:00.000Z');
+  const days = PortfolioData.daysUntil('2026-11-25', now);
+  assert.equal(days, 91);
+});
+
+test('aggregateOverview counts aktif, akanDatang, belumDitentukan, and liveDeployed independently', () => {
+  const counts = PortfolioData.aggregateOverview([
+    product({ validationStatus: 'Aktif', status: 'Live/Deployed' }),
+    product({ validationStatus: 'Aktif', status: 'In Progress' }),
+    product({ validationStatus: 'Akan Datang', status: 'Idea' }),
+    product({ validationStatus: '', status: 'Needs Info' }),
+  ]);
+  assert.equal(counts.aktif, 2);
+  assert.equal(counts.akanDatang, 1);
+  assert.equal(counts.belumDitentukan, 1);
+  assert.equal(counts.liveDeployed, 1);
+});
+
+test('unitCounts merges NADI Client Portfolio into NADI and includes zero-count units', () => {
+  const counts = PortfolioData.unitCounts([
+    product({ businessUnit: 'NADI' }),
+    product({ businessUnit: 'NADI Client Portfolio' }),
+    product({ businessUnit: 'NGI Internal' }),
+  ]);
+  assert.equal(counts['NADI'], 2);
+  assert.equal(counts['NGI Internal'], 1);
+  assert.equal(counts['Foam & Fold'], 0);
+  assert.equal(counts['Tukang Nagara'], 0);
+  assert.equal(counts['Es Batu Kristal'], 0);
+});
+
+test('unitHealth is neutral when a unit has no products', () => {
+  assert.equal(PortfolioData.unitHealth([], 'Foam & Fold'), 'neutral');
+});
+
+test('unitHealth is red if any product in the unit is On Hold', () => {
+  const products = [product({ businessUnit: 'NADI', status: 'On Hold' }), product({ businessUnit: 'NADI', status: 'Idea' })];
+  assert.equal(PortfolioData.unitHealth(products, 'NADI'), 'red');
+});
+
+test('unitHealth is yellow if any product is Needs Info and none are On Hold', () => {
+  const products = [product({ businessUnit: 'NADI', status: 'Needs Info' }), product({ businessUnit: 'NADI', status: 'Idea' })];
+  assert.equal(PortfolioData.unitHealth(products, 'NADI'), 'yellow');
+});
+
+test('unitHealth is green when all products are Idea/In Progress/Live-Deployed', () => {
+  const products = [product({ businessUnit: 'NGI Internal', status: 'Idea' }), product({ businessUnit: 'NGI Internal', status: 'Live/Deployed' })];
+  assert.equal(PortfolioData.unitHealth(products, 'NGI Internal'), 'green');
+});
+
+test('modeDate returns the most frequent non-empty tanggalReview value', () => {
+  const products = [
+    product({ tanggalReview: '2026-11-25' }),
+    product({ tanggalReview: '2026-11-25' }),
+    product({ tanggalReview: '' }),
+    product({ tanggalReview: '2027-01-01' }),
+  ];
+  assert.equal(PortfolioData.modeDate(products), '2026-11-25');
+});
+
+test('modeDate returns null when no product has a tanggalReview', () => {
+  assert.equal(PortfolioData.modeDate([product({ tanggalReview: '' })]), null);
+});
