@@ -4968,6 +4968,14 @@
     return escapeHtml(str);
   }
 
+  // HTML-escaping a URL doesn't neutralize a javascript:/data: scheme — only
+  // http(s) links from Airtable's Link/URL field (a free-text field, not a
+  // validated URL type) are rendered as clickable; anything else is treated
+  // as plain text so it can't execute on click.
+  function isSafeHttpUrl(str) {
+    return typeof str === 'string' && /^https?:\/\//i.test(str.trim());
+  }
+
   let _pfProducts = [];
   let _pfTab = 'validation';
 
@@ -5029,6 +5037,8 @@
 
   function pfSwitchColumn(columnName) {
     // Scrolls the given kanban column into view — used by the Overview warning banner deep-link.
+    // columnName must be a hardcoded literal (one of VALIDATION_COLUMNS/STATUS_COLUMNS),
+    // not Airtable- or user-sourced text — it's interpolated unescaped into a selector string.
     const col = document.querySelector(`#pf-kanban [data-column="${columnName}"]`);
     if (col) col.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -5036,7 +5046,7 @@
   function pfPopulateFilter() {
     const select = document.getElementById('pf-filter-unit');
     const units = Array.from(new Set(_pfProducts.map(p => p.businessUnit).filter(Boolean))).sort();
-    select.innerHTML = '<option value="">Semua</option>' + units.map(u => `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('');
+    select.innerHTML = '<option value="">Semua</option>' + units.map(u => `<option value="${escapeAttr(u)}">${escapeHtml(u)}</option>`).join('');
   }
 
   function pfRenderTable() {
@@ -5065,7 +5075,11 @@
       <div class="pf-modal-field"><div class="pf-modal-field-label">Tech Stack</div><div class="pf-modal-field-value">${escapeHtml(p.techStack) || '—'}</div></div>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Kriteria Naik Status</div><div class="pf-modal-field-value">${escapeHtml(p.kriteriaNaikStatus) || '—'}</div></div>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Notes / Next Steps</div><div class="pf-modal-field-value">${escapeHtml(p.notes) || '—'}</div></div>
-      ${p.link ? `<div class="pf-modal-field"><div class="pf-modal-field-label">Link</div><div class="pf-modal-field-value"><a href="${escapeAttr(p.link)}" target="_blank" rel="noopener">${escapeHtml(p.link)}</a></div></div>` : ''}
+      ${p.link ? `<div class="pf-modal-field"><div class="pf-modal-field-label">Link</div><div class="pf-modal-field-value">${
+        isSafeHttpUrl(p.link)
+          ? `<a href="${escapeAttr(p.link)}" target="_blank" rel="noopener">${escapeHtml(p.link)}</a>`
+          : escapeHtml(p.link)
+      }</div></div>` : ''}
     `;
     document.getElementById('pf-modal-overlay').style.display = 'flex';
   }
