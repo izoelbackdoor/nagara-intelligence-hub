@@ -3,6 +3,7 @@
   "name": "nagara-intelligence-hub",
   "builds": [
     { "src": "index.html", "use": "@vercel/static" },
+    { "src": "js/portfolio-data.js", "use": "@vercel/static" },
     { "src": "api/**/*.js", "use": "@vercel/node" }
   ],
   "routes": [
@@ -15,6 +16,7 @@
     { "src": "/api/robot/signal", "dest": "/api/robot/signal.js" },
     { "src": "/api/inbox/webhook-openwa", "dest": "/api/inbox/webhook-openwa.js" },
     { "src": "/api/(.*)\\.js", "dest": "/api/$1.js" },
+    { "src": "/js/portfolio-data.js", "dest": "/js/portfolio-data.js" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
