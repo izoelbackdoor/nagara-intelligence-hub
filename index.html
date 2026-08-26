@@ -4831,6 +4831,8 @@
   </main>
 </div>
 
+  <!-- No async/defer: the inline script right below needs window.PortfolioData
+       synchronously at parse time, so this must load and execute first. -->
   <script src="/js/portfolio-data.js"></script>
 <script>
   // ── Auth ──
@@ -4994,27 +4996,41 @@
 
   let _portfolioCache = null;
   let _portfolioCacheAt = 0;
+  let _portfolioFetchInFlight = null;
   const PORTFOLIO_CACHE_MS = 60000;
 
+  // Cache-first fetch of every record in the Portfolio Airtable base (all
+  // pages followed automatically). Returns the cached result if it's under
+  // PORTFOLIO_CACHE_MS old; pass force:true to bypass the cache and refetch
+  // (e.g. a manual "refresh" button). Concurrent callers share one in-flight
+  // request instead of each starting their own pagination loop.
   async function fetchAllPortfolioRecords(force) {
     if (!force && _portfolioCache && (Date.now() - _portfolioCacheAt) < PORTFOLIO_CACHE_MS) {
       return _portfolioCache;
     }
-    let all = [];
-    let offset;
-    do {
-      const page = await fetchAirtable(PORTFOLIO_TABLE, {
-        baseId: PORTFOLIO_BASE,
-        pageSize: 100,
-        offset,
-        sort: [{ field: 'App Name', direction: 'asc' }],
-      });
-      all = all.concat(page.records || []);
-      offset = page.offset;
-    } while (offset);
-    _portfolioCache = all;
-    _portfolioCacheAt = Date.now();
-    return all;
+    if (_portfolioFetchInFlight) return _portfolioFetchInFlight;
+    _portfolioFetchInFlight = (async () => {
+      let all = [];
+      let offset;
+      do {
+        const page = await fetchAirtable(PORTFOLIO_TABLE, {
+          baseId: PORTFOLIO_BASE,
+          pageSize: 100,
+          offset,
+          sort: [{ field: 'App Name', direction: 'asc' }],
+        });
+        all = all.concat(page.records || []);
+        offset = page.offset;
+      } while (offset);
+      _portfolioCache = all;
+      _portfolioCacheAt = Date.now();
+      return all;
+    })();
+    try {
+      return await _portfolioFetchInFlight;
+    } finally {
+      _portfolioFetchInFlight = null;
+    }
   }
 
   function fmtDate(isoStr) {
