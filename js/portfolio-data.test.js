@@ -96,10 +96,22 @@ test('daysSince computes whole days between createdTime and now', () => {
   assert.equal(days, 35);
 });
 
+test('daysSince returns null for a missing or invalid date instead of NaN', () => {
+  assert.equal(PortfolioData.daysSince(''), null);
+  assert.equal(PortfolioData.daysSince(undefined), null);
+  assert.equal(PortfolioData.daysSince('not-a-date'), null);
+});
+
 test('daysUntil computes whole days between now and a future date, rounding up', () => {
   const now = new Date('2026-08-26T00:00:00.000Z');
   const days = PortfolioData.daysUntil('2026-11-25', now);
   assert.equal(days, 91);
+});
+
+test('daysUntil returns null for a missing or invalid date instead of NaN', () => {
+  assert.equal(PortfolioData.daysUntil(''), null);
+  assert.equal(PortfolioData.daysUntil(undefined), null);
+  assert.equal(PortfolioData.daysUntil('not-a-date'), null);
 });
 
 test('aggregateOverview counts aktif, akanDatang, belumDitentukan, and liveDeployed independently', () => {
@@ -132,6 +144,16 @@ test('unitHealth is neutral when a unit has no products', () => {
   assert.equal(PortfolioData.unitHealth([], 'Foam & Fold'), 'neutral');
 });
 
+test('unitHealth ignores products from other business units', () => {
+  const products = [product({ businessUnit: 'NGI Internal', status: 'On Hold' }), product({ businessUnit: 'NADI', status: 'Idea' })];
+  assert.equal(PortfolioData.unitHealth(products, 'NADI'), 'green');
+});
+
+test('unitHealth applies the NADI Client Portfolio merge', () => {
+  const products = [product({ businessUnit: 'NADI Client Portfolio', status: 'On Hold' })];
+  assert.equal(PortfolioData.unitHealth(products, 'NADI'), 'red');
+});
+
 test('unitHealth is red if any product in the unit is On Hold', () => {
   const products = [product({ businessUnit: 'NADI', status: 'On Hold' }), product({ businessUnit: 'NADI', status: 'Idea' })];
   assert.equal(PortfolioData.unitHealth(products, 'NADI'), 'red');
@@ -159,4 +181,12 @@ test('modeDate returns the most frequent non-empty tanggalReview value', () => {
 
 test('modeDate returns null when no product has a tanggalReview', () => {
   assert.equal(PortfolioData.modeDate([product({ tanggalReview: '' })]), null);
+});
+
+test('modeDate breaks a tie by first-seen order', () => {
+  const products = [
+    product({ tanggalReview: '2027-01-01' }),
+    product({ tanggalReview: '2026-11-25' }),
+  ];
+  assert.equal(PortfolioData.modeDate(products), '2027-01-01');
 });

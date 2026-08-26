@@ -61,35 +61,54 @@
   }
 
   function groupByValidationStatus(products) {
-    var groups = { 'Akan Datang': [], 'Aktif': [], 'Arsip': [], 'Belum Ditentukan': [] };
+    var groups = {};
+    VALIDATION_COLUMNS.forEach(function (c) { groups[c] = []; });
     products.forEach(function (p) {
       var col = validationColumn(p);
-      if (!groups[col]) groups[col] = [];
+      if (VALIDATION_COLUMNS.indexOf(col) === -1) col = 'Belum Ditentukan';
       groups[col].push(p);
     });
     return groups;
   }
 
+  // Any status not in STATUS_COLUMNS (blank, or an unrecognized value) falls
+  // into 'Lainnya' so it stays visible instead of silently vanishing from a
+  // board that only iterates STATUS_COLUMNS.
   function groupByStatus(products) {
-    var groups = { 'Idea': [], 'In Progress': [], 'Live/Deployed': [], 'On Hold': [], 'Needs Info': [] };
+    var groups = {};
+    STATUS_COLUMNS.forEach(function (c) { groups[c] = []; });
+    groups['Lainnya'] = [];
     products.forEach(function (p) {
-      var col = p.status || 'Lainnya';
-      if (!groups[col]) groups[col] = [];
+      var col = STATUS_COLUMNS.indexOf(p.status) !== -1 ? p.status : 'Lainnya';
       groups[col].push(p);
     });
     return groups;
   }
 
+  // Returns null (not NaN) for a missing/invalid date, since 'Tanggal Review
+  // Berikutnya' can be blank in real data (see modeDate) — callers should
+  // treat null as "unknown", not render it.
   function daysSince(isoDate, now) {
-    now = now || new Date();
+    if (!isoDate) return null;
     var then = new Date(isoDate);
+    if (isNaN(then.getTime())) return null;
+    now = now || new Date();
     var diffMs = now.getTime() - then.getTime();
     return Math.max(0, Math.floor(diffMs / 86400000));
   }
 
+  // Returns null for a missing/invalid date. Otherwise can be negative —
+  // that's intentional and means the date has already passed (overdue),
+  // not clamped to 0 like daysSince. Note: since isoDate is typically a
+  // date-only string (e.g. '2026-11-25'), it's compared as UTC midnight
+  // against the caller's local `now`; around the target date's own midnight
+  // in WIB (UTC+7) this can read one day higher than the local calendar day
+  // for a few hours. Accepted tradeoff for this internal dashboard's cadence.
   function daysUntil(isoDate, now) {
-    now = now || new Date();
+    if (!isoDate) return null;
     var target = new Date(isoDate);
+    if (isNaN(target.getTime())) return null;
+    now = now || new Date();
     var diffMs = target.getTime() - now.getTime();
     return Math.ceil(diffMs / 86400000);
   }
@@ -128,6 +147,8 @@
     return 'green';
   }
 
+  // On a tie, the first-seen date (in the `products` array's order) wins,
+  // since `best` is only replaced on a strictly-greater count.
   function modeDate(products) {
     var counts = {};
     var best = null;
