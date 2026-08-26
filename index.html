@@ -544,6 +544,27 @@
   .ph-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; background: var(--brand-gradient); padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem; }
   .ph-title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 0.75rem; }
   .ph-desc { font-size: 13px; color: var(--sand-text2); line-height: 1.6; }
+
+  /* ── Overview + Portfolio shared states ── */
+  .pf-loading { text-align: center; padding: 3rem; color: var(--sand-text2); font-size: 13px; }
+  .pf-error { background: #fff4f2; border: 1px solid #f3b3ab; color: #9c2b1f; border-radius: 10px; padding: 12px 16px; margin-bottom: 1rem; font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .pf-retry-btn { background: #9c2b1f; color: #fff; border: none; border-radius: 6px; padding: 6px 14px; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+
+  /* ── Overview ── */
+  .ov-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 1.5rem; }
+  .ov-card { background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 14px; padding: 1.1rem; }
+  .ov-num { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 28px; color: var(--ink); line-height: 1; margin-bottom: 6px; }
+  .ov-label { font-size: 12px; color: var(--sand-text2); }
+  .ov-band { border-radius: 12px; background: var(--brand-gradient); color: #fff; padding: 14px 18px; font-size: 13px; font-weight: 600; margin-bottom: 1rem; }
+  .ov-flag { background: #fff8ea; border: 1px dashed #d8b23a; border-radius: 10px; padding: 12px 16px; font-size: 12.5px; color: #7a5c00; margin-bottom: 1.5rem; cursor: pointer; }
+  .ov-section-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); margin-bottom: 10px; }
+  .ov-unit-row { display: flex; align-items: center; justify-content: space-between; background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 10px; padding: 10px 16px; margin-bottom: 8px; font-size: 13px; color: var(--ink); }
+  .ov-unit-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-left: 8px; vertical-align: middle; }
+  .ov-unit-dot.red { background: #d43f2e; }
+  .ov-unit-dot.yellow { background: #f5a623; }
+  .ov-unit-dot.green { background: #2e9e5b; }
+  .ov-unit-dot.neutral { background: #c9beac; }
+
   #page-capital.active { display: flex; }
 
   /* Dalam Pengembangan */
@@ -949,274 +970,27 @@
 
     <!-- ─── Page: Overview ─── -->
     <div id="page-overview" class="page-section active">
+      <div id="ov-error" class="pf-error" style="display:none;">
+        <span id="ov-error-msg"></span>
+        <button class="pf-retry-btn" onclick="ovInit(true)">Coba lagi</button>
+      </div>
+      <div id="ov-loading" class="pf-loading">Memuat data portfolio…</div>
+      <div id="ov-content" style="display:none;">
 
-    <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(108,99,255,0.15);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6c63ff" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <div class="ov-cards">
+          <div class="ov-card"><div class="ov-num" id="ov-num-aktif">—</div><div class="ov-label">Produk Aktif</div></div>
+          <div class="ov-card"><div class="ov-num" id="ov-num-akan-datang">—</div><div class="ov-label">Akan Datang</div></div>
+          <div class="ov-card"><div class="ov-num" id="ov-num-live">—</div><div class="ov-label">Live/Deployed (teknis)</div></div>
+          <div class="ov-card"><div class="ov-num" id="ov-num-days">—</div><div class="ov-label">Hari ke rapat semester</div></div>
         </div>
-        <div class="stat-value">12</div>
-        <div class="stat-label">Unit Bisnis Aktif</div>
-        <div class="stat-trend trend-neutral">Semua unit terdaftar</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(34,201,122,0.12);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c97a" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        </div>
-        <div class="stat-value">25</div>
-        <div class="stat-label">Agent AI Berjalan</div>
-        <div class="stat-trend trend-up">▲ 12 Analyst · 12 Manager · 1 Audit</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(59,158,255,0.12);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b9eff" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.36 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/></svg>
-        </div>
-        <div class="stat-value" style="font-size:20px;margin-top:3px;">1.187</div>
-        <div class="stat-label">Email BPR Terkirim</div>
-        <div class="stat-trend trend-up">▲ Batch 1 (228) + Batch 2 (959)</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(245,166,35,0.12);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-        <div class="stat-value" style="font-size:18px;margin-top:4px;">1,37 jt</div>
-        <div class="stat-label">Biaya AI / Bulan</div>
-        <div class="stat-trend trend-neutral">Termasuk Higgsfield</div>
-      </div>
-    </div>
 
-    <!-- Units -->
-    <div class="section-header">
-      <div class="section-title">12 Unit Bisnis Nagara Group</div>
-      <div class="section-sub">Klik unit untuk detail</div>
-    </div>
-    <div class="units-grid">
+        <div class="ov-band" id="ov-band">—</div>
+        <div class="ov-flag" id="ov-flag" style="display:none;"></div>
 
-      <div class="unit-card" onclick="showPage('nadi')">
-        <div class="unit-head">
-          <div class="unit-icon-wrap">
-            <div class="unit-icon" style="background:rgba(108,99,255,0.15);">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6c63ff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            </div>
-            <div><div class="unit-name">NADI Digital Lab</div><div class="unit-cat">Website · AI · Teknologi</div></div>
-          </div>
-          <span class="badge badge-green">Aktif</span>
-        </div>
-        <div class="unit-footer">
-          <div><div class="unit-footer-key">Focus</div><div class="unit-footer-val">Pipeline klien</div></div>
-          <div class="unit-agent">NADI AI</div>
-        </div>
-      </div>
+        <div class="ov-section-title">Status per Business Unit</div>
+        <div id="ov-units"></div>
 
-      <div class="unit-card" onclick="openUnitModal('nagara-media')">
-        <div class="unit-head">
-          <div class="unit-icon-wrap">
-            <div class="unit-icon" style="background:rgba(167,139,250,0.15);">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-            </div>
-            <div><div class="unit-name">Nagara Media</div><div class="unit-cat">Konten · Desain · Video</div></div>
-          </div>
-          <span class="badge badge-green">Aktif</span>
-        </div>
-        <div class="unit-footer">
-          <div><div class="unit-footer-key">Focus</div><div class="unit-footer-val">Jadwal konten</div></div>
-          <div class="unit-agent" style="color:var(--purple);">Media AI</div>
-        </div>
       </div>
-
-      <div class="unit-card" onclick="openUnitModal('nagara-marketing')">
-        <div class="unit-head">
-          <div class="unit-icon-wrap">
-            <div class="unit-icon" style="background:rgba(34,201,122,0.12);">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#22c97a" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            </div>
-            <div><div class="unit-name">Nagara Marketing</div><div class="unit-cat">Leads · Ads · Social</div></div>
-          </div>
-          <span class="badge badge-green">Aktif</span>
-        </div>
-        <div class="unit-footer">
-          <div><div class="unit-footer-key">Focus</div><div class="unit-footer-val">Konversi leads</div></div>
-          <div class="unit-agent" style="color:var(--green);">Marketing AI</div>
-        </div>
-      </div>
-
-      <div class="unit-card" onclick="showPage('capital')">
-        <div class="unit-head">
-          <div class="unit-icon-wrap">
-            <div class="unit-icon" style="background:rgba(245,166,35,0.12);">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-            </div>
-            <div><div class="unit-name">Nagara Capital</div><div class="unit-cat">Investasi · Saham · IDX</div></div>
-          </div>
-          <span class="badge badge-yellow">Perhatian</span>
-        </div>
-        <div class="unit-footer">
-          <div><div class="unit-footer-key">Focus</div><div class="unit-footer-val">Watchlist IDX</div></div>
-          <div class="unit-agent" style="color:var(--yellow);">Capital AI</div>
-        </div>
-      </div>
-
-      <div class="unit-card" onclick="openUnitModal('nagara-ops')">
-        <div class="unit-head">
-          <div class="unit-icon-wrap">
-            <div class="unit-icon" style="background:rgba(255,255,255,0.06);">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8888a0" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-            </div>
-            <div><div class="unit-name">Nagara Operational</div><div class="unit-cat">Tools · Server · Sistem</div></div>
-          </div>
-          <span class="badge badge-green">Aktif</span>
-        </div>
-        <div class="unit-footer">
-          <div><div class="unit-footer-key">Focus</div><div class="unit-footer-val">Renewal check</div></div>
-          <div class="unit-agent" style="color:var(--text2);">Ops AI</div>
-        </div>
-      </div>
-
-      <div class="unit-card" onclick="openUnitModal('nagara-finance')">
-        <div class="unit-head">
-          <div class="unit-icon-wrap">
-            <div class="unit-icon" style="background:rgba(34,201,122,0.1);">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#22c97a" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            </div>
-            <div><div class="unit-name">Nagara Finance</div><div class="unit-cat">Cash Flow · Hutang</div></div>
-          </div>
-          <span class="badge badge-green">Aktif</span>
-        </div>
-        <div class="unit-footer">
-          <div><div class="unit-footer-key">Focus</div><div class="unit-footer-val">Cash flow</div></div>
-          <div class="unit-agent" style="color:var(--green);">Finance AI</div>
-        </div>
-      </div>
-
-      <div class="unit-card" onclick="showPage('bisnis')" style="border-color:rgba(245,166,35,0.25);background:linear-gradient(135deg,rgba(245,166,35,0.04),var(--bg2));">
-        <div class="unit-head">
-          <div class="unit-icon-wrap">
-            <div class="unit-icon" style="background:rgba(245,166,35,0.12);">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </div>
-            <div>
-              <div class="unit-name">Nagara Fisik</div>
-              <div class="unit-cat">5 Unit · Laundry · Minuman · Es · Buah · Teknisi</div>
-            </div>
-          </div>
-          <span class="badge badge-green">Aktif</span>
-        </div>
-        <div style="display:flex;gap:5px;margin:8px 0;flex-wrap:wrap;">
-          <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(6,182,212,0.1);color:#06b6d4;border:1px solid rgba(6,182,212,0.2);">Foam &amp; Fold</span>
-          <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.2);">Kemboo Drinks</span>
-          <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(96,165,250,0.1);color:#60a5fa;border:1px solid rgba(96,165,250,0.2);">Es Batu</span>
-          <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(132,204,22,0.1);color:#84cc16;border:1px solid rgba(132,204,22,0.2);">Buah Segar</span>
-          <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(249,115,22,0.1);color:#f97316;border:1px solid rgba(249,115,22,0.2);">Tukang Siaga</span>
-        </div>
-        <div class="unit-footer">
-          <div><div class="unit-footer-key">Focus</div><div class="unit-footer-val">Operasional harian</div></div>
-          <div class="unit-agent" style="color:#f5a623;">Buka Dashboard →</div>
-        </div>
-      </div>
-
-      <div class="unit-card" onclick="openUnitModal('intel-watch')">
-        <div class="unit-head">
-          <div class="unit-icon-wrap">
-            <div class="unit-icon" style="background:rgba(45,212,191,0.12);">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </div>
-            <div><div class="unit-name">Intelligence Watch</div><div class="unit-cat">Riset · Regulasi · Tren</div></div>
-          </div>
-          <span class="badge badge-green">Aktif</span>
-        </div>
-        <div class="unit-footer">
-          <div><div class="unit-footer-key">Focus</div><div class="unit-footer-val">Berita & regulasi</div></div>
-          <div class="unit-agent" style="color:var(--teal);">Riset AI</div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Bottom Panels -->
-    <div class="bottom-grid">
-      <div class="panel">
-        <div class="panel-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-          Status Agent AI
-        </div>
-        <div class="agent-row">
-          <div class="agent-row-left"><span class="a-dot" style="background:var(--green);"></span>12 Unit Analyst</div>
-          <span class="badge badge-green">Siap</span>
-        </div>
-        <div class="agent-row">
-          <div class="agent-row-left"><span class="a-dot" style="background:var(--green);"></span>12 AI Manager</div>
-          <span class="badge badge-green">Siap</span>
-        </div>
-        <div class="agent-row">
-          <div class="agent-row-left"><span class="a-dot" style="background:var(--green);"></span>Audit Council</div>
-          <span class="badge badge-green">Siap</span>
-        </div>
-        <div class="agent-row">
-          <div class="agent-row-left"><span class="a-dot" style="background:var(--yellow);"></span>n8n Scheduler</div>
-          <span class="badge badge-yellow">Belum setup</span>
-        </div>
-        <div class="agent-row">
-          <div class="agent-row-left"><span class="a-dot" style="background:var(--yellow);"></span>Riset AI 4 jam</div>
-          <span class="badge badge-yellow">Plan B</span>
-        </div>
-        <div class="progress-wrap">
-          <div class="progress-header"><span>Kesiapan sistem</span><span>80%</span></div>
-          <div class="progress-track"><div class="progress-fill" style="width:80%;"></div></div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          Biaya Operasional / Bulan
-        </div>
-        <div class="cost-row"><span class="cost-label">Claude API (30 run)</span><span class="cost-val">Rp 270.000</span></div>
-        <div class="cost-row"><span class="cost-label">Airtable Pro</span><span class="cost-val">Rp 320.000</span></div>
-        <div class="cost-row"><span class="cost-label">VPS + Fonnte</span><span class="cost-val">Rp 140.000</span></div>
-        <div class="cost-row"><span class="cost-label">Higgsfield ($40)</span><span class="cost-val">Rp 640.000</span></div>
-        <div class="cost-row" style="padding-top:10px;border-top:1px solid var(--border2);border-bottom:none;font-size:13px;font-weight:600;">
-          <span>Total</span><span style="color:var(--green);">Rp 1.370.000</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Todo -->
-    <div class="todo-panel">
-      <div class="panel-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        Agenda Prioritas
-      </div>
-      <div class="todo-item">
-        <div class="t-dot" style="background:var(--red);"></div>
-        <div><div class="t-name">Pantau blast BPR Batch 2</div><div class="t-desc">959 email sedang berjalan (PID 65817) — estimasi selesai ~17:00 WIB</div></div>
-      </div>
-      <div class="todo-item">
-        <div class="t-dot" style="background:var(--yellow);"></div>
-        <div><div class="t-name">Setup VPS Hetzner + Coolify</div><div class="t-desc">Diperlukan sebelum klien website pertama onboard</div></div>
-      </div>
-      <div class="todo-item">
-        <div class="t-dot" style="background:var(--yellow);"></div>
-        <div><div class="t-name">Setup n8n scheduler 04:00 WIB</div><div class="t-desc">AI system masih berjalan manual — perlu otomasi harian</div></div>
-      </div>
-      <div class="todo-item">
-        <div class="t-dot" style="background:var(--yellow);"></div>
-        <div><div class="t-name">Isi data real ke 12 tabel Airtable</div><div class="t-desc">AI Manager butuh data nyata untuk mulai analisis harian</div></div>
-      </div>
-      <div class="todo-item">
-        <div class="t-dot" style="background:var(--green);"></div>
-        <div><div class="t-name">Kontrak + SLA klien website</div><div class="t-desc">Selesai — tersimpan di templates/kontrak-website-klien.md</div></div>
-      </div>
-      <div class="todo-item">
-        <div class="t-dot" style="background:var(--green);"></div>
-        <div><div class="t-name">Master System Prompt AI Hub</div><div class="t-desc">Selesai — tersimpan di ai-system/MASTER_SYSTEM_PROMPT.md</div></div>
-      </div>
-    </div>
-
-    <div style="text-align:center;font-size:11px;color:var(--text3);padding-bottom:2rem;">
-      Nagara Intelligence Hub &nbsp;·&nbsp; Built by NADI &nbsp;·&nbsp; &copy; 2025 Nagara Group Indonesia
-    </div>
-
     </div><!-- /page-overview -->
 
     <!-- ─── Page: Business Unit Monitor (placeholder) ─── -->
@@ -5030,6 +4804,71 @@
       return await _portfolioFetchInFlight;
     } finally {
       _portfolioFetchInFlight = null;
+    }
+  }
+
+  function ovShowError(message) {
+    document.getElementById('ov-loading').style.display = 'none';
+    document.getElementById('ov-content').style.display = 'none';
+    const errEl = document.getElementById('ov-error');
+    document.getElementById('ov-error-msg').textContent = message;
+    errEl.style.display = 'flex';
+  }
+
+  function ovRender(records) {
+    const products = PortfolioData.parseRecords(records);
+    const counts = PortfolioData.aggregateOverview(products);
+    const targetDate = PortfolioData.modeDate(products);
+
+    document.getElementById('ov-num-aktif').textContent = counts.aktif;
+    document.getElementById('ov-num-akan-datang').textContent = counts.akanDatang;
+    document.getElementById('ov-num-live').textContent = counts.liveDeployed;
+
+    if (targetDate) {
+      const days = PortfolioData.daysUntil(targetDate);
+      document.getElementById('ov-num-days').textContent = days;
+      const formatted = new Date(targetDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      document.getElementById('ov-band').textContent =
+        `⏱ Rapat Semester Berikutnya — ${formatted} — ${counts.akanDatang} produk "Akan Datang" perlu diputuskan`;
+    } else {
+      document.getElementById('ov-num-days').textContent = '—';
+      document.getElementById('ov-band').textContent = '⏱ Belum ada Tanggal Review Berikutnya tercatat di Airtable';
+    }
+
+    const flagEl = document.getElementById('ov-flag');
+    if (counts.belumDitentukan > 0) {
+      flagEl.style.display = 'block';
+      flagEl.textContent = `⚠ ${counts.belumDitentukan} produk belum ada Validation Status — cek sebelum rapat`;
+      flagEl.onclick = () => { showPage('portfolio'); pfSwitchTab('validation'); pfSwitchColumn('Belum Ditentukan'); };
+    } else {
+      flagEl.style.display = 'none';
+    }
+
+    const unitCounts = PortfolioData.unitCounts(products);
+    const unitsEl = document.getElementById('ov-units');
+    unitsEl.innerHTML = '';
+    PortfolioData.BUSINESS_UNITS.forEach(unit => {
+      const health = PortfolioData.unitHealth(products, unit);
+      const row = document.createElement('div');
+      row.className = 'ov-unit-row';
+      row.innerHTML = `<span>${unit}</span><span>${unitCounts[unit]} produk<span class="ov-unit-dot ${health}"></span></span>`;
+      unitsEl.appendChild(row);
+    });
+
+    document.getElementById('ov-loading').style.display = 'none';
+    document.getElementById('ov-error').style.display = 'none';
+    document.getElementById('ov-content').style.display = 'block';
+  }
+
+  async function ovInit(force) {
+    document.getElementById('ov-loading').style.display = 'block';
+    document.getElementById('ov-error').style.display = 'none';
+    document.getElementById('ov-content').style.display = 'none';
+    try {
+      const records = await fetchAllPortfolioRecords(force);
+      ovRender(records);
+    } catch (e) {
+      ovShowError('Belum bisa ambil data Portfolio Produk — ' + e.message + '. Cek AIRTABLE_TOKEN di Vercel punya akses ke base ini.');
     }
   }
 
