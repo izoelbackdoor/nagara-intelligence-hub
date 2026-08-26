@@ -698,6 +698,19 @@
   /* ── INBOX ──────────────────────────────────── */
   #page-inbox { display: none; padding: 0; height: calc(100vh - 57px); overflow: hidden; }
   #page-inbox.active { display: flex; }
+  /* ─── Roadmap ─── */
+  .rm-filter-btn { background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 13px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s; }
+  .rm-filter-btn:hover { color:var(--text1); }
+  .rm-filter-active { background:rgba(108,99,255,0.15);border-color:var(--accent2);color:var(--accent2); }
+  .rm-card { background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:border-color 0.15s,transform 0.15s; }
+  .rm-card:hover { border-color:var(--accent2);transform:translateY(-1px); }
+  .rm-progress-bar { height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:10px 0 6px; }
+  .rm-progress-fill { height:100%;border-radius:3px;transition:width 0.4s ease; }
+  .rm-badge { display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600; }
+  .rm-stat-card { background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px; }
+  .rm-milestone-item { display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border); }
+  .rm-milestone-item:last-child { border-bottom:none; }
+
   .inbox-sidebar { width: 260px; min-width: 200px; border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
   .inbox-sidebar-head { padding: 16px 14px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .inbox-sidebar-head h3 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
@@ -858,6 +871,10 @@
       <button class="nav-item active" id="nav-overview" onclick="showPage('overview')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Overview
+      </button>
+      <button class="nav-item" id="nav-roadmap" onclick="showPage('roadmap')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M6 20V10l6-6 6 6v10"/><path d="M10 20v-5h4v5"/></svg>
+        Roadmap
       </button>
       <button class="nav-item" id="nav-agent-ai" onclick="showPage('agent-ai')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
@@ -4579,6 +4596,101 @@
 
     </div>
 
+    <!-- ─── Page: Roadmap ─── -->
+    <div id="page-roadmap" class="page-section" style="padding:0;overflow:auto;">
+      <div style="padding:24px 28px;max-width:1100px;margin:0 auto;">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+          <div>
+            <h2 style="margin:0;font-size:20px;font-weight:700;">Project Roadmap</h2>
+            <p style="margin:4px 0 0;font-size:12px;color:var(--text3);">Pantau progress semua project aktif Nagara Group</p>
+          </div>
+          <button onclick="rmOpenAddModal()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Project
+          </button>
+        </div>
+
+        <!-- Stats row -->
+        <div id="rm-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;"></div>
+
+        <!-- Filter tabs -->
+        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+          <button onclick="rmSetFilter('semua')" id="rm-filter-semua" class="rm-filter-btn rm-filter-active">Semua</button>
+          <button onclick="rmSetFilter('aktif')" id="rm-filter-aktif" class="rm-filter-btn">Aktif</button>
+          <button onclick="rmSetFilter('selesai')" id="rm-filter-selesai" class="rm-filter-btn">Selesai</button>
+          <button onclick="rmSetFilter('tertunda')" id="rm-filter-tertunda" class="rm-filter-btn">Tertunda</button>
+        </div>
+
+        <!-- Project grid -->
+        <div id="rm-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
+      </div>
+
+      <!-- Modal: Add/Edit Project -->
+      <div id="rm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h3 id="rm-modal-title" style="margin:0;font-size:16px;font-weight:700;">Tambah Project</h3>
+            <button onclick="rmCloseModal()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1;">×</button>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px;">NAMA PROJECT</label>
+              <input id="rm-inp-nama" type="text" placeholder="cth: Nagara EduVerse" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:13px;box-sizing:border-box;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px;">DESKRIPSI SINGKAT</label>
+              <textarea id="rm-inp-desc" placeholder="Apa yang dibangun dalam project ini?" rows="2" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:13px;box-sizing:border-box;outline:none;resize:vertical;font-family:inherit;"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px;">KATEGORI</label>
+                <select id="rm-inp-kat" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:13px;box-sizing:border-box;outline:none;">
+                  <option>SAAS</option><option>Website</option><option>Aplikasi</option><option>Internal</option><option>Marketing</option><option>Lainnya</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px;">STATUS</label>
+                <select id="rm-inp-status" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:13px;box-sizing:border-box;outline:none;">
+                  <option value="aktif">Aktif</option><option value="tertunda">Tertunda</option><option value="selesai">Selesai</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px;">MULAI</label>
+                <input id="rm-inp-mulai" type="date" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:13px;box-sizing:border-box;outline:none;">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px;">TARGET SELESAI</label>
+                <input id="rm-inp-target" type="date" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:13px;box-sizing:border-box;outline:none;">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px;">MILESTONE / GOALS <span style="opacity:0.5;">(satu per baris)</span></label>
+              <textarea id="rm-inp-milestones" placeholder="Fase 1: Setup auth & database&#10;Fase 2: Landing page&#10;Fase 3: Dashboard user&#10;Fase 4: Payment integration&#10;Fase 5: Launch & testing" rows="6" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:12px;box-sizing:border-box;outline:none;resize:vertical;font-family:inherit;"></textarea>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:8px;">MILESTONE SELESAI <span style="opacity:0.5;">(centang yang sudah done)</span></label>
+              <div id="rm-milestone-check" style="display:flex;flex-direction:column;gap:6px;"></div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:22px;">
+            <button onclick="rmSaveProject()" style="flex:1;background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">Simpan</button>
+            <button onclick="rmCloseModal()" style="padding:10px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:13px;cursor:pointer;">Batal</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Detail Project -->
+      <div id="rm-detail-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+        <div id="rm-detail-content" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;"></div>
+      </div>
+    </div>
+
     <!-- ─── Page: Inbox ─── -->
     <div id="page-inbox" class="page-section">
       <!-- Sidebar kontak -->
@@ -4586,7 +4698,10 @@
         <div class="inbox-sidebar-head">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <h3 style="margin:0;">Inbox</h3>
-            <button onclick="inboxMarkAllRead()" style="background:none;border:none;font-size:10px;color:var(--text3);cursor:pointer;padding:2px 4px;" title="Tandai semua sudah dibaca">✓ Semua dibaca</button>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <button onclick="inboxMarkAllRead()" style="background:none;border:none;font-size:10px;color:var(--text3);cursor:pointer;padding:2px 4px;" title="Tandai semua sudah dibaca">✓ Semua dibaca</button>
+              <button onclick="inboxNewChat()" title="Chat ke nomor baru" style="background:var(--accent);color:#000;border:none;border-radius:6px;width:26px;height:26px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">+</button>
+            </div>
           </div>
           <div class="inbox-search">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -4601,6 +4716,29 @@
         </div>
         <div class="inbox-contact-list" id="inbox-contact-list">
           <div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">Memuat kontak...</div>
+        </div>
+      </div>
+
+      <!-- Modal: Chat ke nomor baru -->
+      <div id="inbox-new-chat-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div style="font-size:14px;font-weight:600;color:var(--text1);">Chat ke Nomor Baru</div>
+            <button onclick="document.getElementById('inbox-new-chat-modal').style.display='none'" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;">×</button>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Nomor WhatsApp *</label>
+            <input id="new-chat-nowa" type="tel" placeholder="628xxx atau 08xxx" style="width:100%;background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--text1);outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')document.getElementById('new-chat-nama').focus()">
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Nama (opsional)</label>
+            <input id="new-chat-nama" type="text" placeholder="Nama kontak" style="width:100%;background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--text1);outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')inboxNewChatOpen()">
+          </div>
+          <div id="new-chat-err" style="font-size:11px;color:#ff5c5c;margin-bottom:8px;display:none;"></div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="document.getElementById('inbox-new-chat-modal').style.display='none'" style="flex:1;background:var(--bg1);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:9px;font-size:12px;cursor:pointer;">Batal</button>
+            <button onclick="inboxNewChatOpen()" style="flex:2;background:var(--accent);color:#000;border:none;border-radius:6px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;">Buka Chat</button>
+          </div>
         </div>
       </div>
 
@@ -6122,23 +6260,29 @@
 
   async function inboxLoadLastMsgMap() {
     try {
-      const params = new URLSearchParams({
-        'sort[0][field]': 'Tanggal',
-        'sort[0][direction]': 'desc',
-        'pageSize': '100',
-      });
-      const data = await inboxAirtable(`${INBOX_CONVOS_TABLE}?${params}`);
       inboxLastMsgMap = {};
-      (data.records || []).forEach(r => {
-        const key = r.fields['No WA'] || r.fields['Email Kontak'] || '';
-        if (key && !inboxLastMsgMap[key]) {
-          inboxLastMsgMap[key] = {
-            time: r.fields['Tanggal'] || '',
-            preview: r.fields['Isi Pesan'] || '',
-            arah: r.fields['Arah'] || '',
-          };
-        }
-      });
+      let offset = null;
+      do {
+        const params = new URLSearchParams({
+          'sort[0][field]': 'Tanggal',
+          'sort[0][direction]': 'desc',
+          'pageSize': '100',
+        });
+        if (offset) params.set('offset', offset);
+        const data = await inboxAirtable(`${INBOX_CONVOS_TABLE}?${params}`);
+        (data.records || []).forEach(r => {
+          const key = r.fields['No WA'] || r.fields['Email Kontak'] || '';
+          // Karena diurutkan desc, entri pertama per key = paling baru
+          if (key && !inboxLastMsgMap[key]) {
+            inboxLastMsgMap[key] = {
+              time: r.fields['Tanggal'] || '',
+              preview: r.fields['Isi Pesan'] || '',
+              arah: r.fields['Arah'] || '',
+            };
+          }
+        });
+        offset = data.offset || null;
+      } while (offset);
     } catch(e) {
       console.warn('[inboxLoadLastMsgMap]', e.message);
     }
@@ -6565,6 +6709,83 @@
     document.getElementById('inbox-file-chip-name').textContent = '';
   }
 
+  function inboxNewChat() {
+    document.getElementById('new-chat-nowa').value = '';
+    document.getElementById('new-chat-nama').value = '';
+    document.getElementById('new-chat-err').style.display = 'none';
+    const modal = document.getElementById('inbox-new-chat-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => document.getElementById('new-chat-nowa').focus(), 50);
+  }
+
+  function inboxNewChatOpen() {
+    const rawNo = document.getElementById('new-chat-nowa').value.trim();
+    const nama  = document.getElementById('new-chat-nama').value.trim();
+    const errEl = document.getElementById('new-chat-err');
+
+    // Normalize: strip non-digits, convert 08xx → 628xx
+    let digits = rawNo.replace(/[^0-9]/g, '');
+    if (digits.startsWith('0')) digits = '62' + digits.slice(1);
+    if (digits.length < 10) {
+      errEl.textContent = 'Nomor tidak valid. Contoh: 6281234567890';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    document.getElementById('inbox-new-chat-modal').style.display = 'none';
+
+    // Cek apakah kontak sudah ada di list
+    const existing = inboxContacts.find(c => c.noWA && c.noWA.replace(/[^0-9]/g, '') === digits);
+    if (existing) {
+      // Langsung select kontak yang sudah ada
+      inboxActiveContact = existing;
+      document.querySelectorAll('.inbox-contact-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.cid === existing.id);
+      });
+      document.getElementById('inbox-no-chat').style.display = 'none';
+      document.getElementById('inbox-chat-panel').style.display = 'flex';
+      document.getElementById('inbox-chat-name').innerHTML = escInbox(existing.nama || existing.noWA) + '<span class="inbox-channel-badge wa">WA</span>';
+      document.getElementById('inbox-chat-meta').textContent = existing.noWA;
+      document.getElementById('inbox-detail-panel').style.display = 'none';
+      inboxLoadMessages();
+      inboxStartPolling();
+      return;
+    }
+
+    // Buat kontak sementara (tidak disimpan ke Airtable)
+    const tempContact = {
+      id: 'temp_' + digits,
+      nama: nama || digits,
+      noWA: digits,
+      kategori: '', kota: '', status: '', email: '',
+      hasWebsite: false, websiteUrl: '',
+    };
+
+    inboxActiveContact = tempContact;
+    document.querySelectorAll('.inbox-contact-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('inbox-no-chat').style.display = 'none';
+    const panel = document.getElementById('inbox-chat-panel');
+    panel.style.display = 'flex';
+    document.getElementById('inbox-chat-name').innerHTML = escInbox(nama || digits) + '<span class="inbox-channel-badge wa">WA</span>';
+    document.getElementById('inbox-chat-meta').textContent = digits;
+
+    const det = document.getElementById('inbox-detail-panel');
+    det.style.display = 'block';
+    document.getElementById('idet-nama').textContent = nama || '—';
+    document.getElementById('idet-wa').textContent = digits;
+    document.getElementById('idet-email').textContent = '—';
+    document.getElementById('idet-perusahaan').textContent = '—';
+    document.getElementById('idet-kota').textContent = '—';
+    document.getElementById('idet-status').textContent = '—';
+    document.getElementById('idet-kategori').textContent = '—';
+    document.getElementById('idet-website').innerHTML = '<span style="color:var(--text3);">—</span>';
+    document.getElementById('idet-catatan').textContent = '—';
+    document.getElementById('idet-ai-rekom').innerHTML = '';
+    document.getElementById('inbox-messages').innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:20px;">Chat baru — belum ada riwayat pesan</div>';
+    document.getElementById('inbox-compose-text').value = '';
+    document.getElementById('inbox-compose-text').focus();
+  }
+
   async function inboxSend() {
     const c = inboxActiveContact;
     if (!c) return;
@@ -6590,6 +6811,22 @@
           const data = await res.json();
           if (!data.ok) alert('Gagal kirim WA: ' + (data.error || 'Unknown error'));
         }
+        // Simpan pesan keluar ke Airtable Conversations
+        try {
+          await inboxAirtable(INBOX_CONVOS_TABLE, {
+            method: 'POST',
+            body: JSON.stringify({
+              fields: {
+                'No WA': c.noWA,
+                'Nama Kontak': c.nama || c.noWA,
+                'Isi Pesan': text || (inboxAttachedFile ? `📎 ${inboxAttachedFile.name}` : ''),
+                'Arah': 'Keluar',
+                'Channel': 'WA',
+                'Tanggal': new Date().toISOString(),
+              }
+            })
+          });
+        } catch(saveErr) { console.warn('[inboxSend] gagal simpan ke Airtable:', saveErr); }
       } else if (c.email) {
         const res = await fetch('/api/inbox/send-email', {
           method: 'POST',
@@ -7620,20 +7857,38 @@ Berikan jawaban yang spesifik, actionable, dan berbasis data. Gunakan Bahasa Ind
   async function openWASendMessage(noWA, text, filePayload) {
     const cfg = openWAGetConfig();
     if (!cfg.url || !cfg.apiKey) throw new Error('OpenWA belum dikonfigurasi');
-    // Format nomor: pastikan tanpa + dan pakai format internasional
-    const to = noWA.replace(/[^0-9]/g, '');
-    const body = { to, content: { text } };
-    if (filePayload && filePayload.fileData) {
-      body.content = { media: { data: filePayload.fileData, mimetype: filePayload.fileMime, filename: filePayload.fileName }, caption: text };
-    }
+    // Format nomor: 628xxx@c.us (WAHA format)
+    const digits = noWA.replace(/[^0-9]/g, '');
+    const chatId = digits.includes('@') ? digits : `${digits}@c.us`;
     const proxyBase = window.location.protocol === 'file:' ? 'https://nagara-intelligence-hub.vercel.app' : window.location.origin;
-    const r = await fetch(`${proxyBase}/api/openwa/proxy?path=/api/sessions/${cfg.session}/messages/send`, {
+
+    // OpenWA v0.10.x endpoint: /api/sessions/{session}/messages/send-{type}
+    const sess = cfg.session || 'default';
+    let path, body;
+    if (filePayload && filePayload.fileData) {
+      const isImage = filePayload.fileMime && filePayload.fileMime.startsWith('image/');
+      path = isImage
+        ? `/api/sessions/${sess}/messages/send-image`
+        : `/api/sessions/${sess}/messages/send-document`;
+      body = {
+        chatId,
+        caption: text || '',
+        file: { data: filePayload.fileData, mimetype: filePayload.fileMime, filename: filePayload.fileName },
+      };
+    } else {
+      path = `/api/sessions/${sess}/messages/send-text`;
+      body = { chatId, text };
+    }
+
+    const r = await fetch(`${proxyBase}/api/openwa/proxy?path=${encodeURIComponent(path)}`, {
       method: 'POST',
       headers: { 'X-OpenWA-URL': cfg.url, 'X-OpenWA-Key': cfg.apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.message || `HTTP ${r.status}`);
+    const raw = await r.text();
+    let d;
+    try { d = JSON.parse(raw); } catch { d = { error: raw }; }
+    if (!r.ok) throw new Error(d.message || d.error || raw || `HTTP ${r.status}`);
     return d;
   }
 
@@ -8103,6 +8358,279 @@ Berikan jawaban praktis dalam Bahasa Indonesia. Sertakan copy iklan siap pakai j
     }
     msgs.scrollTop = msgs.scrollHeight;
   }
+
+  // ─── ROADMAP ───────────────────────────────────────────────────────────────
+
+  const RM_KEY = 'nagara_roadmap_projects';
+  let rmProjects = [];
+  let rmEditId   = null;
+  let rmFilter   = 'semua';
+
+  const RM_DEFAULT = [
+    { id:'rm_1', nama:'SAAS - Nagara Vision', desc:'Platform manajemen bisnis terpusat untuk Nagara Group', kat:'SAAS', status:'tertunda', mulai:'2026-08-01', target:'2026-12-31',
+      milestones:['Riset & wireframe','Backend API & auth','Dashboard utama','Modul laporan','Beta testing','Launch'], done:[] },
+    { id:'rm_2', nama:'SAAS - Nagara EduVerse', desc:'Platform edukasi digital untuk bisnis & UMKM Indonesia', kat:'SAAS', status:'aktif', mulai:'2026-06-01', target:'2026-10-31',
+      milestones:['Riset & desain','Landing page','Auth & profil user','Modul kelas & konten','Payment integration','Launch beta'], done:['Riset & desain','Landing page'] },
+    { id:'rm_3', nama:'SAAS - Nagara SocialNest', desc:'Tools manajemen media sosial & konten otomatis', kat:'SAAS', status:'aktif', mulai:'2026-07-01', target:'2026-11-30',
+      milestones:['Riset kompetitor','Wireframe & desain','Backend scheduler','Integrasi IG & FB','Dashboard analytics','Launch'], done:['Riset kompetitor'] },
+    { id:'rm_4', nama:'SAAS - Nagara CRM', desc:'CRM khusus UMKM Indonesia dengan integrasi WhatsApp', kat:'SAAS', status:'aktif', mulai:'2026-06-15', target:'2026-09-30',
+      milestones:['Database & API','Inbox WA','Kontak & segmentasi','Blast & campaign','Laporan & analytics','Deploy production'], done:['Database & API','Inbox WA','Kontak & segmentasi'] },
+    { id:'rm_5', nama:'SAAS - Nagara SupportHub', desc:'Helpdesk & ticketing untuk bisnis lokal Indonesia', kat:'SAAS', status:'tertunda', mulai:'2026-09-01', target:'2027-01-31',
+      milestones:['Riset & wireframe','Sistem tiket','Live chat widget','Knowledge base','Integrasi WA','Launch'], done:[] },
+    { id:'rm_6', nama:'SAAS - Nagara SmartDocs', desc:'Generator dokumen bisnis otomatis (kontrak, invoice, proposal)', kat:'SAAS', status:'aktif', mulai:'2026-07-15', target:'2026-10-15',
+      milestones:['Template library','Editor dokumen','Generate PDF','E-signature','Dashboard klien','Launch'], done:['Template library'] },
+    { id:'rm_7', nama:'SAAS - Nagara HADIR', desc:'Sistem absensi & HR digital untuk UMKM', kat:'SAAS', status:'tertunda', mulai:'2026-10-01', target:'2027-02-28',
+      milestones:['Riset & desain','Absensi QR/GPS','Manajemen shift','Payroll otomatis','Laporan HR','Launch'], done:[] },
+    { id:'rm_8', nama:'Client - Content Automation', desc:'Otomasi konten multi-platform: WordPress, FB, IG, TikTok, LinkedIn, X — via n8n + Postiz + Claude AI', kat:'CLIENT', status:'aktif', mulai:'2026-08-12', target:'2026-11-30',
+      milestones:['Phase 0: Admin & API submissions','Phase 1: WordPress end-to-end','Phase 2: Facebook & Instagram','Phase 3: Video & Reels','Phase 4: Command Center panel','Phase 5: X / Twitter','Phase 6: TikTok','Phase 7: LinkedIn','Phase 8: QA & Handoff'], done:['Phase 0: Admin & API submissions'] },
+  ];
+
+  function rmLoad() {
+    const raw = localStorage.getItem(RM_KEY);
+    rmProjects = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(RM_DEFAULT));
+  }
+
+  function rmSave() {
+    localStorage.setItem(RM_KEY, JSON.stringify(rmProjects));
+  }
+
+  function rmPct(p) {
+    if (!p.milestones || p.milestones.length === 0) return 0;
+    return Math.round(((p.done || []).length / p.milestones.length) * 100);
+  }
+
+  function rmStatusColor(s) {
+    return { aktif:'#22c97a', selesai:'#3b9eff', tertunda:'#f5a623' }[s] || '#888';
+  }
+
+  function rmProgressColor(pct) {
+    if (pct >= 75) return '#22c97a';
+    if (pct >= 40) return '#3b9eff';
+    return 'var(--accent2)';
+  }
+
+  function rmETA(p) {
+    if (!p.target) return '—';
+    const d   = new Date(p.target);
+    const now = new Date();
+    const diff = Math.round((d - now) / 86400000);
+    if (p.status === 'selesai') return 'Selesai';
+    if (diff < 0) return `<span style="color:#ff4d6d;">Terlambat ${Math.abs(diff)} hari</span>`;
+    if (diff === 0) return '<span style="color:#f5a623;">Hari ini deadline</span>';
+    return `${diff} hari lagi`;
+  }
+
+  function rmRenderStats() {
+    const total   = rmProjects.length;
+    const aktif   = rmProjects.filter(p=>p.status==='aktif').length;
+    const selesai = rmProjects.filter(p=>p.status==='selesai').length;
+    const avgPct  = total ? Math.round(rmProjects.reduce((s,p)=>s+rmPct(p),0)/total) : 0;
+    document.getElementById('rm-stats').innerHTML = [
+      { label:'Total Project', val:total, color:'var(--accent2)' },
+      { label:'Aktif', val:aktif, color:'#22c97a' },
+      { label:'Selesai', val:selesai, color:'#3b9eff' },
+      { label:'Avg Progress', val:avgPct+'%', color:'#f5a623' },
+    ].map(s=>`
+      <div class="rm-stat-card">
+        <div style="font-size:22px;font-weight:700;color:${s.color};">${s.val}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${s.label}</div>
+      </div>`).join('');
+  }
+
+  function rmRenderGrid() {
+    const list = rmFilter === 'semua' ? rmProjects : rmProjects.filter(p=>p.status===rmFilter);
+    const grid = document.getElementById('rm-grid');
+    if (!list.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3);font-size:13px;">Belum ada project.</div>';
+      return;
+    }
+    grid.innerHTML = list.map(p => {
+      const pct  = rmPct(p);
+      const done = (p.done||[]).length;
+      const total= (p.milestones||[]).length;
+      const sc   = rmStatusColor(p.status);
+      const pc   = rmProgressColor(pct);
+      return `
+      <div class="rm-card" onclick="rmOpenDetail('${p.id}')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:600;color:var(--text1);line-height:1.3;">${p.nama}</div>
+          <span class="rm-badge" style="background:${sc}22;color:${sc};white-space:nowrap;">${p.status}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.5;">${p.desc||''}</div>
+        <div class="rm-progress-bar">
+          <div class="rm-progress-fill" style="width:${pct}%;background:${pc};"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:11px;color:var(--text3);">${done}/${total} milestone</span>
+          <span style="font-size:13px;font-weight:700;color:${pc};">${pct}%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:10px;">
+          <span>ETA: ${rmETA(p)}</span>
+          <span style="background:var(--bg3);padding:2px 7px;border-radius:4px;">${p.kat||''}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function rmRender() {
+    rmRenderStats();
+    rmRenderGrid();
+  }
+
+  function rmSetFilter(f) {
+    rmFilter = f;
+    document.querySelectorAll('.rm-filter-btn').forEach(b=>b.classList.remove('rm-filter-active'));
+    document.getElementById('rm-filter-'+f).classList.add('rm-filter-active');
+    rmRenderGrid();
+  }
+
+  // ─── Add/Edit modal ───
+  function rmOpenAddModal(id) {
+    rmEditId = id || null;
+    const p  = id ? rmProjects.find(x=>x.id===id) : null;
+    document.getElementById('rm-modal-title').textContent = p ? 'Edit Project' : 'Tambah Project';
+    document.getElementById('rm-inp-nama').value      = p ? p.nama   : '';
+    document.getElementById('rm-inp-desc').value      = p ? p.desc   : '';
+    document.getElementById('rm-inp-kat').value       = p ? p.kat    : 'SAAS';
+    document.getElementById('rm-inp-status').value    = p ? p.status : 'aktif';
+    document.getElementById('rm-inp-mulai').value     = p ? p.mulai  : '';
+    document.getElementById('rm-inp-target').value    = p ? p.target : '';
+    document.getElementById('rm-inp-milestones').value= p ? (p.milestones||[]).join('\n') : '';
+    rmRenderMilestoneCheck(p);
+    const m = document.getElementById('rm-modal');
+    m.style.display = 'flex';
+  }
+
+  function rmRenderMilestoneCheck(p) {
+    const milestones = document.getElementById('rm-inp-milestones').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    const done       = p ? (p.done||[]) : [];
+    document.getElementById('rm-milestone-check').innerHTML = milestones.length
+      ? milestones.map((m,i)=>`
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text1);cursor:pointer;">
+            <input type="checkbox" id="rm-ms-${i}" ${done.includes(m)?'checked':''} style="accent-color:var(--accent2);width:14px;height:14px;">
+            <span style="${done.includes(m)?'text-decoration:line-through;opacity:0.5;':''}">${m}</span>
+          </label>`).join('')
+      : '<span style="font-size:11px;color:var(--text3);">Isi milestone terlebih dahulu di atas.</span>';
+  }
+
+  document.getElementById('rm-inp-milestones').addEventListener('input', () => {
+    rmRenderMilestoneCheck(rmEditId ? rmProjects.find(x=>x.id===rmEditId) : null);
+  });
+
+  function rmCloseModal() {
+    document.getElementById('rm-modal').style.display = 'none';
+  }
+
+  function rmSaveProject() {
+    const nama = document.getElementById('rm-inp-nama').value.trim();
+    if (!nama) { alert('Nama project wajib diisi.'); return; }
+    const milestones = document.getElementById('rm-inp-milestones').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    const done = milestones.filter((_,i)=>{
+      const cb = document.getElementById('rm-ms-'+i);
+      return cb && cb.checked;
+    });
+    const data = {
+      id:     rmEditId || 'rm_'+Date.now(),
+      nama,
+      desc:   document.getElementById('rm-inp-desc').value.trim(),
+      kat:    document.getElementById('rm-inp-kat').value,
+      status: document.getElementById('rm-inp-status').value,
+      mulai:  document.getElementById('rm-inp-mulai').value,
+      target: document.getElementById('rm-inp-target').value,
+      milestones, done,
+    };
+    if (rmEditId) {
+      const idx = rmProjects.findIndex(x=>x.id===rmEditId);
+      if (idx >= 0) rmProjects[idx] = data;
+    } else {
+      rmProjects.unshift(data);
+    }
+    rmSave();
+    rmRender();
+    rmCloseModal();
+  }
+
+  // ─── Detail modal ───
+  function rmOpenDetail(id) {
+    const p = rmProjects.find(x=>x.id===id);
+    if (!p) return;
+    const pct = rmPct(p);
+    const pc  = rmProgressColor(pct);
+    const sc  = rmStatusColor(p.status);
+    const milestones = p.milestones || [];
+    const done = new Set(p.done || []);
+    document.getElementById('rm-detail-content').innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;">
+        <div>
+          <span class="rm-badge" style="background:${sc}22;color:${sc};margin-bottom:6px;display:inline-block;">${p.status} · ${p.kat}</span>
+          <h3 style="margin:0;font-size:16px;font-weight:700;">${p.nama}</h3>
+        </div>
+        <button onclick="document.getElementById('rm-detail-modal').style.display='none'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:22px;line-height:1;flex-shrink:0;">×</button>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin:0 0 16px;line-height:1.6;">${p.desc||''}</p>
+
+      <!-- Progress -->
+      <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:12px;color:var(--text3);">Progress keseluruhan</span>
+          <span style="font-size:18px;font-weight:700;color:${pc};">${pct}%</span>
+        </div>
+        <div class="rm-progress-bar" style="height:10px;">
+          <div class="rm-progress-fill" style="width:${pct}%;background:${pc};"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;">
+          <div style="text-align:center;"><div style="font-size:15px;font-weight:700;">${done.size}/${milestones.length}</div><div style="font-size:10px;color:var(--text3);">Milestone</div></div>
+          <div style="text-align:center;"><div style="font-size:12px;font-weight:600;">${p.mulai||'—'}</div><div style="font-size:10px;color:var(--text3);">Mulai</div></div>
+          <div style="text-align:center;"><div style="font-size:12px;font-weight:600;">${p.target||'—'}</div><div style="font-size:10px;color:var(--text3);">Target</div></div>
+        </div>
+      </div>
+
+      <!-- Milestones -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;">MILESTONE</div>
+        ${milestones.length ? milestones.map((m,i)=>{
+          const isDone = done.has(m);
+          return `<div class="rm-milestone-item">
+            <div style="width:20px;height:20px;border-radius:50%;border:2px solid ${isDone?pc:'var(--border)'};background:${isDone?pc:'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+              ${isDone?`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`:''}
+            </div>
+            <div>
+              <div style="font-size:12px;color:${isDone?'var(--text3)':'var(--text1)'};${isDone?'text-decoration:line-through;':''}">${m}</div>
+              <div style="font-size:10px;color:var(--text3);">Fase ${i+1}</div>
+            </div>
+          </div>`;
+        }).join('') : '<div style="font-size:12px;color:var(--text3);">Belum ada milestone.</div>'}
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;">
+        <button onclick="document.getElementById('rm-detail-modal').style.display='none';rmOpenAddModal('${p.id}')" style="flex:1;background:var(--accent2);color:#fff;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;">Edit Project</button>
+        <button onclick="rmDelete('${p.id}')" style="padding:9px 14px;background:rgba(255,77,109,0.1);border:1px solid #ff4d6d;border-radius:8px;color:#ff4d6d;font-size:12px;cursor:pointer;">Hapus</button>
+      </div>`;
+    document.getElementById('rm-detail-modal').style.display = 'flex';
+  }
+
+  function rmDelete(id) {
+    if (!confirm('Hapus project ini?')) return;
+    rmProjects = rmProjects.filter(x=>x.id!==id);
+    rmSave();
+    rmRender();
+    document.getElementById('rm-detail-modal').style.display = 'none';
+  }
+
+  // Close modals on backdrop click
+  document.getElementById('rm-modal').addEventListener('click', e => { if (e.target===e.currentTarget) rmCloseModal(); });
+  document.getElementById('rm-detail-modal').addEventListener('click', e => { if (e.target===e.currentTarget) e.currentTarget.style.display='none'; });
+
+  // Init roadmap when page shown — hook into showPage
+  const _origShowPageRm = showPage;
+  showPage = function(page) {
+    _origShowPageRm(page);
+    if (page === 'roadmap') {
+      rmLoad();
+      rmRender();
+    }
+  };
 
 </script>
 
