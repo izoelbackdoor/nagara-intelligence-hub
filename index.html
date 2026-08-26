@@ -565,6 +565,44 @@
   .ov-unit-dot.green { background: #2e9e5b; }
   .ov-unit-dot.neutral { background: #c9beac; }
 
+  /* ── Portfolio Produk ── */
+  .pf-tabs { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .pf-tab { background: var(--sand-card); border: 1px solid var(--sand-border); color: var(--sand-text2); font-size: 12.5px; font-weight: 600; padding: 8px 16px; border-radius: 20px; cursor: pointer; }
+  .pf-tab.active { background: var(--brand-gradient); color: #fff; border-color: transparent; }
+
+  .pf-kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; align-items: start; }
+  .pf-kanban.status-view { grid-template-columns: repeat(5, 1fr); }
+  .pf-col-header { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--sand-text2); margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .pf-col-header.flagged { color: #b34700; }
+  .pf-card { background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; font-size: 12px; }
+  .pf-card.flagged { border-color: #d8b23a; }
+  .pf-card-name { font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+  .pf-card-empty { text-align: center; color: var(--sand-text2); opacity: .6; font-size: 11.5px; padding: 8px; }
+  .pf-age { font-size: 10.5px; color: #b34700; margin-top: 4px; }
+
+  .pf-badge { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: var(--brand-gradient); color: #fff; }
+  .pf-badge.ngi { background: var(--ink); }
+  .pf-badge.other { background: #6b7280; }
+
+  .pf-section-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); margin-bottom: 10px; }
+  .pf-filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .pf-filter-label { font-size: 12px; color: var(--sand-text2); }
+  .pf-filter-select { font-size: 12px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--sand-border); background: var(--sand-card); color: var(--ink); }
+
+  .pf-table-wrap { overflow-x: auto; background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 12px; margin-bottom: 2rem; }
+  .pf-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .pf-table th { text-align: left; padding: 10px 14px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--sand-text2); border-bottom: 2px solid var(--sand-border); white-space: nowrap; }
+  .pf-table td { padding: 10px 14px; border-bottom: 1px solid #f0e9dc; color: var(--ink); vertical-align: top; }
+  .pf-table td.pf-td-kriteria { white-space: pre-wrap; max-width: 320px; }
+
+  .pf-modal-overlay { position: fixed; inset: 0; background: rgba(36,30,26,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
+  .pf-modal { background: var(--sand-card); border-radius: 14px; padding: 1.5rem; max-width: 560px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
+  .pf-modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--sand-text2); }
+  .pf-modal h3 { font-family: 'Space Grotesk', sans-serif; color: var(--ink); margin-bottom: 4px; }
+  .pf-modal-field { margin-top: 12px; }
+  .pf-modal-field-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--sand-text2); margin-bottom: 3px; }
+  .pf-modal-field-value { font-size: 13px; color: var(--ink); white-space: pre-wrap; }
+
   #page-capital.active { display: flex; }
 
   /* Dalam Pengembangan */
@@ -992,6 +1030,47 @@
 
       </div>
     </div><!-- /page-overview -->
+
+    <!-- ─── Page: Portfolio Produk ─── -->
+    <div id="page-portfolio" class="page-section">
+      <div id="pf-error" class="pf-error" style="display:none;">
+        <span id="pf-error-msg"></span>
+        <button class="pf-retry-btn" onclick="pfInit(true)">Coba lagi</button>
+      </div>
+      <div id="pf-loading" class="pf-loading">Memuat data portfolio…</div>
+      <div id="pf-content" style="display:none;">
+
+        <div class="pf-tabs">
+          <button class="pf-tab active" id="pf-tab-validation" onclick="pfSwitchTab('validation')">By Validation Status</button>
+          <button class="pf-tab" id="pf-tab-status" onclick="pfSwitchTab('status')">By Status Teknis</button>
+        </div>
+        <div class="pf-kanban" id="pf-kanban"></div>
+
+        <div class="pf-section-title">Semua Produk</div>
+        <div class="pf-filter-row">
+          <label class="pf-filter-label">Filter Business Unit:</label>
+          <select id="pf-filter-unit" class="pf-filter-select" onchange="pfRenderTable()">
+            <option value="">Semua</option>
+          </select>
+        </div>
+        <div class="pf-table-wrap">
+          <table class="pf-table" id="pf-table">
+            <thead><tr>
+              <th>App Name</th><th>Business Unit</th><th>Status</th><th>Validation Status</th>
+              <th>Kriteria Naik Status</th><th>Tanggal Review</th>
+            </tr></thead>
+            <tbody id="pf-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="pf-modal-overlay" class="pf-modal-overlay" style="display:none;" onclick="pfCloseModal(event)">
+        <div class="pf-modal">
+          <button class="pf-modal-close" onclick="pfCloseModal()">&times;</button>
+          <div id="pf-modal-body"></div>
+        </div>
+      </div>
+    </div>
 
     <!-- ─── Page: Business Unit Monitor (placeholder) ─── -->
     <div id="page-business-unit" class="page-section">
@@ -4870,6 +4949,153 @@
       ovRender(records);
     } catch (e) {
       ovShowError('Belum bisa ambil data Portfolio Produk — ' + e.message + '. Cek AIRTABLE_TOKEN di Vercel punya akses ke base ini.');
+    }
+  }
+
+  // ── Portfolio Produk ──
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function escapeAttr(str) {
+    // Same escaping is safe for use inside a double-quoted HTML attribute too.
+    return escapeHtml(str);
+  }
+
+  let _pfProducts = [];
+  let _pfTab = 'validation';
+
+  function pfBadgeClass(unit) {
+    const merged = PortfolioData.mergedBusinessUnit(unit);
+    if (merged === 'NADI') return 'pf-badge';
+    if (merged === 'NGI Internal') return 'pf-badge ngi';
+    return 'pf-badge other';
+  }
+
+  function pfCardHtml(product, showAge) {
+    const ageHtml = showAge ? `<div class="pf-age">${PortfolioData.daysSince(product.createdTime)} hari di status ini</div>` : '';
+    return `<div class="pf-card" onclick="pfOpenModal('${product.id}')">
+      <div class="pf-card-name">${escapeHtml(product.name)}</div>
+      <span class="${pfBadgeClass(product.businessUnit)}">${escapeHtml(product.businessUnit) || '—'}</span>
+      ${ageHtml}
+    </div>`;
+  }
+
+  function pfRenderKanban() {
+    const kanbanEl = document.getElementById('pf-kanban');
+    if (_pfTab === 'validation') {
+      kanbanEl.className = 'pf-kanban';
+      const groups = PortfolioData.groupByValidationStatus(_pfProducts);
+      kanbanEl.innerHTML = PortfolioData.VALIDATION_COLUMNS.map(col => {
+        const items = groups[col] || [];
+        const showAge = col === 'Akan Datang' || col === 'Belum Ditentukan';
+        const flagged = col === 'Belum Ditentukan';
+        const cards = items.length
+          ? items.map(p => pfCardHtml(p, showAge)).join('')
+          : '<div class="pf-card-empty">Kosong</div>';
+        return `<div data-column="${col}">
+          <div class="pf-col-header ${flagged ? 'flagged' : ''}"><span>${col}</span><span>${items.length}</span></div>
+          ${cards}
+        </div>`;
+      }).join('');
+    } else {
+      kanbanEl.className = 'pf-kanban status-view';
+      const groups = PortfolioData.groupByStatus(_pfProducts);
+      kanbanEl.innerHTML = PortfolioData.STATUS_COLUMNS.map(col => {
+        const items = groups[col] || [];
+        const cards = items.length
+          ? items.map(p => pfCardHtml(p, false)).join('')
+          : '<div class="pf-card-empty">Kosong</div>';
+        return `<div data-column="${col}">
+          <div class="pf-col-header"><span>${col}</span><span>${items.length}</span></div>
+          ${cards}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  function pfSwitchTab(tab) {
+    _pfTab = tab;
+    document.getElementById('pf-tab-validation').classList.toggle('active', tab === 'validation');
+    document.getElementById('pf-tab-status').classList.toggle('active', tab === 'status');
+    pfRenderKanban();
+  }
+
+  function pfSwitchColumn(columnName) {
+    // Scrolls the given kanban column into view — used by the Overview warning banner deep-link.
+    const col = document.querySelector(`#pf-kanban [data-column="${columnName}"]`);
+    if (col) col.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function pfPopulateFilter() {
+    const select = document.getElementById('pf-filter-unit');
+    const units = Array.from(new Set(_pfProducts.map(p => p.businessUnit).filter(Boolean))).sort();
+    select.innerHTML = '<option value="">Semua</option>' + units.map(u => `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('');
+  }
+
+  function pfRenderTable() {
+    const filterVal = document.getElementById('pf-filter-unit').value;
+    const rows = _pfProducts.filter(p => !filterVal || p.businessUnit === filterVal);
+    const tbody = document.getElementById('pf-table-body');
+    tbody.innerHTML = rows.map(p => `<tr onclick="pfOpenModal('${p.id}')" style="cursor:pointer;">
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(p.businessUnit) || '—'}</td>
+      <td>${escapeHtml(p.status) || '—'}</td>
+      <td>${escapeHtml(p.validationStatus) || '—'}</td>
+      <td class="pf-td-kriteria">${escapeHtml(p.kriteriaNaikStatus) || '—'}</td>
+      <td>${escapeHtml(p.tanggalReview) || '—'}</td>
+    </tr>`).join('');
+  }
+
+  function pfOpenModal(productId) {
+    const p = _pfProducts.find(x => x.id === productId);
+    if (!p) return;
+    const body = document.getElementById('pf-modal-body');
+    body.innerHTML = `
+      <h3>${escapeHtml(p.name)}</h3>
+      <span class="${pfBadgeClass(p.businessUnit)}">${escapeHtml(p.businessUnit) || '—'}</span>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Status / Validation Status</div><div class="pf-modal-field-value">${escapeHtml(p.status) || '—'} / ${escapeHtml(p.validationStatus) || '—'}</div></div>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Features</div><div class="pf-modal-field-value">${escapeHtml(p.features) || '—'}</div></div>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Tech Stack</div><div class="pf-modal-field-value">${escapeHtml(p.techStack) || '—'}</div></div>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Kriteria Naik Status</div><div class="pf-modal-field-value">${escapeHtml(p.kriteriaNaikStatus) || '—'}</div></div>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Notes / Next Steps</div><div class="pf-modal-field-value">${escapeHtml(p.notes) || '—'}</div></div>
+      ${p.link ? `<div class="pf-modal-field"><div class="pf-modal-field-label">Link</div><div class="pf-modal-field-value"><a href="${escapeAttr(p.link)}" target="_blank" rel="noopener">${escapeHtml(p.link)}</a></div></div>` : ''}
+    `;
+    document.getElementById('pf-modal-overlay').style.display = 'flex';
+  }
+
+  function pfCloseModal(event) {
+    if (event && event.target.id !== 'pf-modal-overlay') return;
+    document.getElementById('pf-modal-overlay').style.display = 'none';
+  }
+
+  function pfShowError(message) {
+    document.getElementById('pf-loading').style.display = 'none';
+    document.getElementById('pf-content').style.display = 'none';
+    document.getElementById('pf-error-msg').textContent = message;
+    document.getElementById('pf-error').style.display = 'flex';
+  }
+
+  async function pfInit(force) {
+    document.getElementById('pf-loading').style.display = 'block';
+    document.getElementById('pf-error').style.display = 'none';
+    document.getElementById('pf-content').style.display = 'none';
+    try {
+      const records = await fetchAllPortfolioRecords(force);
+      _pfProducts = PortfolioData.parseRecords(records);
+      pfPopulateFilter();
+      pfRenderKanban();
+      pfRenderTable();
+      document.getElementById('pf-loading').style.display = 'none';
+      document.getElementById('pf-content').style.display = 'block';
+    } catch (e) {
+      pfShowError('Belum bisa ambil data Portfolio Produk — ' + e.message + '. Cek AIRTABLE_TOKEN di Vercel punya akses ke base ini.');
     }
   }
 
