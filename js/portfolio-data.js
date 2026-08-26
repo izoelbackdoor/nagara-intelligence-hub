@@ -47,6 +47,10 @@
     return (records || []).map(parseRecord);
   }
 
+  // `product.businessUnit` keeps the raw Airtable value (e.g. for display on
+  // a card/table). Callers that aggregate/count by unit — Overview's per-unit
+  // status, health indicator, etc. — should pass it through mergedBusinessUnit
+  // first, since "NADI Client Portfolio" is folded into "NADI" for those views.
   function mergedBusinessUnit(businessUnit) {
     if (businessUnit === 'NADI Client Portfolio') return 'NADI';
     return businessUnit;
