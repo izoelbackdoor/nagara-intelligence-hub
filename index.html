@@ -541,6 +541,10 @@
   /* Page Sections */
   .page-section { display: none; }
   .page-section.active { display: block; animation: fadeIn 0.3s ease; }
+  .ph-wrap { max-width: 480px; margin: 4rem auto; text-align: center; }
+  .ph-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; background: var(--brand-gradient); padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem; }
+  .ph-title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 0.75rem; }
+  .ph-desc { font-size: 13px; color: var(--sand-text2); line-height: 1.6; }
   #page-capital.active { display: flex; }
 
   /* Dalam Pengembangan */
@@ -876,74 +880,33 @@
     </div>
 
     <div class="nav-section">
-      <div class="nav-section-label">Utama</div>
-      <button class="nav-item" id="nav-inbox" onclick="showPage('inbox')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        Inbox
-      </button>
       <button class="nav-item active" id="nav-overview" onclick="showPage('overview')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Overview
       </button>
-      <button class="nav-item" id="nav-roadmap" onclick="showPage('roadmap')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M6 20V10l6-6 6 6v10"/><path d="M10 20v-5h4v5"/></svg>
-        Roadmap
+      <button class="nav-item" id="nav-portfolio" onclick="showPage('portfolio')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Portfolio Produk
       </button>
-      <button class="nav-item" id="nav-agent-ai" onclick="showPage('agent-ai')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        Agent AI Hub
-      </button>
-      <button class="nav-item" id="nav-finance" onclick="showPage('finance')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        Finance
-      </button>
-      <button class="nav-item" id="nav-analytics" onclick="showPage('analytics')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Analytics
-      </button>
-    </div>
-
-    <div class="nav-section">
-      <div class="nav-section-label">Unit Bisnis</div>
-      <button class="nav-item" id="nav-nadi" onclick="showPage('nadi')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        NADI Digital
-      </button>
-      <button class="nav-item" id="nav-capital" onclick="showPage('capital')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 6 23 6 23 12"/></svg>
-        Nagara Capital
-      </button>
-      <button class="nav-item" id="nav-bisnis" onclick="showPage('bisnis')">
+      <button class="nav-item" id="nav-business-unit" onclick="showPage('business-unit')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-        Bisnis Fisik
+        Business Unit Monitor
       </button>
-      <button class="nav-item" id="nav-crm" onclick="showPage('crm')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Klien & CRM
-      </button>
-      <button class="nav-item" id="nav-legal" onclick="showPage('legal')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        Nagara Legal
-      </button>
-      <button class="nav-item" id="nav-marketing" onclick="showPage('marketing')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-        Nagara Marketing
-      </button>
-      <button class="nav-item" id="nav-robot" onclick="showPage('robot')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="currentColor"/><line x1="8" y1="16" x2="8" y2="16" stroke-width="3" stroke-linecap="round"/><line x1="16" y1="16" x2="16" y2="16" stroke-width="3" stroke-linecap="round"/></svg>
-        Robot Trading
-      </button>
-    </div>
-
-    <div class="nav-section">
-      <div class="nav-section-label">Sistem</div>
-      <button class="nav-item" id="nav-airtable" onclick="showPage('airtable')">
+      <button class="nav-item" id="nav-ai-orchestration" onclick="showPage('ai-orchestration')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        Airtable Sync
+        AI Agent Orchestration
       </button>
-      <button class="nav-item" id="nav-keamanan" onclick="showPage('keamanan')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Keamanan
+      <button class="nav-item" id="nav-crm-pipeline" onclick="showPage('crm-pipeline')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        CRM &amp; Pipeline
+      </button>
+      <button class="nav-item" id="nav-marketing-content" onclick="showPage('marketing-content')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Marketing &amp; Content
+      </button>
+      <button class="nav-item" id="nav-legal-compliance" onclick="showPage('legal-compliance')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Legal &amp; Compliance
       </button>
     </div>
 
@@ -1256,6 +1219,51 @@
     </div>
 
     </div><!-- /page-overview -->
+
+    <!-- ─── Page: Business Unit Monitor (placeholder) ─── -->
+    <div id="page-business-unit" class="page-section">
+      <div class="ph-wrap">
+        <div class="ph-badge">Segera hadir</div>
+        <h2 class="ph-title">Business Unit Monitor</h2>
+        <p class="ph-desc">Section ini akan menampilkan produk per business unit (NADI, Foam &amp; Fold, Tukang Nagara, Es Batu Kristal, NGI Internal) dan metrik operasionalnya. Dibangun di siklus berikutnya.</p>
+      </div>
+    </div>
+
+    <!-- ─── Page: AI Agent Orchestration (placeholder) ─── -->
+    <div id="page-ai-orchestration" class="page-section">
+      <div class="ph-wrap">
+        <div class="ph-badge">Segera hadir</div>
+        <h2 class="ph-title">AI Agent Orchestration</h2>
+        <p class="ph-desc">Section ini akan menampilkan trace observability workflow AI (request → tool call → output, latency, cost). Dibangun di siklus berikutnya.</p>
+      </div>
+    </div>
+
+    <!-- ─── Page: CRM & Pipeline (placeholder) ─── -->
+    <div id="page-crm-pipeline" class="page-section">
+      <div class="ph-wrap">
+        <div class="ph-badge">Segera hadir</div>
+        <h2 class="ph-title">CRM &amp; Pipeline</h2>
+        <p class="ph-desc">Section ini akan menampilkan pipeline deal Nagara CRM begitu sistemnya live. Dibangun di siklus berikutnya.</p>
+      </div>
+    </div>
+
+    <!-- ─── Page: Marketing & Content (placeholder) ─── -->
+    <div id="page-marketing-content" class="page-section">
+      <div class="ph-wrap">
+        <div class="ph-badge">Segera hadir</div>
+        <h2 class="ph-title">Marketing &amp; Content</h2>
+        <p class="ph-desc">Section ini akan menampilkan performa Meta Ads dan antrian konten 11 Facebook Page. Dibangun di siklus berikutnya.</p>
+      </div>
+    </div>
+
+    <!-- ─── Page: Legal & Compliance (placeholder) ─── -->
+    <div id="page-legal-compliance" class="page-section">
+      <div class="ph-wrap">
+        <div class="ph-badge">Segera hadir</div>
+        <h2 class="ph-title">Legal &amp; Compliance</h2>
+        <p class="ph-desc">Section ini akan menampilkan checklist compliance UU PDP dan status lisensi open-source per produk. Dibangun di siklus berikutnya.</p>
+      </div>
+    </div>
 
     <!-- ─── Page: Agent AI Hub ─── -->
     <div id="page-agent-ai" class="page-section">
@@ -4890,20 +4898,13 @@
 
   // ── Navigation ──
   const PAGE_META = {
-    'overview':   { title: 'Command Center',   sub: null },
-    'agent-ai':   { title: 'Agent AI Hub',     sub: 'Monitor & kontrol 25 agent AI' },
-    'finance':    { title: 'Finance',           sub: 'Cash flow & biaya operasional' },
-    'analytics':  { title: 'Analytics',         sub: 'Insight & laporan harian AI' },
-    'nadi':       { title: 'NADI Digital Lab',  sub: 'Pipeline klien & proyek website' },
-    'capital':    { title: 'Nagara Capital',     sub: 'Portofolio saham · Watchlist IDX · Analisis' },
-    'bisnis':     { title: 'Bisnis Fisik',      sub: 'Operasional 5 unit bisnis' },
-    'crm':        { title: 'Klien & CRM',       sub: 'Database kontak & follow-up' },
-    'airtable':   { title: 'Airtable Sync',     sub: 'Status & kontrol sinkronisasi data' },
-    'keamanan':   { title: 'Keamanan Sistem',   sub: 'Log akses & manajemen kredensial' },
-    'inbox':      { title: 'Inbox',              sub: 'WA + Email terpadu dengan AI Reply' },
-    'legal':      { title: 'Nagara Legal',       sub: 'Manajemen kontrak & dokumen hukum' },
-    'marketing':  { title: 'Nagara Marketing',   sub: 'Facebook & Instagram Ads — buat, pantau, dan optimalkan iklan' },
-    'robot':      { title: 'Robot Trading',       sub: 'Automated trading bot — konfigurasi, pantau posisi, dan analisa performa' },
+    'overview':          { title: 'Overview',               sub: 'Ringkasan seluruh business unit' },
+    'portfolio':         { title: 'Portfolio Produk',        sub: 'Status governance & progres semua produk NGI' },
+    'business-unit':     { title: 'Business Unit Monitor',   sub: 'Segera hadir' },
+    'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Segera hadir' },
+    'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Segera hadir' },
+    'marketing-content': { title: 'Marketing & Content',     sub: 'Segera hadir' },
+    'legal-compliance':  { title: 'Legal & Compliance',      sub: 'Segera hadir' },
   };
 
   function showPage(name) {
@@ -4932,6 +4933,8 @@
     document.querySelector('.main').scrollTop = 0;
 
     // Page-specific loaders
+    if (name === 'overview')  ovInit();
+    if (name === 'portfolio') pfInit();
     if (name === 'finance')  finLoadData();
     if (name === 'analytics') loadTrending();
     if (name === 'keamanan') loadSecurityPage();
