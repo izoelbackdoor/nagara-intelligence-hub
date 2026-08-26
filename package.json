@@ -1,6 +1,9 @@
 {
   "name": "nagara-intelligence-hub",
   "version": "1.0.0",
+  "scripts": {
+    "test": "node --test js/"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
     "nodemailer": "^9.0.1"
