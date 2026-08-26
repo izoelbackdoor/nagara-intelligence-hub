@@ -4831,6 +4831,7 @@
   </main>
 </div>
 
+  <script src="/js/portfolio-data.js"></script>
 <script>
   // ── Auth ──
   const CREDS = { user: 'mamzoel', pass: 'nagara2024' };
@@ -4959,29 +4960,61 @@
     memory   : 'tbl4yIGsvcXDKOjPI',
   };
 
+  const PORTFOLIO_BASE  = 'appLavNoTYubx4OuN';
+  const PORTFOLIO_TABLE = 'Applications';
+
   async function fetchAirtable(tableId, params = {}) {
     const defaults = { pageSize: 20, sort: [{ field: 'Tanggal', direction: 'desc' }] };
     const merged = Object.assign({}, defaults, params);
+    const baseId = merged.baseId || AIRTABLE_BASE;
     if (_AT_PROXY) {
       // Via Vercel proxy (production)
       const url = new URL(_AT_PROXY, window.location.origin);
       url.searchParams.set('table', tableId);
+      url.searchParams.set('baseId', baseId);
       if (merged.sort) { url.searchParams.set('sort[0][field]', merged.sort[0].field); url.searchParams.set('sort[0][direction]', merged.sort[0].direction); }
       if (merged.pageSize) url.searchParams.set('pageSize', merged.pageSize);
       if (merged.filterByFormula) url.searchParams.set('filterByFormula', merged.filterByFormula);
+      if (merged.offset) url.searchParams.set('offset', merged.offset);
       const res = await fetch(url.toString());
       if (!res.ok) throw new Error(`Airtable error ${res.status}: ${await res.text()}`);
       return res.json();
     } else {
       // Lokal — langsung ke Airtable
-      const url = new URL(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${tableId}`);
+      const url = new URL(`https://api.airtable.com/v0/${baseId}/${tableId}`);
       if (merged.sort) { url.searchParams.set('sort[0][field]', merged.sort[0].field); url.searchParams.set('sort[0][direction]', merged.sort[0].direction); }
       if (merged.pageSize) url.searchParams.set('pageSize', merged.pageSize);
       if (merged.filterByFormula) url.searchParams.set('filterByFormula', merged.filterByFormula);
+      if (merged.offset) url.searchParams.set('offset', merged.offset);
       const res = await fetch(url.toString(), { headers: { Authorization: 'Bearer ' + AIRTABLE_TOKEN } });
       if (!res.ok) throw new Error(`Airtable error ${res.status}: ${await res.text()}`);
       return res.json();
     }
+  }
+
+  let _portfolioCache = null;
+  let _portfolioCacheAt = 0;
+  const PORTFOLIO_CACHE_MS = 60000;
+
+  async function fetchAllPortfolioRecords(force) {
+    if (!force && _portfolioCache && (Date.now() - _portfolioCacheAt) < PORTFOLIO_CACHE_MS) {
+      return _portfolioCache;
+    }
+    let all = [];
+    let offset;
+    do {
+      const page = await fetchAirtable(PORTFOLIO_TABLE, {
+        baseId: PORTFOLIO_BASE,
+        pageSize: 100,
+        offset,
+        sort: [{ field: 'App Name', direction: 'asc' }],
+      });
+      all = all.concat(page.records || []);
+      offset = page.offset;
+    } while (offset);
+    _portfolioCache = all;
+    _portfolioCacheAt = Date.now();
+    return all;
   }
 
   function fmtDate(isoStr) {
