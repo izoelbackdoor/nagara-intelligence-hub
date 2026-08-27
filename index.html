@@ -1183,19 +1183,28 @@
 
       <div class="pf-section-title">Meta Ads Lead-Gen — NADI</div>
       <div class="mc-snapshot-note">Data snapshot 27 Agustus 2026 (refresh manual) — sumber: Meta Ads Manager. Campaign ID 120247567388800474.</div>
+      <!-- Figures below are REAL, verified via direct Meta Ads API access
+           during planning (2026-08-27) for Campaign ID 120247567388800474
+           ("NADI - Lead Gen - AI Automation UMKM") — not placeholder data.
+           No live integration exists yet (see the implementation plan for
+           why); re-verify in Meta Ads Manager and update this block if it
+           goes stale. -->
       <div class="ov-cards">
         <div class="ov-card"><div class="ov-num mc-status-paused">Paused</div><div class="ov-label">Status Campaign</div></div>
         <div class="ov-card"><div class="ov-num">Rp 0</div><div class="ov-label">Total Spend</div></div>
         <div class="ov-card"><div class="ov-num">Belum Ada</div><div class="ov-label">Leads</div></div>
         <div class="ov-card"><div class="ov-num">N/A</div><div class="ov-label">Cost per Lead</div></div>
       </div>
-      <!-- Reusing .pf-error's visual language (red, urgent) for these two
-           actionable alerts, not an actual fetch error — both are real,
-           verified facts the owner needs to act on, not placeholders. -->
-      <div class="pf-error" style="margin-bottom:10px;">
+      <!-- .ov-flag (not .pf-error) — these are persistent "action needed"
+           notices the owner must resolve in Meta's own dashboard, not a
+           retriable fetch failure, so the file's existing "governance gap"
+           styling fits better than the error/retry-button convention every
+           other .pf-error on this page follows. cursor overridden since
+           there's no click target here, unlike Overview's .ov-flag. -->
+      <div class="ov-flag" style="cursor:default;margin-bottom:10px;">
         <span>⚠ Lead Generation ToS belum di-accept di halaman "Nagara Digital Lab Indonesia" — kemungkinan penyebab campaign belum menghasilkan leads. Accept di facebook.com/legal/leadgen/tos.</span>
       </div>
-      <div class="pf-error">
+      <div class="ov-flag" style="cursor:default;">
         <span>⚠ Meta Pixel belum di-setup di nagaraku.id (tercatat di Portfolio Produk) — tanpa pixel, tracking konversi website tidak akan akurat.</span>
       </div>
 
