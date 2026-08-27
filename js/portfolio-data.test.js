@@ -67,6 +67,11 @@ function product(overrides) {
   }, overrides || {});
 }
 
+test('validationColumn defaults a blank validationStatus to Belum Ditentukan', () => {
+  assert.equal(PortfolioData.validationColumn(product({ validationStatus: 'Aktif' })), 'Aktif');
+  assert.equal(PortfolioData.validationColumn(product({ validationStatus: '' })), 'Belum Ditentukan');
+});
+
 test('groupByValidationStatus buckets blank validationStatus as Belum Ditentukan', () => {
   const groups = PortfolioData.groupByValidationStatus([
     product({ validationStatus: 'Aktif' }),

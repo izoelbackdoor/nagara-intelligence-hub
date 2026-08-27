@@ -4986,9 +4986,9 @@
     return 'pf-badge other';
   }
 
-  function pfCardHtml(product, showAge) {
+  function pfCardHtml(product, showAge, flagged) {
     const ageHtml = showAge ? `<div class="pf-age">${PortfolioData.daysSince(product.createdTime)} hari di status ini</div>` : '';
-    return `<div class="pf-card" onclick="pfOpenModal('${product.id}')">
+    return `<div class="pf-card ${flagged ? 'flagged' : ''}" onclick="pfOpenModal('${product.id}')">
       <div class="pf-card-name">${escapeHtml(product.name)}</div>
       <span class="${pfBadgeClass(product.businessUnit)}">${escapeHtml(product.businessUnit) || '—'}</span>
       ${ageHtml}
@@ -5005,7 +5005,7 @@
         const showAge = col === 'Akan Datang' || col === 'Belum Ditentukan';
         const flagged = col === 'Belum Ditentukan';
         const cards = items.length
-          ? items.map(p => pfCardHtml(p, showAge)).join('')
+          ? items.map(p => pfCardHtml(p, showAge, flagged)).join('')
           : '<div class="pf-card-empty">Kosong</div>';
         return `<div data-column="${col}">
           <div class="pf-col-header ${flagged ? 'flagged' : ''}"><span>${col}</span><span>${items.length}</span></div>
