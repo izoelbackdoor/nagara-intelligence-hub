@@ -603,6 +603,13 @@
   .pf-modal-field-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--sand-text2); margin-bottom: 3px; }
   .pf-modal-field-value { font-size: 13px; color: var(--ink); white-space: pre-wrap; }
 
+  /* ── Business Unit Monitor ── */
+  .bum-mock-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 1rem 0 1.5rem; }
+  .bum-mock-card { position: relative; background: var(--sand-card); border: 1px dashed var(--sand-border); border-radius: 12px; padding: 1.1rem; }
+  .bum-mock-badge { position: absolute; top: 10px; right: 10px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--sand-text2); background: #f0e9dc; padding: 2px 8px; border-radius: 20px; }
+  .bum-mock-label { font-size: 12px; color: var(--sand-text2); margin-bottom: 6px; }
+  .bum-mock-value { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: #b3a898; }
+
   #page-capital.active { display: flex; }
 
   /* Dalam Pengembangan */
@@ -1072,12 +1079,39 @@
       </div>
     </div>
 
-    <!-- ─── Page: Business Unit Monitor (placeholder) ─── -->
+    <!-- ─── Page: Business Unit Monitor ─── -->
     <div id="page-business-unit" class="page-section">
-      <div class="ph-wrap">
-        <div class="ph-badge">Segera hadir</div>
-        <h2 class="ph-title">Business Unit Monitor</h2>
-        <p class="ph-desc">Section ini akan menampilkan produk per business unit (NADI, Foam &amp; Fold, Tukang Nagara, Es Batu Kristal, NGI Internal) dan metrik operasionalnya. Dibangun di siklus berikutnya.</p>
+      <div id="bum-error" class="pf-error" style="display:none;">
+        <span id="bum-error-msg"></span>
+        <button class="pf-retry-btn" onclick="bumInit(true)">Coba lagi</button>
+      </div>
+      <div id="bum-loading" class="pf-loading">Memuat data portfolio…</div>
+      <div id="bum-content" style="display:none;">
+
+        <div class="pf-tabs" id="bum-tabs">
+          <button class="pf-tab active" data-unit="NADI" onclick="bumSwitchTab('NADI')">NADI</button>
+          <button class="pf-tab" data-unit="Foam &amp; Fold" onclick="bumSwitchTab('Foam &amp; Fold')">Foam &amp; Fold</button>
+          <button class="pf-tab" data-unit="Tukang Nagara" onclick="bumSwitchTab('Tukang Nagara')">Tukang Nagara</button>
+          <button class="pf-tab" data-unit="Es Batu Kristal" onclick="bumSwitchTab('Es Batu Kristal')">Es Batu Kristal</button>
+          <button class="pf-tab" data-unit="NGI Internal" onclick="bumSwitchTab('NGI Internal')">NGI Internal</button>
+        </div>
+
+        <div class="bum-mock-row">
+          <div class="bum-mock-card">
+            <div class="bum-mock-badge">Data Contoh</div>
+            <div class="bum-mock-label">Revenue</div>
+            <div class="bum-mock-value">Belum terhubung</div>
+          </div>
+          <div class="bum-mock-card">
+            <div class="bum-mock-badge">Data Contoh</div>
+            <div class="bum-mock-label">Customer Aktif</div>
+            <div class="bum-mock-value">Belum terhubung</div>
+          </div>
+        </div>
+
+        <div class="pf-section-title">Produk di Unit Ini</div>
+        <div id="bum-product-list"></div>
+
       </div>
     </div>
 
@@ -4756,7 +4790,7 @@
   const PAGE_META = {
     'overview':          { title: 'Overview',               sub: 'Ringkasan seluruh business unit' },
     'portfolio':         { title: 'Portfolio Produk',        sub: 'Status governance & progres semua produk NGI' },
-    'business-unit':     { title: 'Business Unit Monitor',   sub: 'Segera hadir' },
+    'business-unit':     { title: 'Business Unit Monitor',   sub: 'Produk & metrik operasional per unit bisnis' },
     'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Segera hadir' },
     'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Segera hadir' },
     'marketing-content': { title: 'Marketing & Content',     sub: 'Segera hadir' },
