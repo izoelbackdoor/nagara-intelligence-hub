@@ -5138,11 +5138,19 @@
     </tr>`).join('');
   }
 
+  // Shared by every feature that opens the product/trace/deal detail modal
+  // (pfOpenModal, aioOpenTrace, crmOpenDeal, and any future one) — writes
+  // `html` into the one shared modal body and shows the shared overlay, so
+  // no caller can forget the display:flex line.
+  function openSharedModal(html) {
+    document.getElementById('pf-modal-body').innerHTML = html;
+    document.getElementById('pf-modal-overlay').style.display = 'flex';
+  }
+
   function pfOpenModal(productId) {
     const p = _pfProducts.find(x => x.id === productId);
     if (!p) return;
-    const body = document.getElementById('pf-modal-body');
-    body.innerHTML = `
+    openSharedModal(`
       <h3>${escapeHtml(p.name)}</h3>
       <span class="${pfBadgeClass(p.businessUnit)}">${escapeHtml(p.businessUnit) || '—'}</span>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Status / Validation Status</div><div class="pf-modal-field-value">${escapeHtml(p.status) || '—'} / ${escapeHtml(p.validationStatus) || '—'}</div></div>
@@ -5155,8 +5163,7 @@
           ? `<a href="${escapeAttr(p.link)}" target="_blank" rel="noopener">${escapeHtml(p.link)}</a>`
           : escapeHtml(p.link)
       }</div></div>` : ''}
-    `;
-    document.getElementById('pf-modal-overlay').style.display = 'flex';
+    `);
   }
 
   function pfCloseModal(event) {
@@ -5363,8 +5370,7 @@
   function aioOpenTrace(id) {
     const trace = AIO_MOCK_TRACES.find(t => t.id === id);
     if (!trace) return;
-    const body = document.getElementById('pf-modal-body');
-    body.innerHTML = `
+    openSharedModal(`
       <h3>${trace.workflow}</h3>
       <span class="pf-badge other">${trace.tenant}</span>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Correlation ID</div><div class="pf-modal-field-value"><code>${trace.id}</code></div></div>
@@ -5380,8 +5386,7 @@
         </div>`).join('')}
       </div>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Total</div><div class="pf-modal-field-value">${trace.latencyMs.toLocaleString('id-ID')} ms · ${aioFmtCost(trace.costRupiah)}</div></div>
-    `;
-    document.getElementById('pf-modal-overlay').style.display = 'flex';
+    `);
   }
 
   // Mock deal data for CRM & Pipeline. Static/hardcoded, same reasoning as
@@ -5441,16 +5446,14 @@
   function crmOpenDeal(id) {
     const deal = CRM_MOCK_DEALS.find(d => d.id === id);
     if (!deal) return;
-    const body = document.getElementById('pf-modal-body');
-    body.innerHTML = `
+    openSharedModal(`
       <h3>${deal.dealName}</h3>
       <span class="pf-badge other">${deal.stage}</span>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Calon Klien</div><div class="pf-modal-field-value">${deal.clientName}</div></div>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Nilai Deal</div><div class="pf-modal-field-value">${crmFmtValue(deal.valueRupiah)}</div></div>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Masuk Pipeline</div><div class="pf-modal-field-value">${crmFmtDate(deal.enteredAt)}</div></div>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Catatan</div><div class="pf-modal-field-value">${deal.notes}</div></div>
-    `;
-    document.getElementById('pf-modal-overlay').style.display = 'flex';
+    `);
   }
 
   function fmtDate(isoStr) {
