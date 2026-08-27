@@ -1216,6 +1216,7 @@
       <div id="mc-loading" class="pf-loading">Memuat data konten…</div>
       <div id="mc-content" style="display:none;">
         <div class="mc-page-grid" id="mc-page-grid"></div>
+        <div id="mc-unmatched-note" class="mc-snapshot-note" style="display:none;"></div>
       </div>
 
     </div>
@@ -5638,8 +5639,17 @@
     };
   }
 
+  // 'Page Name' in Airtable is freeform singleLineText (no dropdown), unlike
+  // Portfolio Produk's Business Unit (a singleSelect PortfolioData.mergedBusinessUnit
+  // can safely exact-match). Trim + case-fold here so a stray space or casing
+  // difference doesn't silently make a page's real content vanish from its card.
+  function mcNormalizePageName(name) {
+    return String(name || '').trim().toLowerCase();
+  }
+
   function mcQueueForPage(pageName) {
-    return _mcItems.filter(i => i.pageName === pageName);
+    const target = mcNormalizePageName(pageName);
+    return _mcItems.filter(i => mcNormalizePageName(i.pageName) === target);
   }
 
   function mcCardHtml(pageName) {
@@ -5657,6 +5667,21 @@
 
   function mcRenderGrid() {
     document.getElementById('mc-page-grid').innerHTML = MC_PAGE_NAMES.map(mcCardHtml).join('');
+
+    // Safety net: a record whose Page Name doesn't match any of the 11
+    // canonical names (typo, or a 12th page added later) would otherwise sit
+    // in _mcItems and never appear anywhere — same "stay visible instead of
+    // silently vanishing" principle as PortfolioData.groupByStatus's
+    // 'Lainnya' catch-all.
+    const known = MC_PAGE_NAMES.map(mcNormalizePageName);
+    const unmatchedCount = _mcItems.filter(i => !known.includes(mcNormalizePageName(i.pageName))).length;
+    const noteEl = document.getElementById('mc-unmatched-note');
+    if (unmatchedCount > 0) {
+      noteEl.textContent = `⚠ ${unmatchedCount} item Content Queue tidak cocok ke 11 halaman manapun (cek ejaan "Page Name" di Airtable).`;
+      noteEl.style.display = 'block';
+    } else {
+      noteEl.style.display = 'none';
+    }
   }
 
   function mcOpenPage(pageName) {
