@@ -627,6 +627,15 @@
   .aio-step-name { font-size: 13px; color: var(--ink); font-weight: 600; }
   .aio-step-duration { font-size: 11px; color: var(--sand-text2); margin-top: 2px; }
 
+  /* ── CRM & Pipeline ── */
+  .crm-kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+  .crm-col { flex: 0 0 220px; }
+  .crm-col-header { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--sand-text2); margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .crm-card { background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; font-size: 12px; }
+  .crm-card-name { font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .crm-card-client { color: var(--sand-text2); font-size: 11.5px; margin-bottom: 4px; }
+  .crm-card-value { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink); }
+
   #page-capital.active { display: flex; }
 
   /* Dalam Pengembangan */
@@ -1151,13 +1160,10 @@
       </div>
     </div>
 
-    <!-- ─── Page: CRM & Pipeline (placeholder) ─── -->
+    <!-- ─── Page: CRM & Pipeline ─── -->
     <div id="page-crm-pipeline" class="page-section">
-      <div class="ph-wrap">
-        <div class="ph-badge">Segera hadir</div>
-        <h2 class="ph-title">CRM &amp; Pipeline</h2>
-        <p class="ph-desc">Section ini akan menampilkan pipeline deal Nagara CRM begitu sistemnya live. Dibangun di siklus berikutnya.</p>
-      </div>
+      <div class="aio-mock-banner">🔧 Nagara CRM (fork Atomic CRM) masih tahap In Progress, belum live. Data di bawah ini contoh ilustratif.</div>
+      <div class="crm-kanban" id="crm-kanban"></div>
     </div>
 
     <!-- ─── Page: Marketing & Content (placeholder) ─── -->
@@ -4819,7 +4825,7 @@
     'portfolio':         { title: 'Portfolio Produk',        sub: 'Status governance & progres semua produk NGI' },
     'business-unit':     { title: 'Business Unit Monitor',   sub: 'Produk & metrik operasional per unit bisnis' },
     'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Trace observability workflow AI (data contoh)' },
-    'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Segera hadir' },
+    'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Pipeline deal Nagara CRM (data contoh)' },
     'marketing-content': { title: 'Marketing & Content',     sub: 'Segera hadir' },
     'legal-compliance':  { title: 'Legal & Compliance',      sub: 'Segera hadir' },
   };
@@ -4859,6 +4865,7 @@
     if (name === 'portfolio') pfInit();
     if (name === 'business-unit') bumInit();
     if (name === 'ai-orchestration') aioRenderTable();
+    if (name === 'crm-pipeline') crmRenderKanban();
     if (name === 'finance')  finLoadData();
     if (name === 'analytics') loadTrending();
     if (name === 'keamanan') loadSecurityPage();
@@ -5373,6 +5380,75 @@
         </div>`).join('')}
       </div>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Total</div><div class="pf-modal-field-value">${trace.latencyMs.toLocaleString('id-ID')} ms · ${aioFmtCost(trace.costRupiah)}</div></div>
+    `;
+    document.getElementById('pf-modal-overlay').style.display = 'flex';
+  }
+
+  // Mock deal data for CRM & Pipeline. Static/hardcoded, same reasoning as
+  // AIO_MOCK_TRACES — not externally-sourced, so no escapeHtml needed.
+  // Client names are intentionally fictional (NOT real past clients from
+  // Portfolio Produk's Airtable data), since these represent open/unclosed
+  // pipeline deals, not delivered work.
+  // TODO: sambungkan ke Supabase project Nagara CRM setelah live — begitu
+  // itu terjadi, data jadi user-editable/externally-sourced, dan escapeHtml
+  // WAJIB ditambahkan di crmCardHtml/crmOpenDeal, sama seperti Portfolio
+  // Produk/Business Unit Monitor menangani data Airtable.
+  const CRM_STAGES = ['New', 'Contacted', 'Qualified', 'Proposal', 'Won', 'Lost'];
+
+  const CRM_MOCK_DEALS = [
+    { id: 'deal_01', dealName: 'Website + CRM', clientName: 'BPR Makmur Sejahtera', valueRupiah: 45000000, stage: 'New', enteredAt: '2026-08-20', notes: 'Rujukan dari klien existing, belum ada kontak langsung.' },
+    { id: 'deal_02', dealName: 'AI Agent WhatsApp', clientName: 'Klinik Sehat Selalu', valueRupiah: 18000000, stage: 'New', enteredAt: '2026-08-22', notes: 'Inbound dari iklan Meta Ads NADI.' },
+    { id: 'deal_03', dealName: 'Website Klinik + Booking', clientName: 'Klinik Ceria Dental', valueRupiah: 22000000, stage: 'Contacted', enteredAt: '2026-08-15', notes: 'Sudah dijadwalkan demo minggu depan.' },
+    { id: 'deal_04', dealName: 'Sistem Reservasi', clientName: 'Wisata Nusantara Travel', valueRupiah: 35000000, stage: 'Contacted', enteredAt: '2026-08-10', notes: 'Menunggu balasan soal kebutuhan integrasi payment.' },
+    { id: 'deal_05', dealName: 'Website + CRM + AI Agent', clientName: 'BPR Sentosa Abadi', valueRupiah: 65000000, stage: 'Qualified', enteredAt: '2026-08-05', notes: 'Budget sudah dikonfirmasi, proposal sedang disiapkan.' },
+    { id: 'deal_06', dealName: 'AI Agent WhatsApp', clientName: 'Klinik Kecantikan Radiance', valueRupiah: 15000000, stage: 'Qualified', enteredAt: '2026-08-08', notes: 'Decision maker sudah setuju, tinggal harga final.' },
+    { id: 'deal_07', dealName: 'Website + Booking Engine', clientName: 'Amara Trip & Tour', valueRupiah: 40000000, stage: 'Proposal', enteredAt: '2026-07-28', notes: 'Proposal terkirim 3 hari lalu, follow-up terjadwal H+3.' },
+    { id: 'deal_08', dealName: 'Sistem Reservasi + CRM', clientName: 'BPR Cahaya Mandiri', valueRupiah: 55000000, stage: 'Proposal', enteredAt: '2026-07-25', notes: 'Sedang nego termin pembayaran.' },
+    { id: 'deal_09', dealName: 'Website + CRM', clientName: 'Klinik Medika Prima', valueRupiah: 28000000, stage: 'Won', enteredAt: '2026-07-10', notes: 'Kontrak ditandatangani, onboarding mulai minggu depan.' },
+    { id: 'deal_10', dealName: 'AI Agent WhatsApp', clientName: 'Rahayu Tour Travel', valueRupiah: 12000000, stage: 'Won', enteredAt: '2026-07-05', notes: 'Sudah live, testimoni sedang diminta.' },
+    { id: 'deal_11', dealName: 'Website + Booking', clientName: 'BPR Tunas Harapan', valueRupiah: 30000000, stage: 'Lost', enteredAt: '2026-06-20', notes: 'Klien pilih vendor lain karena harga.' },
+    { id: 'deal_12', dealName: 'Sistem Reservasi', clientName: 'Klinik Sentosa Medika', valueRupiah: 20000000, stage: 'Lost', enteredAt: '2026-06-15', notes: 'Proyek ditunda internal klien, bukan karena kompetitor.' },
+  ];
+
+  function crmFmtValue(rupiah) {
+    return 'Rp ' + rupiah.toLocaleString('id-ID');
+  }
+
+  function crmFmtDate(isoDate) {
+    return new Date(isoDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function crmCardHtml(deal) {
+    return `<div class="crm-card" onclick="crmOpenDeal('${deal.id}')">
+      <div class="crm-card-name">${deal.dealName}</div>
+      <div class="crm-card-client">${deal.clientName}</div>
+      <div class="crm-card-value">${crmFmtValue(deal.valueRupiah)}</div>
+    </div>`;
+  }
+
+  function crmRenderKanban() {
+    const kanbanEl = document.getElementById('crm-kanban');
+    kanbanEl.innerHTML = CRM_STAGES.map(stage => {
+      const deals = CRM_MOCK_DEALS.filter(d => d.stage === stage);
+      const cards = deals.length ? deals.map(crmCardHtml).join('') : '<div class="pf-card-empty">Kosong</div>';
+      return `<div class="crm-col">
+        <div class="crm-col-header"><span>${stage}</span><span>${deals.length}</span></div>
+        ${cards}
+      </div>`;
+    }).join('');
+  }
+
+  function crmOpenDeal(id) {
+    const deal = CRM_MOCK_DEALS.find(d => d.id === id);
+    if (!deal) return;
+    const body = document.getElementById('pf-modal-body');
+    body.innerHTML = `
+      <h3>${deal.dealName}</h3>
+      <span class="pf-badge other">${deal.stage}</span>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Calon Klien</div><div class="pf-modal-field-value">${deal.clientName}</div></div>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Nilai Deal</div><div class="pf-modal-field-value">${crmFmtValue(deal.valueRupiah)}</div></div>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Masuk Pipeline</div><div class="pf-modal-field-value">${crmFmtDate(deal.enteredAt)}</div></div>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Catatan</div><div class="pf-modal-field-value">${deal.notes}</div></div>
     `;
     document.getElementById('pf-modal-overlay').style.display = 'flex';
   }
