@@ -1181,11 +1181,11 @@
     <div id="page-legal-compliance" class="page-section">
       <div class="aio-mock-banner">🔧 Status lisensi diambil dari catatan Tech Stack Portfolio Produk (snapshot 27 Agustus 2026 — bisa berubah, cek Portfolio Produk untuk data terkini). Status UU PDP murni ilustratif — belum ada assessment nyata untuk produk manapun.</div>
       <div class="pf-table-wrap">
-        <table class="pf-table" id="legal-table">
+        <table class="pf-table" id="lc-table">
           <thead><tr>
             <th>Produk</th><th>Status Lisensi Open-Source</th><th>Status UU PDP</th>
           </tr></thead>
-          <tbody id="legal-table-body"></tbody>
+          <tbody id="lc-table-body"></tbody>
         </table>
       </div>
     </div>
@@ -4872,7 +4872,7 @@
     if (name === 'business-unit') bumInit();
     if (name === 'ai-orchestration') aioRenderTable();
     if (name === 'crm-pipeline') crmRenderKanban();
-    if (name === 'legal-compliance') legalRenderTable();
+    if (name === 'legal-compliance') lcRenderTable();
     if (name === 'finance')  finLoadData();
     if (name === 'analytics') loadTrending();
     if (name === 'keamanan') loadSecurityPage();
@@ -5471,7 +5471,7 @@
   // status (uuPdpStatus/uuPdpNote) IS fully illustrative — no real
   // assessment has been done for any product, this only demonstrates the
   // intended visual/UI shape once that process exists.
-  const LEGAL_MOCK_ITEMS = [
+  const LC_MOCK_ITEMS = [
     {
       id: 'legal_crm', product: 'Nagara CRM', licenseStatus: 'verified',
       licenseDetail: 'Fork Atomic CRM (MIT), React/shadcn/Supabase.',
@@ -5516,36 +5516,36 @@
     },
   ];
 
-  function legalLicenseBadge(status) {
+  function lcLicenseBadge(status) {
     if (status === 'verified') return { cls: 'aio-badge success', label: 'Terverifikasi ✓' };
     if (status === 'partial') return { cls: 'aio-badge warning', label: 'Sebagian Terverifikasi' };
     return { cls: 'aio-badge neutral', label: 'Belum Ada Basis Fork' };
   }
 
-  function legalUuPdpBadge(status) {
+  function lcUuPdpBadge(status) {
     if (status === 'review') return { cls: 'aio-badge warning', label: 'Perlu Review' };
     return { cls: 'aio-badge neutral', label: 'Belum Dinilai' };
   }
 
-  function legalRowHtml(item) {
-    const lic = legalLicenseBadge(item.licenseStatus);
-    const pdp = legalUuPdpBadge(item.uuPdpStatus);
-    return `<tr onclick="legalOpenItem('${item.id}')" style="cursor:pointer;">
+  function lcRowHtml(item) {
+    const lic = lcLicenseBadge(item.licenseStatus);
+    const pdp = lcUuPdpBadge(item.uuPdpStatus);
+    return `<tr onclick="lcOpenItem('${item.id}')" style="cursor:pointer;">
       <td>${item.product}</td>
       <td><span class="${lic.cls}">${lic.label}</span></td>
       <td><span class="${pdp.cls}">${pdp.label}</span></td>
     </tr>`;
   }
 
-  function legalRenderTable() {
-    document.getElementById('legal-table-body').innerHTML = LEGAL_MOCK_ITEMS.map(legalRowHtml).join('');
+  function lcRenderTable() {
+    document.getElementById('lc-table-body').innerHTML = LC_MOCK_ITEMS.map(lcRowHtml).join('');
   }
 
-  function legalOpenItem(id) {
-    const item = LEGAL_MOCK_ITEMS.find(x => x.id === id);
+  function lcOpenItem(id) {
+    const item = LC_MOCK_ITEMS.find(x => x.id === id);
     if (!item) return;
-    const lic = legalLicenseBadge(item.licenseStatus);
-    const pdp = legalUuPdpBadge(item.uuPdpStatus);
+    const lic = lcLicenseBadge(item.licenseStatus);
+    const pdp = lcUuPdpBadge(item.uuPdpStatus);
     openSharedModal(`
       <h3>${item.product}</h3>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Status Lisensi Open-Source</div><div class="pf-modal-field-value"><span class="${lic.cls}">${lic.label}</span><br>${item.licenseDetail}</div></div>
