@@ -616,6 +616,8 @@
   .aio-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
   .aio-badge.success { background: rgba(46,158,91,0.12); color: #2e9e5b; }
   .aio-badge.error { background: rgba(212,63,46,0.12); color: #d43f2e; }
+  .aio-badge.warning { background: rgba(245,166,35,0.12); color: #f5a623; }
+  .aio-badge.neutral { background: rgba(107,114,128,0.12); color: #6b7280; }
   .aio-waterfall { margin-top: 14px; border-left: 2px solid var(--sand-border); padding-left: 16px; }
   .aio-step { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
   .aio-step:last-child { margin-bottom: 0; }
@@ -1175,12 +1177,16 @@
       </div>
     </div>
 
-    <!-- ─── Page: Legal & Compliance (placeholder) ─── -->
+    <!-- ─── Page: Legal & Compliance ─── -->
     <div id="page-legal-compliance" class="page-section">
-      <div class="ph-wrap">
-        <div class="ph-badge">Segera hadir</div>
-        <h2 class="ph-title">Legal &amp; Compliance</h2>
-        <p class="ph-desc">Section ini akan menampilkan checklist compliance UU PDP dan status lisensi open-source per produk. Dibangun di siklus berikutnya.</p>
+      <div class="aio-mock-banner">🔧 Status lisensi diambil dari catatan Tech Stack Portfolio Produk (snapshot 27 Agustus 2026 — bisa berubah, cek Portfolio Produk untuk data terkini). Status UU PDP murni ilustratif — belum ada assessment nyata untuk produk manapun.</div>
+      <div class="pf-table-wrap">
+        <table class="pf-table" id="legal-table">
+          <thead><tr>
+            <th>Produk</th><th>Status Lisensi Open-Source</th><th>Status UU PDP</th>
+          </tr></thead>
+          <tbody id="legal-table-body"></tbody>
+        </table>
       </div>
     </div>
 
@@ -4827,7 +4833,7 @@
     'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Trace observability workflow AI (data contoh)' },
     'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Pipeline deal Nagara CRM (data contoh)' },
     'marketing-content': { title: 'Marketing & Content',     sub: 'Segera hadir' },
-    'legal-compliance':  { title: 'Legal & Compliance',      sub: 'Segera hadir' },
+    'legal-compliance':  { title: 'Legal & Compliance',      sub: 'Checklist lisensi & UU PDP (sebagian data asli, sebagian ilustratif)' },
   };
 
   function showPage(name) {
@@ -4866,6 +4872,7 @@
     if (name === 'business-unit') bumInit();
     if (name === 'ai-orchestration') aioRenderTable();
     if (name === 'crm-pipeline') crmRenderKanban();
+    if (name === 'legal-compliance') legalRenderTable();
     if (name === 'finance')  finLoadData();
     if (name === 'analytics') loadTrending();
     if (name === 'keamanan') loadSecurityPage();
@@ -5453,6 +5460,96 @@
       <div class="pf-modal-field"><div class="pf-modal-field-label">Nilai Deal</div><div class="pf-modal-field-value">${crmFmtValue(deal.valueRupiah)}</div></div>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Masuk Pipeline</div><div class="pf-modal-field-value">${crmFmtDate(deal.enteredAt)}</div></div>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Catatan</div><div class="pf-modal-field-value">${deal.notes}</div></div>
+    `);
+  }
+
+  // License status here is grounded in REAL data from Portfolio Produk's
+  // Tech Stack field (base appLavNoTYubx4OuN), snapshotted 2026-08-27 — it
+  // is NOT invented like AIO_MOCK_TRACES/CRM_MOCK_DEALS. If a product's
+  // Tech Stack entry changes in Airtable, this array must be updated to
+  // match, or it will drift from the truth it's meant to reflect. UU PDP
+  // status (uuPdpStatus/uuPdpNote) IS fully illustrative — no real
+  // assessment has been done for any product, this only demonstrates the
+  // intended visual/UI shape once that process exists.
+  const LEGAL_MOCK_ITEMS = [
+    {
+      id: 'legal_crm', product: 'Nagara CRM', licenseStatus: 'verified',
+      licenseDetail: 'Fork Atomic CRM (MIT), React/shadcn/Supabase.',
+      uuPdpStatus: 'review',
+      uuPdpNote: 'Menyimpan data kontak & percakapan klien — perlu review kebijakan retensi data.',
+    },
+    {
+      id: 'legal_supporthub', product: 'Nagara SupportHub', licenseStatus: 'verified',
+      licenseDetail: 'Fork Chatwoot CE (MIT).',
+      uuPdpStatus: 'unassessed',
+      uuPdpNote: 'Belum masuk tahap assessment — masih status Idea.',
+    },
+    {
+      id: 'legal_hotel', product: 'Nadi Hotel Management', licenseStatus: 'verified',
+      licenseDetail: 'Fork QloApps (OSL-3.0/AFL-3.0), diferensiasi via Webservice API.',
+      uuPdpStatus: 'unassessed',
+      uuPdpNote: 'Belum masuk tahap assessment — masih status Idea.',
+    },
+    {
+      id: 'legal_socialnest', product: 'Nagara SocialNest', licenseStatus: 'verified',
+      licenseDetail: 'Fork Postiz (AGPL-3.0, self-hosted).',
+      uuPdpStatus: 'review',
+      uuPdpNote: 'AGPL-3.0 mewajibkan source disclosure jika dimodifikasi & didistribusikan — perlu review sebelum dijual sebagai SaaS.',
+    },
+    {
+      id: 'legal_eduverse', product: 'Nagara EduVerse', licenseStatus: 'partial',
+      licenseDetail: 'Fork Gibbon — Tech Stack cuma catat "open-source", versi lisensi spesifik belum dicek.',
+      uuPdpStatus: 'review',
+      uuPdpNote: 'Data siswa termasuk data pribadi anak — prioritas tinggi begitu assessment dimulai.',
+    },
+    {
+      id: 'legal_vision', product: 'Nagara Vision', licenseStatus: 'partial',
+      licenseDetail: 'Wan 2.2 (Apache 2.0) terverifikasi; ComfyUI + FLUX.2 [klein] belum dicek lisensinya.',
+      uuPdpStatus: 'unassessed',
+      uuPdpNote: 'Belum masuk tahap assessment — masih status Idea.',
+    },
+    {
+      id: 'legal_smartdocs', product: 'Nagara SmartDocs', licenseStatus: 'none',
+      licenseDetail: 'Tech Stack (Next.js/NestJS/PostgreSQL/dst) tidak mencatat basis fork apapun — kemungkinan dibangun dari nol, belum perlu verifikasi lisensi pihak ketiga.',
+      uuPdpStatus: 'unassessed',
+      uuPdpNote: 'Belum masuk tahap assessment — masih status Idea.',
+    },
+  ];
+
+  function legalLicenseBadge(status) {
+    if (status === 'verified') return { cls: 'aio-badge success', label: 'Terverifikasi ✓' };
+    if (status === 'partial') return { cls: 'aio-badge warning', label: 'Sebagian Terverifikasi' };
+    return { cls: 'aio-badge neutral', label: 'Belum Ada Basis Fork' };
+  }
+
+  function legalUuPdpBadge(status) {
+    if (status === 'review') return { cls: 'aio-badge warning', label: 'Perlu Review' };
+    return { cls: 'aio-badge neutral', label: 'Belum Dinilai' };
+  }
+
+  function legalRowHtml(item) {
+    const lic = legalLicenseBadge(item.licenseStatus);
+    const pdp = legalUuPdpBadge(item.uuPdpStatus);
+    return `<tr onclick="legalOpenItem('${item.id}')" style="cursor:pointer;">
+      <td>${item.product}</td>
+      <td><span class="${lic.cls}">${lic.label}</span></td>
+      <td><span class="${pdp.cls}">${pdp.label}</span></td>
+    </tr>`;
+  }
+
+  function legalRenderTable() {
+    document.getElementById('legal-table-body').innerHTML = LEGAL_MOCK_ITEMS.map(legalRowHtml).join('');
+  }
+
+  function legalOpenItem(id) {
+    const item = LEGAL_MOCK_ITEMS.find(x => x.id === id);
+    if (!item) return;
+    const lic = legalLicenseBadge(item.licenseStatus);
+    const pdp = legalUuPdpBadge(item.uuPdpStatus);
+    openSharedModal(`
+      <h3>${item.product}</h3>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Status Lisensi Open-Source</div><div class="pf-modal-field-value"><span class="${lic.cls}">${lic.label}</span><br>${item.licenseDetail}</div></div>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Status UU PDP</div><div class="pf-modal-field-value"><span class="${pdp.cls}">${pdp.label}</span><br>${item.uuPdpNote}</div></div>
     `);
   }
 
