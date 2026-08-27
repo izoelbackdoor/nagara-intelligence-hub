@@ -1070,12 +1070,18 @@
           </table>
         </div>
       </div>
+    </div>
 
-      <div id="pf-modal-overlay" class="pf-modal-overlay" style="display:none;" onclick="pfCloseModal(event)">
-        <div class="pf-modal">
-          <button class="pf-modal-close" onclick="pfCloseModal()">&times;</button>
-          <div id="pf-modal-body"></div>
-        </div>
+    <!-- Shared product-detail modal — lives OUTSIDE any single .page-section
+         (not just page-portfolio) so pfOpenModal() can be called from other
+         pages too (e.g. Business Unit Monitor) and the modal is still
+         visible. A .page-section always resolves to display:none unless it
+         has .active, which would hide this modal's own display:flex if it
+         stayed nested inside one specific page. -->
+    <div id="pf-modal-overlay" class="pf-modal-overlay" style="display:none;" onclick="pfCloseModal(event)">
+      <div class="pf-modal">
+        <button class="pf-modal-close" onclick="pfCloseModal()">&times;</button>
+        <div id="pf-modal-body"></div>
       </div>
     </div>
 
