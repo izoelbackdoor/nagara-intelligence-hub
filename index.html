@@ -4946,8 +4946,16 @@
   const PORTFOLIO_BASE  = 'appLavNoTYubx4OuN';
   const PORTFOLIO_TABLE = 'Applications';
 
+  // No default `sort` field on purpose: it used to default to `Tanggal`,
+  // which only exists on the original briefing/auditLog/memory tables —
+  // any other table (e.g. Facebook Content Queue, whose date field is
+  // `Schedule Date`) would get a 422 UNKNOWN_FIELD_NAME from Airtable if a
+  // caller forgot to override it (this happened once, during Marketing &
+  // Content's rollout, and was fixed by passing an explicit `sort` there).
+  // Every caller must now pass its own `sort` if it wants one; omitting it
+  // is a safe no-op (Airtable returns records in default view order).
   async function fetchAirtable(tableId, params = {}) {
-    const defaults = { pageSize: 20, sort: [{ field: 'Tanggal', direction: 'desc' }] };
+    const defaults = { pageSize: 20 };
     const merged = Object.assign({}, defaults, params);
     const baseId = merged.baseId || AIRTABLE_BASE;
     if (_AT_PROXY) {
@@ -5749,7 +5757,7 @@
     document.getElementById('briefing-error').style.display = 'none';
     document.getElementById('briefing-empty').style.display = 'none';
     try {
-      const data = await fetchAirtable(AT_TABLES.briefing, { pageSize: 10 });
+      const data = await fetchAirtable(AT_TABLES.briefing, { pageSize: 10, sort: [{ field: 'Tanggal', direction: 'desc' }] });
       document.getElementById('briefing-loading').style.display = 'none';
       if (!data.records || data.records.length === 0) {
         document.getElementById('briefing-empty').style.display = 'block';
@@ -5791,7 +5799,7 @@
     document.getElementById('audit-error').style.display = 'none';
     document.getElementById('audit-empty').style.display = 'none';
     try {
-      const data = await fetchAirtable(AT_TABLES.auditLog, { pageSize: 20 });
+      const data = await fetchAirtable(AT_TABLES.auditLog, { pageSize: 20, sort: [{ field: 'Tanggal', direction: 'desc' }] });
       document.getElementById('audit-loading').style.display = 'none';
       if (!data.records || data.records.length === 0) {
         document.getElementById('audit-empty').style.display = 'block';
