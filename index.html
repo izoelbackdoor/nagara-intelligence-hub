@@ -4804,6 +4804,11 @@
   };
 
   function showPage(name) {
+    // Close the shared product-detail modal if it's open — it now lives
+    // outside any single .page-section (see pf-modal-overlay's comment),
+    // so navigating away no longer hides it as a side effect the way it
+    // used to when the modal was nested inside page-portfolio.
+    pfCloseModal();
     // Hide all pages
     document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
     // Show target
