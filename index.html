@@ -4825,6 +4825,7 @@
     // Page-specific loaders
     if (name === 'overview')  ovInit();
     if (name === 'portfolio') pfInit();
+    if (name === 'business-unit') bumInit();
     if (name === 'finance')  finLoadData();
     if (name === 'analytics') loadTrending();
     if (name === 'keamanan') loadSecurityPage();
@@ -5144,6 +5145,54 @@
       document.getElementById('pf-content').style.display = 'block';
     } catch (e) {
       pfShowError('Belum bisa ambil data Portfolio Produk — ' + e.message + '. Cek AIRTABLE_TOKEN di Vercel punya akses ke base ini.');
+    }
+  }
+
+  let _bumTab = 'NADI';
+
+  function bumProductRowHtml(product) {
+    return `<div class="pf-card" onclick="pfOpenModal('${product.id}')">
+      <div class="pf-card-name">${escapeHtml(product.name)}</div>
+      <span class="pf-badge other">${escapeHtml(product.status) || '—'}</span>
+      <span class="pf-badge other">${escapeHtml(product.validationStatus) || 'Belum Ditentukan'}</span>
+    </div>`;
+  }
+
+  function bumRenderUnit(unitName) {
+    document.querySelectorAll('#bum-tabs .pf-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.unit === unitName);
+    });
+    const products = _pfProducts.filter(p => PortfolioData.mergedBusinessUnit(p.businessUnit) === unitName);
+    const listEl = document.getElementById('bum-product-list');
+    listEl.innerHTML = products.length
+      ? products.map(bumProductRowHtml).join('')
+      : '<div class="pf-card-empty">Belum ada produk tercatat untuk unit ini.</div>';
+  }
+
+  function bumSwitchTab(unitName) {
+    _bumTab = unitName;
+    bumRenderUnit(unitName);
+  }
+
+  function bumShowError(message) {
+    document.getElementById('bum-loading').style.display = 'none';
+    document.getElementById('bum-content').style.display = 'none';
+    document.getElementById('bum-error-msg').textContent = message;
+    document.getElementById('bum-error').style.display = 'flex';
+  }
+
+  async function bumInit(force) {
+    document.getElementById('bum-loading').style.display = 'block';
+    document.getElementById('bum-error').style.display = 'none';
+    document.getElementById('bum-content').style.display = 'none';
+    try {
+      const records = await fetchAllPortfolioRecords(force);
+      _pfProducts = PortfolioData.parseRecords(records);
+      bumRenderUnit(_bumTab);
+      document.getElementById('bum-loading').style.display = 'none';
+      document.getElementById('bum-content').style.display = 'block';
+    } catch (e) {
+      bumShowError('Belum bisa ambil data Portfolio Produk — ' + e.message + '. Cek AIRTABLE_TOKEN di Vercel punya akses ke base ini.');
     }
   }
 
