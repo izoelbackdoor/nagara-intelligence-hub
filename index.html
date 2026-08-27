@@ -5621,6 +5621,11 @@
         baseId: MC_CONTENT_BASE,
         pageSize: 100,
         offset,
+        // fetchAirtable defaults to sorting by 'Tanggal' (used by the
+        // Briefing/Audit Log tables) — the Facebook Content Queue table has
+        // no such field, so that default 422s here. Override with the field
+        // this table actually has.
+        sort: [{ field: 'Schedule Date', direction: 'desc' }],
       });
       all = all.concat(page.records || []);
       offset = page.offset;
