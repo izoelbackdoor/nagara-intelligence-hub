@@ -4916,6 +4916,7 @@
     if (name === 'ai-orchestration') aioRenderTable();
     if (name === 'crm-pipeline') crmRenderKanban();
     if (name === 'legal-compliance') lcRenderTable();
+    if (name === 'marketing-content') mcInit();
     if (name === 'finance')  finLoadData();
     if (name === 'analytics') loadTrending();
     if (name === 'keamanan') loadSecurityPage();
@@ -5594,6 +5595,98 @@
       <div class="pf-modal-field"><div class="pf-modal-field-label">Status Lisensi Open-Source</div><div class="pf-modal-field-value"><span class="${lic.cls}">${lic.label}</span><br>${item.licenseDetail}</div></div>
       <div class="pf-modal-field"><div class="pf-modal-field-label">Status UU PDP</div><div class="pf-modal-field-value"><span class="${pdp.cls}">${pdp.label}</span><br>${item.uuPdpNote}</div></div>
     `);
+  }
+
+  const MC_PAGE_NAMES = [
+    'Penjuru.co.id', 'Foam & Fold Laundry', 'Nagara Group Indonesia', 'Nagara Digital Lab Indonesia',
+    'Abon Oma', 'Kemboo Drink House', 'GACOR Nusantara', 'Sentra Pangan Bergizi Bandung',
+    'Kemboo Es Kristal', 'Diginews.co.id', 'RuangRiang.co.id',
+  ];
+
+  const MC_CONTENT_BASE = 'appCinktVuEB3Xuvt';
+  const MC_CONTENT_TABLE = 'Facebook Content Queue';
+
+  let _mcItems = [];
+
+  // Same pagination pattern as fetchAllPortfolioRecords (Portfolio Produk),
+  // different base/table. No dedicated cache/in-flight dedup here — this
+  // table is small and Marketing & Content is the only page that reads it;
+  // add one (mirroring _portfolioFetchInFlight) if that stops being true.
+  async function fetchAllContentQueueRecords(force) {
+    let all = [];
+    let offset;
+    do {
+      const page = await fetchAirtable(MC_CONTENT_TABLE, {
+        baseId: MC_CONTENT_BASE,
+        pageSize: 100,
+        offset,
+      });
+      all = all.concat(page.records || []);
+      offset = page.offset;
+    } while (offset);
+    return all;
+  }
+
+  function mcParseRecord(record) {
+    const f = record.fields || {};
+    return {
+      id: record.id,
+      title: f['Title'] || '(Tanpa judul)',
+      pageName: f['Page Name'] || '',
+      status: f['Status'] || '',
+      scheduleDate: f['Schedule Date'] || '',
+    };
+  }
+
+  function mcQueueForPage(pageName) {
+    return _mcItems.filter(i => i.pageName === pageName);
+  }
+
+  function mcCardHtml(pageName) {
+    const items = mcQueueForPage(pageName);
+    const queued = items.filter(i => i.status === 'Draft' || i.status === 'Ready');
+    const posted = items.filter(i => i.status === 'Posted').sort((a, b) => (b.scheduleDate || '').localeCompare(a.scheduleDate || ''));
+    const failed = items.some(i => i.status === 'Failed');
+    const latestText = posted.length ? `Terakhir posting: ${posted[0].scheduleDate}` : 'Belum pernah posting';
+    return `<div class="mc-page-card ${failed ? 'has-failed' : ''}" onclick="mcOpenPage('${escapeAttr(pageName)}')">
+      <div class="mc-page-name">${escapeHtml(pageName)}</div>
+      <div class="mc-page-queue">${queued.length} di antrian</div>
+      <div class="mc-page-latest">${escapeHtml(latestText)}</div>
+    </div>`;
+  }
+
+  function mcRenderGrid() {
+    document.getElementById('mc-page-grid').innerHTML = MC_PAGE_NAMES.map(mcCardHtml).join('');
+  }
+
+  function mcOpenPage(pageName) {
+    const items = mcQueueForPage(pageName);
+    const body = items.length
+      ? items.map(i => `<div class="pf-modal-field"><div class="pf-modal-field-label">${escapeHtml(i.status) || '—'}</div><div class="pf-modal-field-value">${escapeHtml(i.title)}${i.scheduleDate ? ' — ' + escapeHtml(i.scheduleDate) : ''}</div></div>`).join('')
+      : '<div class="pf-modal-field"><div class="pf-modal-field-value">Belum ada konten terjadwal untuk halaman ini.</div></div>';
+    openSharedModal(`<h3>${escapeHtml(pageName)}</h3>${body}`);
+  }
+
+  function mcShowError(message) {
+    document.getElementById('mc-loading').style.display = 'none';
+    document.getElementById('mc-content').style.display = 'none';
+    document.getElementById('mc-error-msg').textContent = message;
+    document.getElementById('mc-error').style.display = 'flex';
+  }
+
+  async function mcInit(force) {
+    document.getElementById('mc-loading').style.display = 'block';
+    document.getElementById('mc-error').style.display = 'none';
+    document.getElementById('mc-content').style.display = 'none';
+    try {
+      const records = await fetchAllContentQueueRecords(force);
+      _mcItems = records.map(mcParseRecord);
+      mcRenderGrid();
+      document.getElementById('mc-loading').style.display = 'none';
+      document.getElementById('mc-content').style.display = 'block';
+    } catch (e) {
+      mcShowError('Belum bisa ambil data Content Queue — ' + e.message + '. Cek AIRTABLE_TOKEN di Vercel punya akses ke base solopreneur-main.');
+    }
   }
 
   function fmtDate(isoStr) {
