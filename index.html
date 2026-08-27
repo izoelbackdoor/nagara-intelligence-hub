@@ -610,6 +610,23 @@
   .bum-mock-label { font-size: 12px; color: var(--sand-text2); margin-bottom: 6px; padding-right: 100px; }
   .bum-mock-value { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 15px; font-style: italic; color: var(--sand-text2); }
 
+  /* ── AI Agent Orchestration ── */
+  .aio-mock-banner { background: #f0e9dc; border: 1px dashed #d8b23a; border-radius: 10px; padding: 12px 16px; font-size: 12.5px; color: var(--sand-text2); margin-bottom: 1.25rem; }
+  .aio-mock-banner code { background: rgba(36,30,26,0.08); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+  .aio-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .aio-badge.success { background: rgba(46,158,91,0.12); color: #2e9e5b; }
+  .aio-badge.error { background: rgba(212,63,46,0.12); color: #d43f2e; }
+  .aio-waterfall { margin-top: 14px; border-left: 2px solid var(--sand-border); padding-left: 16px; }
+  .aio-step { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+  .aio-step:last-child { margin-bottom: 0; }
+  .aio-step-time { font-size: 10.5px; color: var(--sand-text2); width: 56px; flex-shrink: 0; padding-top: 2px; }
+  .aio-step-bar { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .aio-step-bar.success { background: #2e9e5b; }
+  .aio-step-bar.error { background: #d43f2e; }
+  .aio-step-body { flex: 1; }
+  .aio-step-name { font-size: 13px; color: var(--ink); font-weight: 600; }
+  .aio-step-duration { font-size: 11px; color: var(--sand-text2); margin-top: 2px; }
+
   #page-capital.active { display: flex; }
 
   /* Dalam Pengembangan */
@@ -1121,12 +1138,16 @@
       </div>
     </div>
 
-    <!-- ─── Page: AI Agent Orchestration (placeholder) ─── -->
+    <!-- ─── Page: AI Agent Orchestration ─── -->
     <div id="page-ai-orchestration" class="page-section">
-      <div class="ph-wrap">
-        <div class="ph-badge">Segera hadir</div>
-        <h2 class="ph-title">AI Agent Orchestration</h2>
-        <p class="ph-desc">Section ini akan menampilkan trace observability workflow AI (request → tool call → output, latency, cost). Dibangun di siklus berikutnya.</p>
+      <div class="aio-mock-banner">🔧 Data Contoh — observability asli belum terhubung. Rencana sumber: n8n execution log atau tabel <code>ai_sessions</code>/<code>ai_tool_calls</code>.</div>
+      <div class="pf-table-wrap">
+        <table class="pf-table" id="aio-table">
+          <thead><tr>
+            <th>Correlation ID</th><th>Waktu</th><th>Workflow</th><th>Tenant</th><th>Status</th><th>Latency</th><th>Cost</th>
+          </tr></thead>
+          <tbody id="aio-table-body"></tbody>
+        </table>
       </div>
     </div>
 
@@ -4797,7 +4818,7 @@
     'overview':          { title: 'Overview',               sub: 'Ringkasan seluruh business unit' },
     'portfolio':         { title: 'Portfolio Produk',        sub: 'Status governance & progres semua produk NGI' },
     'business-unit':     { title: 'Business Unit Monitor',   sub: 'Produk & metrik operasional per unit bisnis' },
-    'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Segera hadir' },
+    'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Trace observability workflow AI (data contoh)' },
     'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Segera hadir' },
     'marketing-content': { title: 'Marketing & Content',     sub: 'Segera hadir' },
     'legal-compliance':  { title: 'Legal & Compliance',      sub: 'Segera hadir' },
@@ -4837,6 +4858,7 @@
     if (name === 'overview')  ovInit();
     if (name === 'portfolio') pfInit();
     if (name === 'business-unit') bumInit();
+    if (name === 'ai-orchestration') aioRenderTable();
     if (name === 'finance')  finLoadData();
     if (name === 'analytics') loadTrending();
     if (name === 'keamanan') loadSecurityPage();
@@ -5205,6 +5227,154 @@
     } catch (e) {
       bumShowError('Belum bisa ambil data Portfolio Produk — ' + e.message + '. Cek AIRTABLE_TOKEN di Vercel punya akses ke base ini.');
     }
+  }
+
+  // Mock trace data for AI Agent Orchestration. Static/hardcoded — NOT
+  // fetched from anywhere, so it does not go through escapeHtml (nothing
+  // here is externally-sourced input). If this table is ever wired up to
+  // a real source (n8n execution log, or an ai_sessions/ai_tool_calls
+  // table), escaping MUST be added at that point, the same way Portfolio
+  // Produk/Business Unit Monitor escape Airtable-sourced text.
+  const AIO_MOCK_TRACES = [
+    {
+      id: 'req_8f3a1c', timestamp: '2026-08-27T08:12:03+07:00',
+      workflow: 'WhatsApp Follow-up H+1', tenant: 'NADI', status: 'success',
+      latencyMs: 1840, costRupiah: 145,
+      steps: [
+        { name: 'Request Diterima', offsetMs: 0, durationMs: 12, status: 'success' },
+        { name: 'Workflow Dipicu (wa-responder)', offsetMs: 12, durationMs: 340, status: 'success' },
+        { name: 'AI Call (Claude Haiku — generate follow-up)', offsetMs: 352, durationMs: 980, status: 'success' },
+        { name: 'Tool Call — Kirim WA via Fonnte', offsetMs: 1332, durationMs: 410, status: 'success' },
+        { name: 'Response External API (Fonnte)', offsetMs: 1742, durationMs: 98, status: 'success' },
+      ],
+    },
+    {
+      id: 'req_2d9e77', timestamp: '2026-08-27T08:45:21+07:00',
+      workflow: 'WhatsApp Follow-up H+3', tenant: 'NADI', status: 'success',
+      latencyMs: 2210, costRupiah: 168,
+      steps: [
+        { name: 'Request Diterima', offsetMs: 0, durationMs: 10, status: 'success' },
+        { name: 'Workflow Dipicu (wa-responder)', offsetMs: 10, durationMs: 305, status: 'success' },
+        { name: 'AI Call (Claude Haiku — generate follow-up + niche context)', offsetMs: 315, durationMs: 1240, status: 'success' },
+        { name: 'Tool Call — Kirim WA via Fonnte', offsetMs: 1555, durationMs: 520, status: 'success' },
+        { name: 'Response External API (Fonnte)', offsetMs: 2075, durationMs: 135, status: 'success' },
+      ],
+    },
+    {
+      id: 'req_c41b90', timestamp: '2026-08-27T09:02:47+07:00',
+      workflow: 'Content Generation (FB Automation)', tenant: 'NGI Internal', status: 'success',
+      latencyMs: 4620, costRupiah: 890,
+      steps: [
+        { name: 'Request Diterima (n8n trigger)', offsetMs: 0, durationMs: 8, status: 'success' },
+        { name: 'Workflow Dipicu (Content Production Engine)', offsetMs: 8, durationMs: 210, status: 'success' },
+        { name: 'AI Call (Claude — generate caption per niche)', offsetMs: 218, durationMs: 2890, status: 'success' },
+        { name: 'Tool Call — Tulis ke Airtable Content Calendar', offsetMs: 3108, durationMs: 640, status: 'success' },
+        { name: 'Response External API (Airtable)', offsetMs: 3748, durationMs: 872, status: 'success' },
+      ],
+    },
+    {
+      id: 'req_ff10a2', timestamp: '2026-08-27T09:15:33+07:00',
+      workflow: 'Content Publish (FB Automation)', tenant: 'NGI Internal', status: 'error',
+      latencyMs: 3100, costRupiah: 210,
+      steps: [
+        { name: 'Request Diterima (n8n trigger)', offsetMs: 0, durationMs: 9, status: 'success' },
+        { name: 'Workflow Dipicu (Content Production Engine)', offsetMs: 9, durationMs: 180, status: 'success' },
+        { name: 'AI Call (Claude — caption sudah tersedia dari cache)', offsetMs: 189, durationMs: 0, status: 'success' },
+        { name: 'Tool Call — Publish ke Facebook Page API', offsetMs: 189, durationMs: 2890, status: 'error' },
+        { name: 'Response External API (Facebook — rate limited)', offsetMs: 3079, durationMs: 21, status: 'error' },
+      ],
+    },
+    {
+      id: 'req_74ab3e', timestamp: '2026-08-27T10:30:02+07:00',
+      workflow: 'WhatsApp Follow-up H+7', tenant: 'NADI', status: 'success',
+      latencyMs: 1975, costRupiah: 152,
+      steps: [
+        { name: 'Request Diterima', offsetMs: 0, durationMs: 11, status: 'success' },
+        { name: 'Workflow Dipicu (wa-responder)', offsetMs: 11, durationMs: 298, status: 'success' },
+        { name: 'AI Call (Claude Haiku — generate follow-up soft-close)', offsetMs: 309, durationMs: 1120, status: 'success' },
+        { name: 'Tool Call — Kirim WA via Fonnte', offsetMs: 1429, durationMs: 450, status: 'success' },
+        { name: 'Response External API (Fonnte)', offsetMs: 1879, durationMs: 96, status: 'success' },
+      ],
+    },
+    {
+      id: 'req_1b6cd5', timestamp: '2026-08-27T11:05:19+07:00',
+      workflow: 'NagaraOpsBot — Cek Kredit Claude API', tenant: 'NGI Internal', status: 'success',
+      latencyMs: 620, costRupiah: 0,
+      steps: [
+        { name: 'Request Diterima (Telegram webhook)', offsetMs: 0, durationMs: 15, status: 'success' },
+        { name: 'Workflow Dipicu (NagaraOpsBot)', offsetMs: 15, durationMs: 40, status: 'success' },
+        { name: 'Tool Call — Cek saldo via Anthropic Console API', offsetMs: 55, durationMs: 480, status: 'success' },
+        { name: 'Response External API (Anthropic)', offsetMs: 535, durationMs: 85, status: 'success' },
+      ],
+    },
+    {
+      id: 'req_9e02f8', timestamp: '2026-08-27T13:22:41+07:00',
+      workflow: 'Content Generation (FB Automation) — retry', tenant: 'NGI Internal', status: 'success',
+      latencyMs: 3980, costRupiah: 890,
+      steps: [
+        { name: 'Request Diterima (n8n trigger, retry ke-2)', offsetMs: 0, durationMs: 7, status: 'success' },
+        { name: 'Workflow Dipicu (Content Production Engine)', offsetMs: 7, durationMs: 195, status: 'success' },
+        { name: 'AI Call (Claude — generate caption per niche)', offsetMs: 202, durationMs: 2510, status: 'success' },
+        { name: 'Tool Call — Tulis ke Airtable Content Calendar', offsetMs: 2712, durationMs: 610, status: 'success' },
+        { name: 'Response External API (Airtable)', offsetMs: 3322, durationMs: 658, status: 'success' },
+      ],
+    },
+    {
+      id: 'req_5a88c1', timestamp: '2026-08-27T14:01:55+07:00',
+      workflow: 'WhatsApp Inbound Auto-Reply', tenant: 'NADI', status: 'error',
+      latencyMs: 8400, costRupiah: 0,
+      steps: [
+        { name: 'Request Diterima (webhook OpenWA)', offsetMs: 0, durationMs: 18, status: 'success' },
+        { name: 'Workflow Dipicu (wa-responder)', offsetMs: 18, durationMs: 220, status: 'success' },
+        { name: 'AI Call (Claude — deteksi keyword HOT)', offsetMs: 238, durationMs: 8100, status: 'error' },
+        { name: 'Response External API (Claude — timeout)', offsetMs: 8338, durationMs: 62, status: 'error' },
+      ],
+    },
+  ];
+
+  function aioFmtCost(rupiah) {
+    return rupiah > 0 ? ('Rp ' + rupiah.toLocaleString('id-ID')) : 'Rp 0';
+  }
+
+  function aioFmtTime(iso) {
+    return new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function aioRenderTable() {
+    const tbody = document.getElementById('aio-table-body');
+    tbody.innerHTML = AIO_MOCK_TRACES.map(t => `<tr onclick="aioOpenTrace('${t.id}')" style="cursor:pointer;">
+      <td><code>${t.id}</code></td>
+      <td>${aioFmtTime(t.timestamp)}</td>
+      <td>${t.workflow}</td>
+      <td><span class="pf-badge other">${t.tenant}</span></td>
+      <td><span class="aio-badge ${t.status}">${t.status === 'success' ? 'Sukses' : 'Error'}</span></td>
+      <td>${t.latencyMs.toLocaleString('id-ID')} ms</td>
+      <td>${aioFmtCost(t.costRupiah)}</td>
+    </tr>`).join('');
+  }
+
+  function aioOpenTrace(id) {
+    const trace = AIO_MOCK_TRACES.find(t => t.id === id);
+    if (!trace) return;
+    const body = document.getElementById('pf-modal-body');
+    body.innerHTML = `
+      <h3>${trace.workflow}</h3>
+      <span class="pf-badge other">${trace.tenant}</span>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Correlation ID</div><div class="pf-modal-field-value"><code>${trace.id}</code></div></div>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Waktu</div><div class="pf-modal-field-value">${aioFmtTime(trace.timestamp)}</div></div>
+      <div class="aio-waterfall">
+        ${trace.steps.map(s => `<div class="aio-step">
+          <div class="aio-step-time">+${s.offsetMs}ms</div>
+          <div class="aio-step-bar ${s.status}"></div>
+          <div class="aio-step-body">
+            <div class="aio-step-name">${s.name}</div>
+            <div class="aio-step-duration">${s.durationMs}ms</div>
+          </div>
+        </div>`).join('')}
+      </div>
+      <div class="pf-modal-field"><div class="pf-modal-field-label">Total</div><div class="pf-modal-field-value">${trace.latencyMs.toLocaleString('id-ID')} ms · ${aioFmtCost(trace.costRupiah)}</div></div>
+    `;
+    document.getElementById('pf-modal-overlay').style.display = 'flex';
   }
 
   function fmtDate(isoStr) {
