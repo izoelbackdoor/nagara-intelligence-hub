@@ -76,7 +76,7 @@
     <canvas id="cv"></canvas>
     <div id="labels"></div>
     <div class="hud" id="hud"></div>
-    <div class="hint">Seret untuk memutar · scroll untuk zoom · label putus-putus = meja belum diisi · klik meja untuk job desk</div>
+    <div class="hint">Seret untuk memutar · scroll untuk zoom · klik meja untuk melihat job desk</div>
     <div class="state" id="state"><div class="box"><h3>Membuka kantor…</h3>Mengambil data zona &amp; meja.</div></div>
   </div>
   <aside>
@@ -103,6 +103,10 @@ function seeded(str) {
   return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
 }
 window.seeded = seeded;
+const ONLINE_MS = 15 * 60 * 1000;
+const isOnline = d => d.last_seen_at && (Date.now() - new Date(d.last_seen_at).getTime()) < ONLINE_MS;
+const ago = t => { if (!t) return 'belum pernah lapor'; const m = Math.round((Date.now() - new Date(t).getTime()) / 60000); return m < 1 ? 'baru saja' : m < 60 ? m + ' menit lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : Math.round(m / 1440) + ' hari lalu'; };
+const stLabel = d => d.status !== 'aktif' ? 'kosong' : isOnline(d) ? '● online' : '○ ' + ago(d.last_seen_at);
 
 /* ---------- scene ---------- */
 const canvas = $('#cv');
@@ -258,9 +262,9 @@ function placeDesk(d, u, zg, i, n) {
   }
   const el = document.createElement('div');
   el.className = 'lbl' + (live ? '' : ' empty'); if (!live) el.title = 'Belum diisi';
-  el.innerHTML = live ? `<span class="dot" style="background:${esc(u.color)}"></span>${esc(d.name)}` : esc(d.name);
+  el.innerHTML = live ? `<span class="dot"></span>${esc(d.name)}` : esc(d.name);
   $('#labels').appendChild(el);
-  labels.push({ el, obj:g, off:headAnchor, key:d.key });
+  labels.push({ el, obj:g, off:headAnchor, key:d.key, dot: el.querySelector('.dot') });
   g.userData = { key:d.key, top };
 }
 
@@ -299,7 +303,7 @@ function deskCard(d) {
   const ag = DATA.agents.find(a => a.desk_key === d.key);
   return `<button class="back" onclick="selectDesk(null)">← Semua zona</button>
   <div class="card"><h3>${esc(d.name)}</h3><div class="role">${esc(d.role)}</div>
-  <span class="badge ${esc(d.status)}">${d.status === 'aktif' ? '● Aktif' : d.status === 'kosong' ? 'Belum diisi' : esc(d.status)}</span>
+  <span class="badge ${d.status === 'aktif' && isOnline(d) ? 'aktif' : d.status === 'kosong' ? 'kosong' : ''}">${d.status === 'aktif' ? (isOnline(d) ? '● Online' : '○ Aktif · ' + esc(ago(d.last_seen_at))) : d.status === 'kosong' ? 'Belum diisi' : esc(d.status)}</span>
   <span class="badge">${esc(u?.name)}</span>${d.model ? `<span class="badge">${esc(d.model)}</span>` : ''}${d.supervisor ? `<span class="badge">Atasan: ${esc(d.supervisor)}</span>` : ''}
   ${line('Tujuan', j.tujuan)}${list('Tugas', j.tugas)}${line('Jadwal', j.jadwal)}
   ${line('Input → Output', j.input || j.output ? `${j.input || '—'} → ${j.output || '—'}` : '')}
@@ -318,7 +322,7 @@ function renderPanel() {
     p.innerHTML = DATA.units.map(u => {
       const ds = DATA.desks.filter(d => d.unit_key === u.key);
       return `<div class="zone"><h4><span class="sw" style="background:${esc(u.color)}"></span>${esc(u.name)}</h4><p>${esc(u.description || '')}</p>
-      ${ds.map(d => `<div class="desk-row" onclick="selectDesk('${esc(d.key)}')"><span>${esc(d.name)}</span><span class="st ${esc(d.status)}">${d.status === 'aktif' ? '● aktif' : 'kosong'}</span></div>`).join('')}</div>`;
+      ${ds.map(d => `<div class="desk-row" onclick="selectDesk('${esc(d.key)}')"><span>${esc(d.name)}</span><span class="st ${d.status === 'aktif' && isOnline(d) ? 'aktif' : ''}">${esc(stLabel(d))}</span></div>`).join('')}</div>`;
     }).join('') || '<div class="empty-note">Belum ada zona aktif.</div>';
   } else if (tab === 'aktivitas') {
     p.innerHTML = DATA.events.length ? DATA.events.map(e => `<div class="ev ${esc(e.level)}"><time>${fmtTime(e.created_at)}${e.desk_key ? ' · ' + esc(e.desk_key) : ''}</time>${esc(e.message)}</div>`).join('') : '<div class="empty-note">Belum ada aktivitas.</div>';
@@ -328,9 +332,13 @@ function renderPanel() {
   }
 }
 
+function paintDots() {
+  for (const l of labels) if (l.dot) { const d = DATA.desks.find(x => x.key === l.key); l.dot.style.background = d && isOnline(d) ? '#22c97a' : '#555568'; }
+}
 function renderHud() {
+  paintDots();
   const act = DATA.desks.filter(d => d.status === 'aktif').length;
-  $('#hud').innerHTML = `<div class="chip"><b>${DATA.units.length}</b>zona</div><div class="chip"><b>${act}</b>agen aktif</div><div class="chip"><b>${DATA.desks.length - act}</b>meja kosong</div><div class="chip"><b>${DATA.approvals.length}</b>menunggu Anda</div>`;
+  $('#hud').innerHTML = `<div class="chip"><b>${DATA.units.length}</b>zona</div><div class="chip"><b>${act}</b>agen aktif · <b style="color:#22c97a">${DATA.desks.filter(isOnline).length}</b>online</div><div class="chip"><b>${DATA.desks.length - act}</b>meja kosong</div><div class="chip"><b>${DATA.approvals.length}</b>menunggu Anda</div>`;
   $('#apn').textContent = DATA.approvals.length;
   $('#upd').textContent = 'Diperbarui ' + fmtTime(DATA.generated_at);
 }
