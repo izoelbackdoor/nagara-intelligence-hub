@@ -540,6 +540,11 @@
   /* Page Sections */
   .page-section { display: none; }
   .page-section.active { display: block; animation: fadeIn 0.3s ease; }
+  .vo-switch { display: flex; gap: 6px; margin-bottom: 10px; }
+  .vo-btn { background: transparent; border: 1px solid var(--border2); color: var(--text2); border-radius: 8px; padding: 6px 12px; font: 600 12.5px inherit; cursor: pointer; }
+  .vo-btn.active { border-color: var(--brand-orange); color: var(--brand-orange); }
+  .vo-wrap { height: calc(100vh - 180px); min-height: 520px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--bg); }
+  .vo-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
   .ph-wrap { max-width: 480px; margin: 4rem auto; text-align: center; }
   .ph-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; background: var(--brand-gradient); padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem; }
   .ph-title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 0.75rem; }
@@ -999,6 +1004,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
         AI Agent Orchestration
       </button>
+      <button class="nav-item" id="nav-virtual-office" onclick="showPage('virtual-office')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><rect x="9" y="12" width="6" height="9"/></svg>
+        Virtual Office
+      </button>
       <button class="nav-item" id="nav-crm-pipeline" onclick="showPage('crm-pipeline')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         CRM &amp; Pipeline
@@ -1170,6 +1179,15 @@
           <tbody id="aio-table-body"></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- ─── Page: Virtual Office ─── -->
+    <div id="page-virtual-office" class="page-section">
+      <div class="vo-switch">
+        <button class="vo-btn active" data-src="/office/" onclick="voSwitch(this)">Kantor Pixel</button>
+        <button class="vo-btn" data-src="/office/3d.html" onclick="voSwitch(this)">Denah 3D &amp; Job Desk</button>
+      </div>
+      <div class="vo-wrap"><iframe id="vo-frame" title="Virtual Office NGI" allow="fullscreen"></iframe></div>
     </div>
 
     <!-- ─── Page: CRM & Pipeline ─── -->
@@ -4805,10 +4823,17 @@
        synchronously at parse time, so this must load and execute first. -->
   <script src="/js/portfolio-data.js"></script>
 <script>
-  // ── Auth ──
-  const CREDS = { user: 'mamzoel', pass: 'nagara2024' };
+  // ── Auth (server-side: /api/auth/*, kredensial hanya di env Vercel) ──
+  function enterDashboard() {
+    document.getElementById('login-page').style.display = 'none';
+    const dash = document.getElementById('dashboard-page');
+    dash.style.display = 'block';
+    dash.classList.add('fade-in');
+    updateClock();
+    showPage('overview');
+  }
 
-  function doLogin() {
+  async function doLogin() {
     const u = document.getElementById('username').value.trim();
     const p = document.getElementById('password').value;
     const err = document.getElementById('login-error');
@@ -4816,32 +4841,40 @@
 
     err.style.display = 'none';
     btn.classList.add('loading');
+    let ok = false, msg = 'Username atau password salah. Silakan coba lagi.';
+    try {
+      const r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ user: u, pass: p }) });
+      ok = r.ok;
+      if (!ok && r.status !== 401) { const j = await r.json().catch(() => ({})); msg = j.error || ('Server error ' + r.status); }
+    } catch (e) { msg = 'Tidak bisa menghubungi server login.'; }
+    btn.classList.remove('loading');
+    if (ok) {
+      const history = JSON.parse(localStorage.getItem('nagara_login_history') || '[]');
+      history.unshift({ time: new Date().toISOString(), user: u, ua: navigator.userAgent });
+      if (history.length > 10) history.pop();
+      localStorage.setItem('nagara_login_history', JSON.stringify(history));
+      localStorage.setItem('nagara_session_start', new Date().toISOString());
+      document.getElementById('password').value = '';
+      enterDashboard();
+    } else {
+      err.textContent = msg;
+      err.style.display = 'block';
+      document.getElementById('password').value = '';
+      document.getElementById('password').focus();
+    }
+  }
 
-    setTimeout(() => {
-      btn.classList.remove('loading');
-      if (u === CREDS.user && p === CREDS.pass) {
-        // Simpan login history ke localStorage
-        const history = JSON.parse(localStorage.getItem('nagara_login_history') || '[]');
-        history.unshift({ time: new Date().toISOString(), user: u, ua: navigator.userAgent });
-        if (history.length > 10) history.pop();
-        localStorage.setItem('nagara_login_history', JSON.stringify(history));
-        localStorage.setItem('nagara_session_start', new Date().toISOString());
+  // Sesi masih berlaku (cookie HttpOnly) → langsung masuk tanpa login ulang
+  fetch('/api/auth/me', { credentials: 'same-origin' }).then(r => { if (r.ok) enterDashboard(); }).catch(() => {});
 
-        document.getElementById('login-page').style.display = 'none';
-        const dash = document.getElementById('dashboard-page');
-        dash.style.display = 'block';
-        dash.classList.add('fade-in');
-        updateClock();
-        showPage('overview');
-      } else {
-        err.style.display = 'block';
-        document.getElementById('password').value = '';
-        document.getElementById('password').focus();
-      }
-    }, 900);
+  function voSwitch(btn) {
+    document.querySelectorAll('.vo-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('vo-frame').src = btn.dataset.src;
   }
 
   function doLogout() {
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
+    const vo = document.getElementById('vo-frame'); if (vo) vo.removeAttribute('src');
     document.getElementById('dashboard-page').style.display = 'none';
     document.getElementById('login-page').style.display = 'flex';
     document.getElementById('username').value = '';
@@ -4875,6 +4908,7 @@
     'portfolio':         { title: 'Portfolio Produk',        sub: 'Status governance & progres semua produk NGI' },
     'business-unit':     { title: 'Business Unit Monitor',   sub: 'Produk & metrik operasional per unit bisnis' },
     'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Trace observability workflow AI (data contoh)' },
+    'virtual-office':    { title: 'Virtual Office',          sub: 'Karyawan AI per zona — data langsung dari database kantor' },
     'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Pipeline deal Nagara CRM (data contoh)' },
     'marketing-content': { title: 'Marketing & Content',     sub: 'Meta Ads (snapshot) & antrian konten 11 Facebook Page' },
     'legal-compliance':  { title: 'Legal & Compliance',      sub: 'Checklist lisensi & UU PDP (sebagian data asli, sebagian ilustratif)' },
@@ -4915,6 +4949,7 @@
     if (name === 'portfolio') pfInit();
     if (name === 'business-unit') bumInit();
     if (name === 'ai-orchestration') aioRenderTable();
+    if (name === 'virtual-office') { const f = document.getElementById('vo-frame'); if (f && !f.getAttribute('src')) f.src = '/office/'; }
     if (name === 'crm-pipeline') crmRenderKanban();
     if (name === 'legal-compliance') lcRenderTable();
     if (name === 'marketing-content') mcInit();

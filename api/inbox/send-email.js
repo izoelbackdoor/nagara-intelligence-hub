@@ -115,3 +115,6 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: err.message })
   }
 }
+
+// Wajib login (sesi cookie) — lihat api/_lib/session.js
+module.exports = require('../../lib/session').withAuth(module.exports);
