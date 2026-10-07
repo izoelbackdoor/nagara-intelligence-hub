@@ -61,6 +61,10 @@
       "dest": "/api/office/state.js"
     },
     {
+      "src": "/api/agents/arah",
+      "dest": "/api/agents/arah.js"
+    },
+    {
       "src": "/api/(.*)\\.js",
       "dest": "/api/$1.js"
     },
@@ -79,6 +83,16 @@
     {
       "src": "/(.*)",
       "dest": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/agents/arah",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/agents/arah",
+      "schedule": "0 10 * * *"
     }
   ]
 }

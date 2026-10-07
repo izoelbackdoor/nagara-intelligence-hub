@@ -627,6 +627,10 @@
   .aio-kpi { background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 12px; padding: 14px 16px; }
   .aio-kpi b { display: block; font: 600 24px 'Space Grotesk', sans-serif; color: var(--sand-text); }
   .aio-kpi span { font-size: 12px; color: var(--sand-text2); }
+  .aio-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; font-size: 12px; color: var(--sand-text2); }
+  .aio-btn { background: var(--ink); color: #fff; border: 0; border-radius: 9px; padding: 8px 14px; font: 600 12.5px inherit; cursor: pointer; }
+  .aio-btn:disabled { opacity: .6; cursor: wait; }
+  .aio-brief { white-space: pre-wrap; font-size: 13.5px; line-height: 1.55; }
   .aio-h { font: 600 14px 'Space Grotesk', sans-serif; color: var(--sand-text); margin: 0 0 .6rem; }
   @media (max-width: 760px) { .aio-kpis { grid-template-columns: repeat(2, minmax(0,1fr)); } }
   .aio-badge.warning { background: rgba(245,166,35,0.12); color: #f5a623; }
@@ -1178,6 +1182,7 @@
 
     <!-- ─── Page: AI Agent Orchestration ─── -->
     <div id="page-ai-orchestration" class="page-section">
+      <div class="aio-actions"><button class="aio-btn" id="aio-brief-btn" onclick="aioAskBrief()">🧭 Minta brief dari Arah</button><span id="aio-brief-note"></span></div>
       <div class="aio-kpis" id="aio-kpis"></div>
       <div id="aio-error" class="aio-mock-banner" style="display:none"></div>
       <h3 class="aio-h">Karyawan AI</h3>
@@ -5488,6 +5493,21 @@
     const on = act.filter(officeIsOnline).length;
     el.textContent = `${act.length} Agent Aktif · ${on} online`;
   }
+  async function aioAskBrief() {
+    const btn = document.getElementById('aio-brief-btn'), note = document.getElementById('aio-brief-note');
+    btn.disabled = true; note.textContent = 'Arah sedang merangkum…';
+    try {
+      const r = await fetch('/api/agents/arah', { method: 'POST', credentials: 'same-origin' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+      if (j.skipped) { note.textContent = 'Dilewati: batas biaya harian Arah tercapai.'; return; }
+      note.textContent = `Selesai · biaya ±$${j.usd}${j.emailed ? ' · terkirim ke email' : ''}`;
+      openSharedModal(`<h3>Brief dari Arah</h3><div class="aio-brief">${escapeHtml(j.brief)}</div>`);
+      aioRenderTable();
+    } catch (e) { note.textContent = 'Gagal: ' + e.message; }
+    finally { btn.disabled = false; }
+  }
+
   async function aioRenderTable() {
     const err = document.getElementById('aio-error');
     err.style.display = 'none';
