@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Virtual Office · Nagara Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0f;--bg2:#111118;--bg3:#16161f;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+    --text:#f0f0f5;--text2:#8888a0;--text3:#555568;--accent:#6c63ff;--green:#22c97a;--yellow:#f5a623;--red:#ff5c5c;
+    --brand:#FF7A2E;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.45 Manrope,system-ui,sans-serif}
+  [hidden]{display:none!important}
+  .app{display:grid;grid-template-columns:1fr 340px;height:100vh}
+  .stage{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 50% 10%,#1a1a26 0%,#0a0a0f 70%)}
+  #cv{display:block;width:100%;height:100%}
+  #labels{position:absolute;inset:0;pointer-events:none;z-index:2}
+  .lbl{position:absolute;transform:translate(-50%,-100%);white-space:nowrap;font:600 11px Manrope,sans-serif;padding:3px 8px;border-radius:999px;background:rgba(10,10,15,.82);border:1px solid var(--border2);color:var(--text)}
+  .lbl.empty{color:var(--text2);border-style:dashed;background:rgba(10,10,15,.6)}
+  .lbl .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:1px}
+  .hud{position:absolute;left:16px;top:14px;z-index:3;display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:rgba(17,17,24,.85);border:1px solid var(--border2);border-radius:10px;padding:7px 11px;font-size:12px;color:var(--text2)}
+  .chip b{color:var(--text);font:700 15px 'Space Grotesk',sans-serif;margin-right:4px}
+  .hint{position:absolute;left:16px;bottom:12px;z-index:3;font-size:11.5px;color:var(--text3)}
+  .state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:4;text-align:center;padding:24px;color:var(--text2)}
+  .state .box{max-width:420px;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:20px 22px}
+  .state h3{margin:0 0 6px;color:var(--text);font:700 16px 'Space Grotesk',sans-serif}
+  aside{border-left:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;min-height:0}
+  .tabs{display:flex;border-bottom:1px solid var(--border)}
+  .tab{flex:1;background:none;border:0;color:var(--text2);font:600 12.5px Manrope,sans-serif;padding:12px 6px;cursor:pointer;border-bottom:2px solid transparent}
+  .tab.on{color:var(--text);border-bottom-color:var(--brand)}
+  .tab .n{display:inline-block;min-width:17px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--bg3);font-size:11px}
+  .pane{flex:1;overflow:auto;padding:14px 16px;min-height:0}
+  .zone{border:1px solid var(--border);border-radius:12px;padding:11px 12px;margin-bottom:10px;background:var(--bg3)}
+  .zone h4{margin:0;font:700 14px 'Space Grotesk',sans-serif;display:flex;align-items:center;gap:8px}
+  .zone .sw{width:10px;height:10px;border-radius:3px}
+  .zone p{margin:4px 0 8px;color:var(--text2);font-size:12px}
+  .desk-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12.5px}
+  .desk-row:hover,.desk-row.sel{background:rgba(255,255,255,.05)}
+  .desk-row .st{margin-left:auto;font-size:11px;color:var(--text3)}
+  .desk-row .st.aktif{color:var(--green)}
+  .card h3{margin:0 0 2px;font:700 18px 'Space Grotesk',sans-serif}
+  .card .role{color:var(--text2);font-size:12.5px;margin-bottom:10px}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid var(--border2);margin:0 4px 4px 0;color:var(--text2)}
+  .badge.aktif{color:var(--green);border-color:rgba(34,201,122,.4)}
+  .badge.kosong{border-style:dashed}
+  .sec{margin-top:12px}
+  .sec h5{margin:0 0 5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
+  .sec ul{margin:0;padding-left:17px;color:var(--text)}
+  .sec li{margin:2px 0;font-size:12.5px}
+  .sec .v{font-size:12.5px}
+  .no li::marker{color:var(--red)}
+  .back{background:none;border:0;color:var(--text2);cursor:pointer;padding:0 0 10px;font:600 12px Manrope,sans-serif}
+  .ev{padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px}
+  .ev time{display:block;color:var(--text3);font-size:11px}
+  .ev.peringatan{color:var(--yellow)} .ev.bahaya{color:var(--red)}
+  .empty-note{color:var(--text3);font-size:12.5px;padding:8px 0}
+  .ap{border:1px solid var(--border2);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--bg3)}
+  .ap .k{font-size:11px;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .foot{border-top:1px solid var(--border);padding:8px 16px;font-size:11px;color:var(--text3);display:flex;justify-content:space-between}
+  @media (max-width:820px){
+    .app{grid-template-columns:1fr;grid-template-rows:58vh 1fr;height:auto;min-height:100vh}
+    aside{border-left:0;border-top:1px solid var(--border)}
+  }
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div class="app">
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div id="labels"></div>
+    <div class="hud" id="hud"></div>
+    <div class="hint">Seret untuk memutar · scroll untuk zoom · label putus-putus = meja belum diisi · klik meja untuk job desk</div>
+    <div class="state" id="state"><div class="box"><h3>Membuka kantor…</h3>Mengambil data zona &amp; meja.</div></div>
+  </div>
+  <aside>
+    <div class="tabs">
+      <button class="tab on" data-t="zona">Zona</button>
+      <button class="tab" data-t="aktivitas">Aktivitas</button>
+      <button class="tab" data-t="approval">Persetujuan<span class="n" id="apn">0</span></button>
+    </div>
+    <div class="pane" id="pane"></div>
+    <div class="foot"><span id="upd">—</span><span>Data langsung dari Supabase</span></div>
+  </aside>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+window.THREE = THREE;
+
+/* ---------- util ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+const fmtTime = t => { try { return new Date(t).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }); } catch { return t; } };
+function seeded(str) {
+  let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+}
+window.seeded = seeded;
+
+/* ---------- scene ---------- */
+const canvas = $('#cv');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene(); window.scene = scene;
+const camera = new THREE.PerspectiveCamera(38, 1, .1, 400);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.maxPolarAngle = 1.25; controls.minDistance = 12; controls.maxDistance = 120;
+scene.add(new THREE.HemisphereLight(0xdfe6ff, 0x1a1420, .85));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(18, 34, 22); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left:-60, right:60, top:40, bottom:-40, far:120 });
+scene.add(sun);
+const shadowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const g = x.createRadialGradient(32, 32, 2, 32, 32, 30); g.addColorStop(0, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); return t; })();
+window.shadowTex = shadowTex;
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color:0x0d0d14, roughness:1 }));
+ground.rotation.x = -Math.PI / 2; ground.position.y = -.02; ground.receiveShadow = true; scene.add(ground);
+
+function makeRobot(color, key = String(Math.random())) {
+  /* Maskot AI: kepala besar, satu warna solid per divisi, aksesori unik per agen (desain sendiri, bukan aset The Delegation) */
+  const rnd = seeded(key), pick = a => a[Math.floor(rnd() * a.length)];
+  const g = new THREE.Group();
+  const base = new THREE.Color(color);
+  const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color:c, roughness:.5, metalness:0, ...o });
+  const bodyM = M(base), headM = M(base.clone().lerp(new THREE.Color(0xffffff), .1)), darkM = M(base.clone().lerp(new THREE.Color(0x000000), .38)), lightM = M(base.clone().lerp(new THREE.Color(0xffffff), .6));
+  const ink = M(0x1b1f27, { roughness:.3 }), white = M(0xffffff, { roughness:.3 });
+  const add = (geo, mat, x, y, z, parent = g) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; };
+  { const ring = new THREE.Mesh(new THREE.RingGeometry(.4, .58, 32), new THREE.MeshBasicMaterial({ color, transparent:true, opacity:.95, depthWrite:false })); ring.rotation.x = -Math.PI / 2; ring.position.y = .035; g.add(ring); }
+  if (typeof shadowTex !== 'undefined') { const b = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.2), new THREE.MeshBasicMaterial({ map:shadowTex, transparent:true, depthWrite:false })); b.rotation.x = -Math.PI / 2; b.position.y = .02; g.add(b); }
+  const leg = sx => { const p = new THREE.Group(); p.position.set(sx * .14, .5, 0); g.add(p);
+    add(new THREE.CapsuleGeometry(.1, .2, 4, 8), darkM, 0, -.2, 0, p);
+    add(new THREE.SphereGeometry(.13, 12, 8), darkM, 0, -.4, .05, p).scale.set(1, .6, 1.35); return p; };
+  const legL = leg(-1), legR = leg(1);
+  const body = add(new THREE.CapsuleGeometry(.3, .32, 6, 14), bodyM, 0, .9, 0); body.scale.set(1, 1, .9);
+  add(new THREE.SphereGeometry(.2, 14, 10), lightM, 0, .84, .19).scale.set(1, 1.1, .45);
+  const bulbMat = new THREE.MeshStandardMaterial({ color, emissive:color, emissiveIntensity:1.1 });
+  add(new THREE.SphereGeometry(.045, 10, 8), bulbMat, .13, 1.04, .25);
+  const arm = sx => { const p = new THREE.Group(); p.position.set(sx * .33, 1.08, 0); g.add(p);
+    add(new THREE.CapsuleGeometry(.075, .26, 4, 8), bodyM, 0, -.17, 0, p);
+    add(new THREE.SphereGeometry(.085, 10, 8), headM, 0, -.36, 0, p); return p; };
+  const armL = arm(-1), armR = arm(1);
+  const head = new THREE.Group(); head.position.y = 1.62; g.add(head);
+  const skull = add(new THREE.SphereGeometry(.44, 24, 18), headM, 0, 0, 0, head); skull.scale.set(1.06, .95, .96);
+  const eyeY = .03 + rnd() * .04, eyeX = .14 + rnd() * .03;
+  for (const sx of [-1, 1]) {
+    add(new THREE.SphereGeometry(.085, 12, 10), white, sx * eyeX, eyeY, .37, head).scale.set(1, 1.2, .5);
+    add(new THREE.SphereGeometry(.048, 10, 8), ink, sx * eyeX, eyeY - .01, .41, head);
+    add(new THREE.SphereGeometry(.014, 6, 4), white, sx * eyeX + .015, eyeY + .02, .45, head);
+    add(new THREE.CircleGeometry(.055, 14), M(0xff8fa3, { transparent:true, opacity:.55 }), sx * .25, -.08, .36, head).rotation.y = sx * .55;
+  }
+  const smile = add(new THREE.TorusGeometry(.06, .013, 6, 14, Math.PI), ink, 0, -.1, .405, head); smile.rotation.z = Math.PI;
+  const acc = pick(['antena', 'topi', 'headphone', 'kupluk', 'kacamata', 'pita', 'tudung', 'jambul', 'antena', 'headphone', 'kacamata', 'topi']);
+  if (acc === 'antena') { add(new THREE.CylinderGeometry(.015, .015, .26, 6), darkM, 0, .52, 0, head); add(new THREE.SphereGeometry(.06, 10, 8), bulbMat, 0, .67, 0, head); }
+  else if (acc === 'topi') { add(new THREE.SphereGeometry(.42, 18, 10, 0, Math.PI * 2, 0, Math.PI * .42), darkM, 0, .1, -.02, head); add(new THREE.BoxGeometry(.42, .03, .26), darkM, 0, .27, .34, head).rotation.x = .25; }
+  else if (acc === 'headphone') { const band = add(new THREE.TorusGeometry(.44, .03, 6, 22, Math.PI), ink, 0, .05, 0, head); band.rotation.z = 0; for (const sx of [-1, 1]) add(new THREE.CylinderGeometry(.11, .11, .08, 14), darkM, sx * .45, .02, 0, head).rotation.z = Math.PI / 2; }
+  else if (acc === 'kupluk') { add(new THREE.SphereGeometry(.43, 18, 10, 0, Math.PI * 2, 0, Math.PI * .45), lightM, 0, .09, -.02, head); add(new THREE.SphereGeometry(.08, 10, 8), lightM, 0, .5, -.02, head); }
+  else if (acc === 'kacamata') { for (const sx of [-1, 1]) add(new THREE.TorusGeometry(.09, .016, 6, 16), ink, sx * eyeX, eyeY, .43, head); add(new THREE.BoxGeometry(.1, .016, .01), ink, 0, eyeY + .01, .44, head); }
+  else if (acc === 'pita') { for (const sx of [-1, 1]) add(new THREE.ConeGeometry(.08, .16, 10), lightM, .2 + sx * .08, .38, .05, head).rotation.z = sx * Math.PI / 2; add(new THREE.SphereGeometry(.04, 8, 6), lightM, .2, .38, .05, head); }
+  else if (acc === 'tudung') { const sh = add(new THREE.SphereGeometry(.48, 20, 14), darkM, 0, .02, -.08, head); sh.scale.set(1.04, 1, .96); add(new THREE.ConeGeometry(.5, .32, 18, 1, true), darkM, 0, -.42, -.04, head); }
+  else if (acc === 'jambul') { for (const [x, rz] of [[-.07, .35], [0, 0], [.07, -.35]]) add(new THREE.ConeGeometry(.05, .18, 8), darkM, x, .46, 0, head).rotation.z = rz; }
+  const docMat = new THREE.MeshStandardMaterial({ color:0xffffff, emissive:color, emissiveIntensity:.4 });
+  const doc = new THREE.Mesh(new THREE.BoxGeometry(.42, .04, .32), docMat); doc.position.set(0, 1.0, .48); doc.visible = false; doc.castShadow = true; g.add(doc);
+  scene.add(g);
+  return { g, legL, legR, armL, armR, head, bulbMat, doc, docMat, hit:[body, skull] };
+}
+
+
+/* ---------- office build ---------- */
+const ZW = 24, ZD = 18, GAP = 5, COLS = 3;
+let world = new THREE.Group(); scene.add(world);
+const pickables = [], labels = [], workers = [];
+let DATA = null, selected = null, layoutKey = '', stacked = false;
+
+function signTex(title, sub, color) {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 220; const x = c.getContext('2d');
+  x.fillStyle = '#111118'; x.fillRect(0, 0, 1024, 220);
+  x.fillStyle = color; x.fillRect(0, 0, 18, 220);
+  x.fillStyle = '#f0f0f5'; x.font = '700 78px "Space Grotesk", sans-serif'; x.fillText(title, 50, 105);
+  x.fillStyle = '#8888a0'; x.font = '500 40px Manrope, sans-serif'; x.fillText(sub, 52, 172);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color:c, roughness:.6, ...o });
+function box(w, h, d, mat, x, y, z, parent) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; parent.add(m); return m; }
+
+function clearWorld() {
+  scene.remove(world); world.traverse(o => { o.geometry?.dispose?.(); });
+  world = new THREE.Group(); scene.add(world);
+  pickables.length = 0; workers.length = 0;
+  labels.forEach(l => l.el.remove()); labels.length = 0;
+}
+
+function build(data) {
+  clearWorld();
+  const units = data.units;
+  stacked = camera.aspect < .95;
+  const cols = stacked ? 1 : units.length, rows = Math.ceil(units.length / cols);
+  const totalW = cols * ZW + (cols - 1) * GAP, totalD = rows * ZD + (rows - 1) * GAP;
+  units.forEach((u, ui) => {
+    const zx = -totalW / 2 + ZW / 2 + (ui % cols) * (ZW + GAP), zz = -totalD / 2 + ZD / 2 + Math.floor(ui / cols) * (ZD + GAP);
+    const zg = new THREE.Group(); zg.position.set(zx, 0, zz); world.add(zg);
+    const col = new THREE.Color(u.color);
+    const floorCol = col.clone().lerp(new THREE.Color(0x14141b), .93);
+    box(ZW, .3, ZD, M(floorCol, { roughness:.95 }), 0, .15, 0, zg);
+    box(ZW - 1.2, .02, ZD - 1.2, M(col.clone().lerp(new THREE.Color(0x14141b), .86), { roughness:.95 }), 0, .31, 0, zg);
+    // edge strip + low walls
+    box(ZW, .08, .25, M(col, { emissive:col, emissiveIntensity:.5 }), 0, .34, ZD / 2, zg);
+    const wallM = M(0x1c1c27, { roughness:.8 });
+    box(ZW, 2.6, .3, wallM, 0, 1.6, -ZD / 2, zg);
+    box(.3, 2.6, ZD, wallM, -ZW / 2, 1.6, 0, zg);
+    box(.3, 2.6, ZD, wallM, ZW / 2, 1.6, 0, zg);
+    const desks = data.desks.filter(d => d.unit_key === u.key);
+    const act = desks.filter(d => d.status === 'aktif').length;
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(12, 2.58), new THREE.MeshBasicMaterial({ map:signTex(u.name, `${act} aktif · ${desks.length - act} kosong`, u.color) }));
+    sign.position.set(0, 3.9, -ZD / 2 + .2); zg.add(sign);
+    box(12.3, 2.85, .15, M(0x0a0a0f), 0, 3.9, -ZD / 2 + .08, zg);
+    desks.forEach((d, i) => placeDesk(d, u, zg, i, desks.length));
+  });
+  frame(totalW, totalD);
+}
+
+function placeDesk(d, u, zg, i, n) {
+  const rows = Math.ceil(n / COLS), c = i % COLS, r = Math.floor(i / COLS);
+  const x = (c - (COLS - 1) / 2) * 7, z = (r - (rows - 1) / 2) * 6.5 + 1;
+  const g = new THREE.Group(); g.position.set(x, .3, z); zg.add(g);
+  const live = d.status === 'aktif';
+  const col = new THREE.Color(u.color);
+  const top = box(3.2, .14, 1.5, M(live ? 0xe9e4dc : 0x34343f), 0, 1.25, .2, g);
+  for (const sx of [-1.45, 1.45]) box(.12, 1.2, 1.3, M(0x2a2a35), sx, .62, .2, g);
+  const screenM = live ? new THREE.MeshStandardMaterial({ color:0x111111, emissive:col, emissiveIntensity:.9 }) : M(0x22222b);
+  box(1.5, .9, .08, M(0x15151c), -.55, 1.85, .55, g);           // monitor (punggung ke kamera)
+  const scr = box(.9, .06, .02, screenM, -.55, 2.33, .6, g);     // lampu status di atas monitor
+  box(.12, .35, .12, M(0x15151c), -.55, 1.45, .6, g);
+  box(.5, .03, .35, M(0xffffff, { emissive:col, emissiveIntensity: live ? .35 : 0 }), .7, 1.34, .1, g); // dokumen
+  // kursi di belakang meja
+  box(1, .12, 1, M(0x262632), 0, .75, -1.0, g); box(1, 1, .12, M(0x262632), 0, 1.3, -1.48, g);
+  box(.1, .7, .1, M(0x202028), 0, .38, -1.0, g);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(3.6, 3.2, 3.6), new THREE.MeshBasicMaterial({ visible:false }));
+  hit.position.set(0, 1.5, 0); hit.userData.desk = d.key; g.add(hit); pickables.push(hit);
+  let headAnchor;
+  if (live) {
+    const r = makeRobot(u.color, d.key);
+    world.remove(r.g); scene.remove(r.g); g.add(r.g);
+    r.g.position.set(0, .2, -1.0); r.g.rotation.y = 0; r.g.scale.setScalar(1.25);
+    r.legL.rotation.x = r.legR.rotation.x = -Math.PI / 2.3;
+    r.armL.rotation.x = r.armR.rotation.x = -1.1;
+    workers.push({ r, ph:seeded(d.key)() * 6.28, scr });
+    headAnchor = new THREE.Vector3(0, 3.5, -1.0);
+  } else {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(.55, .7, 32), new THREE.MeshBasicMaterial({ color:0x8888a0, transparent:true, opacity:.35 }));
+    ring.rotation.x = -Math.PI / 2; ring.position.set(0, .05, -1.0); g.add(ring);
+    headAnchor = new THREE.Vector3(0, 2.6, .2);
+  }
+  const el = document.createElement('div');
+  el.className = 'lbl' + (live ? '' : ' empty'); if (!live) el.title = 'Belum diisi';
+  el.innerHTML = live ? `<span class="dot" style="background:${esc(u.color)}"></span>${esc(d.name)}` : esc(d.name);
+  $('#labels').appendChild(el);
+  labels.push({ el, obj:g, off:headAnchor, key:d.key });
+  g.userData = { key:d.key, top };
+}
+
+let lastW = 0, lastD = 0;
+function frame(totalW = lastW, totalD = lastD) {
+  lastW = totalW; lastD = totalD; if (!totalW) return;
+  const fovV = THREE.MathUtils.degToRad(camera.fov), fovH = 2 * Math.atan(Math.tan(fovV / 2) * camera.aspect);
+  const dist = Math.max(24, (totalW / 2 + 1.5) / Math.tan(fovH / 2) * .92, (totalD * .75) / Math.tan(fovV / 2) * .9);
+  camera.position.set(0, dist * .78, dist * .82); controls.target.set(0, 0, 1); controls.update();
+}
+
+/* ---------- interaction ---------- */
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+let downAt = null;
+canvas.addEventListener('pointerdown', e => downAt = [e.clientX, e.clientY]);
+canvas.addEventListener('pointerup', e => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  const rc = canvas.getBoundingClientRect();
+  mouse.set((e.clientX - rc.left) / rc.width * 2 - 1, -(e.clientY - rc.top) / rc.height * 2 + 1);
+  ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObjects(pickables)[0];
+  if (hit) selectDesk(hit.object.userData.desk);
+});
+
+/* ---------- panel ---------- */
+let tab = 'zona';
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => { tab = b.dataset.t; if (tab !== 'zona') selected = null; renderPanel(); });
+function selectDesk(key) { selected = key; tab = 'zona'; renderPanel(); }
+window.selectDesk = selectDesk;
+
+function list(title, arr, cls = '') { return arr?.length ? `<div class="sec"><h5>${title}</h5><ul class="${cls}">${arr.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''; }
+function line(title, v) { return v ? `<div class="sec"><h5>${title}</h5><div class="v">${esc(v)}</div></div>` : ''; }
+
+function deskCard(d) {
+  const j = d.jobdesc || {}, u = DATA.units.find(x => x.key === d.unit_key);
+  const ag = DATA.agents.find(a => a.desk_key === d.key);
+  return `<button class="back" onclick="selectDesk(null)">← Semua zona</button>
+  <div class="card"><h3>${esc(d.name)}</h3><div class="role">${esc(d.role)}</div>
+  <span class="badge ${esc(d.status)}">${d.status === 'aktif' ? '● Aktif' : d.status === 'kosong' ? 'Belum diisi' : esc(d.status)}</span>
+  <span class="badge">${esc(u?.name)}</span>${d.model ? `<span class="badge">${esc(d.model)}</span>` : ''}${d.supervisor ? `<span class="badge">Atasan: ${esc(d.supervisor)}</span>` : ''}
+  ${line('Tujuan', j.tujuan)}${list('Tugas', j.tugas)}${line('Jadwal', j.jadwal)}
+  ${line('Input → Output', j.input || j.output ? `${j.input || '—'} → ${j.output || '—'}` : '')}
+  ${list('Alat', j.tools)}${list('KPI', j.kpi)}${list('Boleh', j.boleh)}${list('Tidak boleh', j.tidak, 'no')}
+  ${line('Eskalasi', j.eskalasi)}${line('Berjalan di', j.lokasi)}
+  ${ag ? `<div class="sec"><h5>Pengaman agen</h5><div class="v">Batas biaya harian $${esc(ag.daily_budget_usd)} · wajib approval: ${esc((ag.needs_approval || []).join(', ') || '—')}</div></div>` : ''}
+  </div>`;
+}
+
+function renderPanel() {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
+  const p = $('#pane'); if (!DATA) return;
+  if (tab === 'zona') {
+    const d = selected && DATA.desks.find(x => x.key === selected);
+    if (d) { p.innerHTML = deskCard(d); return; }
+    p.innerHTML = DATA.units.map(u => {
+      const ds = DATA.desks.filter(d => d.unit_key === u.key);
+      return `<div class="zone"><h4><span class="sw" style="background:${esc(u.color)}"></span>${esc(u.name)}</h4><p>${esc(u.description || '')}</p>
+      ${ds.map(d => `<div class="desk-row" onclick="selectDesk('${esc(d.key)}')"><span>${esc(d.name)}</span><span class="st ${esc(d.status)}">${d.status === 'aktif' ? '● aktif' : 'kosong'}</span></div>`).join('')}</div>`;
+    }).join('') || '<div class="empty-note">Belum ada zona aktif.</div>';
+  } else if (tab === 'aktivitas') {
+    p.innerHTML = DATA.events.length ? DATA.events.map(e => `<div class="ev ${esc(e.level)}"><time>${fmtTime(e.created_at)}${e.desk_key ? ' · ' + esc(e.desk_key) : ''}</time>${esc(e.message)}</div>`).join('') : '<div class="empty-note">Belum ada aktivitas.</div>';
+  } else {
+    p.innerHTML = DATA.approvals.length ? DATA.approvals.map(a => `<div class="ap"><div class="k">${esc(a.kind)} · ${esc(a.desk_key || '')}</div>${esc(a.summary)}<div class="empty-note" style="padding:4px 0 0">${fmtTime(a.created_at)}</div></div>`).join('')
+      : '<div class="empty-note">Tidak ada yang menunggu persetujuan Anda. Persetujuan Hermes saat ini masih lewat Telegram.</div>';
+  }
+}
+
+function renderHud() {
+  const act = DATA.desks.filter(d => d.status === 'aktif').length;
+  $('#hud').innerHTML = `<div class="chip"><b>${DATA.units.length}</b>zona</div><div class="chip"><b>${act}</b>agen aktif</div><div class="chip"><b>${DATA.desks.length - act}</b>meja kosong</div><div class="chip"><b>${DATA.approvals.length}</b>menunggu Anda</div>`;
+  $('#apn').textContent = DATA.approvals.length;
+  $('#upd').textContent = 'Diperbarui ' + fmtTime(DATA.generated_at);
+}
+
+/* ---------- data ---------- */
+function showState(title, msg) { const s = $('#state'); s.hidden = !title; if (title) s.innerHTML = `<div class="box"><h3>${esc(title)}</h3>${esc(msg)}</div>`; }
+async function load() {
+  try {
+    const r = await fetch('/api/office/state', { credentials:'same-origin', cache:'no-store' });
+    if (r.status === 401) return showState('Sesi login habis', 'Silakan login ulang di Command Center, lalu buka menu Virtual Office lagi.');
+    const j = await r.json();
+    if (!r.ok) return showState('Kantor belum bisa dibuka', j.error || `Error ${r.status}`);
+    DATA = j; showState(null);
+    const key = JSON.stringify([j.units.map(u => u.key), j.desks.map(d => d.key + d.status)]);
+    if (key !== layoutKey) { layoutKey = key; build(j); }
+    renderHud(); renderPanel();
+  } catch (e) { if (!DATA) showState('Tidak bisa terhubung', String(e.message || e)); }
+}
+load(); setInterval(load, 20000);
+
+/* ---------- loop ---------- */
+function resize() { const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', () => { resize(); if (DATA && (camera.aspect < .95) !== stacked) build(DATA); else frame(); }); resize();
+const v = new THREE.Vector3(), clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const t = clock.getElapsedTime();
+  for (const w of workers) {
+    const s = Math.sin(t * 9 + w.ph);
+    w.r.armL.rotation.x = -1.1 + s * .12; w.r.armR.rotation.x = -1.1 - s * .12;
+    w.r.head.rotation.y = Math.sin(t * .6 + w.ph) * .25; w.r.head.position.y = 1.62 + Math.sin(t * 2 + w.ph) * .015;
+    w.r.bulbMat.emissiveIntensity = .7 + Math.max(0, Math.sin(t * 3 + w.ph)) * .8;
+  }
+  controls.update(); renderer.render(scene, camera);
+  const rc = canvas.getBoundingClientRect();
+  for (const l of labels) {
+    v.copy(l.off); l.obj.localToWorld(v); v.project(camera);
+    const vis = v.z < 1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1 && (rc.width > 640 || !l.el.classList.contains('empty') || l.key === selected);
+    l.el.style.display = vis ? '' : 'none';
+    if (vis) { l.el.style.left = ((v.x + 1) / 2 * rc.width) + 'px'; l.el.style.top = ((1 - v.y) / 2 * rc.height) + 'px'; }
+    l.el.style.outline = l.key === selected ? '2px solid #FF7A2E' : '';
+  }
+});
+
+</script>
+</body>
+</html>
