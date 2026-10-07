@@ -3,7 +3,7 @@
  * Hanya bisa dibaca setelah login. Kunci Supabase hanya di server (env):
  *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  */
-const { requireAuth, sendJson } = require('../_lib/session');
+const { requireAuth, sendJson } = require('../../lib/session');
 
 async function q(path) {
   const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;

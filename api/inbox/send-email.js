@@ -117,4 +117,4 @@ module.exports = async (req, res) => {
 }
 
 // Wajib login (sesi cookie) — lihat api/_lib/session.js
-module.exports = require('../_lib/session').withAuth(module.exports);
+module.exports = require('../../lib/session').withAuth(module.exports);

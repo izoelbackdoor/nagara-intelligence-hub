@@ -53,6 +53,14 @@
       "dest": "/api/inbox/webhook-openwa.js"
     },
     {
+      "src": "/api/auth/(login|logout|me)",
+      "dest": "/api/auth.js?action=$1"
+    },
+    {
+      "src": "/api/office/state",
+      "dest": "/api/office/state.js"
+    },
+    {
       "src": "/api/(.*)\\.js",
       "dest": "/api/$1.js"
     },
