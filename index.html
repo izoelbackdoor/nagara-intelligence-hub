@@ -540,7 +540,10 @@
   /* Page Sections */
   .page-section { display: none; }
   .page-section.active { display: block; animation: fadeIn 0.3s ease; }
-  .vo-wrap { height: calc(100vh - 140px); min-height: 520px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--bg); }
+  .vo-switch { display: flex; gap: 6px; margin-bottom: 10px; }
+  .vo-btn { background: transparent; border: 1px solid var(--border2); color: var(--text2); border-radius: 8px; padding: 6px 12px; font: 600 12.5px inherit; cursor: pointer; }
+  .vo-btn.active { border-color: var(--brand-orange); color: var(--brand-orange); }
+  .vo-wrap { height: calc(100vh - 180px); min-height: 520px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--bg); }
   .vo-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
   .ph-wrap { max-width: 480px; margin: 4rem auto; text-align: center; }
   .ph-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; background: var(--brand-gradient); padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem; }
@@ -1180,6 +1183,10 @@
 
     <!-- ─── Page: Virtual Office ─── -->
     <div id="page-virtual-office" class="page-section">
+      <div class="vo-switch">
+        <button class="vo-btn active" data-src="/office/" onclick="voSwitch(this)">Kantor Pixel</button>
+        <button class="vo-btn" data-src="/office/3d.html" onclick="voSwitch(this)">Denah 3D &amp; Job Desk</button>
+      </div>
       <div class="vo-wrap"><iframe id="vo-frame" title="Virtual Office NGI" allow="fullscreen"></iframe></div>
     </div>
 
@@ -4859,6 +4866,11 @@
 
   // Sesi masih berlaku (cookie HttpOnly) → langsung masuk tanpa login ulang
   fetch('/api/auth/me', { credentials: 'same-origin' }).then(r => { if (r.ok) enterDashboard(); }).catch(() => {});
+
+  function voSwitch(btn) {
+    document.querySelectorAll('.vo-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('vo-frame').src = btn.dataset.src;
+  }
 
   function doLogout() {
     fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
