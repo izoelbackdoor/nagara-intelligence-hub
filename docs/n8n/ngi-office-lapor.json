@@ -1,0 +1,64 @@
+{
+  "name": "NGI Office · Lapor ke Kantor",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "name": "Saat dipanggil",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://nagara-intelligence-hub.vercel.app/api/office/state",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ desk: $json.desk || 'hermes', type: $json.type || 'event', level: $json.level || 'info', message: $json.message, kind: $json.kind, summary: $json.summary }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Kirim ke Virtual Office",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "NGI Office Token"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Saat dipanggil": {
+      "main": [
+        [
+          {
+            "node": "Kirim ke Virtual Office",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
