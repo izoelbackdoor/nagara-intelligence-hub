@@ -621,6 +621,14 @@
   .aio-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
   .aio-badge.success { background: rgba(46,158,91,0.12); color: #2e9e5b; }
   .aio-badge.error { background: rgba(212,63,46,0.12); color: #d43f2e; }
+  .aio-badge.idle { background: rgba(36,30,26,0.08); color: var(--sand-text2); }
+  .aio-badge.warn { background: rgba(245,166,35,0.15); color: #b97a0e; }
+  .aio-kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 1.25rem; }
+  .aio-kpi { background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 12px; padding: 14px 16px; }
+  .aio-kpi b { display: block; font: 600 24px 'Space Grotesk', sans-serif; color: var(--sand-text); }
+  .aio-kpi span { font-size: 12px; color: var(--sand-text2); }
+  .aio-h { font: 600 14px 'Space Grotesk', sans-serif; color: var(--sand-text); margin: 0 0 .6rem; }
+  @media (max-width: 760px) { .aio-kpis { grid-template-columns: repeat(2, minmax(0,1fr)); } }
   .aio-badge.warning { background: rgba(245,166,35,0.12); color: #f5a623; }
   .aio-badge.neutral { background: rgba(107,114,128,0.12); color: #6b7280; }
   .aio-waterfall { margin-top: 14px; border-left: 2px solid var(--sand-border); padding-left: 16px; }
@@ -1047,7 +1055,7 @@
       <div class="topbar-right">
         <div class="status-pill">
           <span class="status-dot"></span>
-          25 Agent Aktif
+          <span id="agent-pill">— Agent Aktif</span>
         </div>
         <button class="logout-btn" onclick="doLogout()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1170,13 +1178,20 @@
 
     <!-- ─── Page: AI Agent Orchestration ─── -->
     <div id="page-ai-orchestration" class="page-section">
-      <div class="aio-mock-banner">🔧 Data Contoh — observability asli belum terhubung. Rencana sumber: n8n execution log atau tabel <code>ai_sessions</code>/<code>ai_tool_calls</code>.</div>
+      <div class="aio-kpis" id="aio-kpis"></div>
+      <div id="aio-error" class="aio-mock-banner" style="display:none"></div>
+      <h3 class="aio-h">Karyawan AI</h3>
       <div class="pf-table-wrap">
-        <table class="pf-table" id="aio-table">
-          <thead><tr>
-            <th>Correlation ID</th><th>Waktu</th><th>Workflow</th><th>Tenant</th><th>Status</th><th>Latency</th><th>Cost</th>
-          </tr></thead>
-          <tbody id="aio-table-body"></tbody>
+        <table class="pf-table">
+          <thead><tr><th>Agen</th><th>Zona</th><th>Status</th><th>Model</th><th>Laporan 24 jam</th><th>Terakhir lapor</th></tr></thead>
+          <tbody id="aio-agents-body"><tr><td colspan="6">Memuat…</td></tr></tbody>
+        </table>
+      </div>
+      <h3 class="aio-h">Log aktivitas</h3>
+      <div class="pf-table-wrap">
+        <table class="pf-table">
+          <thead><tr><th>Waktu</th><th>Agen</th><th>Level</th><th>Pesan</th></tr></thead>
+          <tbody id="aio-table-body"><tr><td colspan="4">Memuat…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -4831,6 +4846,7 @@
     dash.classList.add('fade-in');
     updateClock();
     showPage('overview');
+    officeFetch().catch(() => {});
   }
 
   async function doLogin() {
@@ -4907,7 +4923,7 @@
     'overview':          { title: 'Overview',               sub: 'Ringkasan seluruh business unit' },
     'portfolio':         { title: 'Portfolio Produk',        sub: 'Status governance & progres semua produk NGI' },
     'business-unit':     { title: 'Business Unit Monitor',   sub: 'Produk & metrik operasional per unit bisnis' },
-    'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Trace observability workflow AI (data contoh)' },
+    'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Status & log aktivitas karyawan AI — data langsung dari database kantor' },
     'virtual-office':    { title: 'Virtual Office',          sub: 'Karyawan AI per zona — data langsung dari database kantor' },
     'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Pipeline deal Nagara CRM (data contoh)' },
     'marketing-content': { title: 'Marketing & Content',     sub: 'Meta Ads (snapshot) & antrian konten 11 Facebook Page' },
@@ -5449,39 +5465,61 @@
     return new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
-  function aioRenderTable() {
-    const tbody = document.getElementById('aio-table-body');
-    tbody.innerHTML = AIO_MOCK_TRACES.map(t => `<tr onclick="aioOpenTrace('${t.id}')" style="cursor:pointer;">
-      <td><code>${t.id}</code></td>
-      <td>${aioFmtTime(t.timestamp)}</td>
-      <td>${t.workflow}</td>
-      <td><span class="pf-badge other">${t.tenant}</span></td>
-      <td><span class="aio-badge ${t.status}">${t.status === 'success' ? 'Sukses' : 'Error'}</span></td>
-      <td>${t.latencyMs.toLocaleString('id-ID')} ms</td>
-      <td>${aioFmtCost(t.costRupiah)}</td>
-    </tr>`).join('');
+  // ── AI Agent Orchestration: data asli dari database kantor (/api/office/state) ──
+  let _officeState = null;
+  async function officeFetch() {
+    const r = await fetch('/api/office/state', { credentials: 'same-origin', cache: 'no-store' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+    _officeState = j;
+    officeUpdatePill();
+    return j;
   }
-
-  function aioOpenTrace(id) {
-    const trace = AIO_MOCK_TRACES.find(t => t.id === id);
-    if (!trace) return;
-    openSharedModal(`
-      <h3>${trace.workflow}</h3>
-      <span class="pf-badge other">${trace.tenant}</span>
-      <div class="pf-modal-field"><div class="pf-modal-field-label">Correlation ID</div><div class="pf-modal-field-value"><code>${trace.id}</code></div></div>
-      <div class="pf-modal-field"><div class="pf-modal-field-label">Waktu</div><div class="pf-modal-field-value">${aioFmtTime(trace.timestamp)}</div></div>
-      <div class="aio-waterfall">
-        ${trace.steps.map(s => `<div class="aio-step">
-          <div class="aio-step-time">+${s.offsetMs}ms</div>
-          <div class="aio-step-bar ${s.status}"></div>
-          <div class="aio-step-body">
-            <div class="aio-step-name">${s.name}</div>
-            <div class="aio-step-duration">${s.durationMs}ms</div>
-          </div>
-        </div>`).join('')}
-      </div>
-      <div class="pf-modal-field"><div class="pf-modal-field-label">Total</div><div class="pf-modal-field-value">${trace.latencyMs.toLocaleString('id-ID')} ms · ${aioFmtCost(trace.costRupiah)}</div></div>
-    `);
+  const OFFICE_ONLINE_MS = 15 * 60 * 1000;
+  const officeIsOnline = d => d && d.last_seen_at && (Date.now() - new Date(d.last_seen_at).getTime()) < OFFICE_ONLINE_MS;
+  function officeAgo(t) {
+    if (!t) return 'belum pernah';
+    const m = Math.round((Date.now() - new Date(t).getTime()) / 60000);
+    return m < 1 ? 'baru saja' : m < 60 ? m + ' menit lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : Math.round(m / 1440) + ' hari lalu';
+  }
+  function officeUpdatePill() {
+    const el = document.getElementById('agent-pill'); if (!el || !_officeState) return;
+    const act = _officeState.desks.filter(d => d.status === 'aktif');
+    const on = act.filter(officeIsOnline).length;
+    el.textContent = `${act.length} Agent Aktif · ${on} online`;
+  }
+  async function aioRenderTable() {
+    const err = document.getElementById('aio-error');
+    err.style.display = 'none';
+    let st;
+    try { st = await officeFetch(); }
+    catch (e) { err.textContent = 'Belum bisa membaca database kantor — ' + e.message; err.style.display = 'block'; return; }
+    const units = Object.fromEntries(st.units.map(u => [u.key, u]));
+    const desks = Object.fromEntries(st.desks.map(d => [d.key, d]));
+    const act = st.desks.filter(d => d.status === 'aktif');
+    const dayAgo = Date.now() - 864e5;
+    const ev24 = st.events.filter(e => new Date(e.created_at).getTime() > dayAgo);
+    document.getElementById('aio-kpis').innerHTML = [
+      [act.length, 'agen aktif'],
+      [act.filter(officeIsOnline).length, 'online (15 menit)'],
+      [ev24.length, 'laporan 24 jam'],
+      [st.approvals.length, 'menunggu persetujuan'],
+    ].map(([v, l]) => `<div class="aio-kpi"><b>${v}</b><span>${l}</span></div>`).join('');
+    document.getElementById('aio-agents-body').innerHTML = act.length ? act.map(d => {
+      const on = officeIsOnline(d);
+      const n = ev24.filter(e => e.desk_key === d.key).length;
+      return `<tr><td><b>${escapeHtml(d.name)}</b><br><span style="color:var(--sand-text2)">${escapeHtml(d.role)}</span></td>
+        <td>${escapeHtml(units[d.unit_key]?.name || d.unit_key)}</td>
+        <td><span class="aio-badge ${on ? 'success' : 'idle'}">${on ? 'Online' : 'Tidak terlihat'}</span></td>
+        <td>${escapeHtml(d.model || '—')}</td><td>${n}</td><td>${escapeHtml(officeAgo(d.last_seen_at))}</td></tr>`;
+    }).join('') : '<tr><td colspan="6">Belum ada agen aktif.</td></tr>';
+    const lvl = { info: ['success', 'Info'], teknis: ['idle', 'Teknis'], peringatan: ['warn', 'Peringatan'], bahaya: ['error', 'Bahaya'] };
+    document.getElementById('aio-table-body').innerHTML = st.events.length ? st.events.map(e => {
+      const [cls, label] = lvl[e.level] || lvl.info;
+      return `<tr><td style="white-space:nowrap">${aioFmtTime(e.created_at)}</td>
+        <td>${escapeHtml(desks[e.desk_key]?.name || (e.desk_key ? e.desk_key : 'Sistem'))}</td>
+        <td><span class="aio-badge ${cls}">${label}</span></td><td>${escapeHtml(e.message)}</td></tr>`;
+    }).join('') : '<tr><td colspan="4">Belum ada laporan dari agen.</td></tr>';
   }
 
   // Mock deal data for CRM & Pipeline. Static/hardcoded, same reasoning as
