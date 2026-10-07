@@ -57,12 +57,12 @@
       "dest": "/api/auth.js?action=$1"
     },
     {
-      "src": "/api/office/state",
-      "dest": "/api/office/state.js"
+      "src": "/api/office/(state|leads|leads-sync|lead|approval)",
+      "dest": "/api/office/state.js?action=$1"
     },
     {
-      "src": "/api/agents/arah",
-      "dest": "/api/agents/arah.js"
+      "src": "/api/agents/(arah|usul)",
+      "dest": "/api/agents/run.js?agent=$1"
     },
     {
       "src": "/api/(.*)\\.js",

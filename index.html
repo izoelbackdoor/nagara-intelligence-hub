@@ -647,13 +647,23 @@
   .aio-step-duration { font-size: 11px; color: var(--sand-text2); margin-top: 2px; }
 
   /* ── CRM & Pipeline ── */
-  .crm-kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
-  .crm-col { flex: 0 0 220px; }
-  .crm-col-header { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--sand-text2); margin-bottom: 8px; display: flex; justify-content: space-between; }
-  .crm-card { background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; font-size: 12px; }
-  .crm-card-name { font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-  .crm-card-client { color: var(--sand-text2); font-size: 11.5px; margin-bottom: 4px; }
-  .crm-card-value { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: var(--ink); }
+  .crm-tabs { display:flex; gap:8px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .crm-sub { font-family: inherit; font-weight:400; font-size:12px; color: var(--sand-text2); }
+  .crm-queue { display:grid; gap:10px; }
+  .crm-q { background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 12px; padding: 12px 14px; }
+  .crm-q-head { display:flex; justify-content:space-between; gap:10px; font-size:12.5px; margin-bottom:8px; }
+  .crm-q-head b { color: var(--sand-text); }
+  .crm-q textarea { width:100%; min-height:110px; border:1px solid var(--sand-border); border-radius:9px; padding:9px 10px; font-family: inherit; font-size:13px; line-height:1.5; background:#fff; color: var(--ink); resize: vertical; box-sizing: border-box; }
+  .crm-q-actions { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; align-items:center; font-size:12px; color: var(--sand-text2); }
+  .crm-btn-ghost { background: transparent; color: var(--sand-text); border: 1px solid var(--sand-border); border-radius: 9px; padding: 7px 12px; font-family: inherit; font-weight:600; font-size:12px; cursor: pointer; }
+  .crm-btn-ghost:disabled, .crm-q .aio-btn:disabled { opacity:.6; cursor: wait; }
+  .crm-filters { display:flex; gap:8px; margin-bottom: .7rem; flex-wrap: wrap; }
+  .crm-filters input, .crm-filters select, .pf-table select.crm-status { border:1px solid var(--sand-border); border-radius:8px; padding:6px 9px; font-family: inherit; font-size:12.5px; background:#fff; color: var(--ink); }
+  .crm-filters input { flex: 1 1 200px; }
+  .crm-score { display:inline-block; min-width:34px; text-align:center; font: 700 12px 'Space Grotesk', sans-serif; padding:3px 7px; border-radius: 20px; background: rgba(36,30,26,.08); }
+  .crm-score.hi { background: rgba(46,158,91,.14); color:#2e7d4f; } .crm-score.md { background: rgba(245,166,35,.16); color:#a46a07; }
+  .crm-pager { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-top:.7rem; font-size:12px; color: var(--sand-text2); }
+  .crm-name { cursor:pointer; font-weight:600; } .crm-name:hover { text-decoration: underline; }
 
   /* ── Marketing & Content ── */
   .mc-snapshot-note { font-size: 11.5px; color: var(--sand-text2); margin: -0.5rem 0 1rem; }
@@ -1212,8 +1222,34 @@
 
     <!-- ─── Page: CRM & Pipeline ─── -->
     <div id="page-crm-pipeline" class="page-section">
-      <div class="aio-mock-banner">🔧 Nagara CRM (fork Atomic CRM) masih tahap In Progress, belum live. Data di bawah ini contoh ilustratif.</div>
-      <div class="crm-kanban" id="crm-kanban"></div>
+      <div class="crm-tabs" id="crm-tabs">
+        <button class="vo-btn active" data-product="nadi" onclick="crmSetProduct(this)">NADI · UMKM</button>
+        <button class="vo-btn" data-product="edukit" onclick="crmSetProduct(this)">Nagara EduKit · Lembaga Training</button>
+      </div>
+      <div class="aio-actions">
+        <button class="aio-btn" id="crm-sync-btn" onclick="crmSync()">⟳ Sinkron dari Airtable</button>
+        <button class="aio-btn" id="crm-usul-btn" onclick="crmUsul()">✍️ Usul: siapkan 5 draf WA</button>
+        <span id="crm-note"></span>
+      </div>
+      <div id="crm-error" class="aio-mock-banner" style="display:none"></div>
+      <div class="aio-kpis" id="crm-kpis"></div>
+
+      <h3 class="aio-h">Antrean persetujuan pesan <span class="crm-sub">— tidak ada pesan terkirim sebelum Anda klik “Setujui &amp; kirim” · maks 20/hari</span></h3>
+      <div id="crm-queue" class="crm-queue"><div class="pf-card-empty">Memuat…</div></div>
+
+      <h3 class="aio-h" style="margin-top:1.5rem">Calon klien <span class="crm-sub">— diurutkan skor tertinggi</span></h3>
+      <div class="crm-filters">
+        <input id="crm-q" type="search" placeholder="Cari nama / kota…" oninput="crmDebounce()">
+        <select id="crm-f-status" onchange="crmLoad()"></select>
+        <select id="crm-f-cat" onchange="crmLoad()"><option value="">Semua kategori</option></select>
+      </div>
+      <div class="pf-table-wrap">
+        <table class="pf-table">
+          <thead><tr><th>Skor</th><th>Nama</th><th>Kategori</th><th>Kota</th><th>WA</th><th>Status</th></tr></thead>
+          <tbody id="crm-body"><tr><td colspan="6">Memuat…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="crm-pager"><button class="vo-btn" onclick="crmPage(-1)">‹ Sebelumnya</button><span id="crm-page-note"></span><button class="vo-btn" onclick="crmPage(1)">Berikutnya ›</button></div>
     </div>
 
     <!-- ─── Page: Marketing & Content ─── -->
@@ -4930,7 +4966,7 @@
     'business-unit':     { title: 'Business Unit Monitor',   sub: 'Produk & metrik operasional per unit bisnis' },
     'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Status & log aktivitas karyawan AI — data langsung dari database kantor' },
     'virtual-office':    { title: 'Virtual Office',          sub: 'Karyawan AI per zona — data langsung dari database kantor' },
-    'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Pipeline deal Nagara CRM (data contoh)' },
+    'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Calon klien NADI & Nagara EduKit — data asli Airtable, skor otomatis, outreach dengan persetujuan' },
     'marketing-content': { title: 'Marketing & Content',     sub: 'Meta Ads (snapshot) & antrian konten 11 Facebook Page' },
     'legal-compliance':  { title: 'Legal & Compliance',      sub: 'Checklist lisensi & UU PDP (sebagian data asli, sebagian ilustratif)' },
   };
@@ -4971,7 +5007,7 @@
     if (name === 'business-unit') bumInit();
     if (name === 'ai-orchestration') aioRenderTable();
     if (name === 'virtual-office') { const f = document.getElementById('vo-frame'); if (f && !f.getAttribute('src')) f.src = '/office/'; }
-    if (name === 'crm-pipeline') crmRenderKanban();
+    if (name === 'crm-pipeline') crmRender();
     if (name === 'legal-compliance') lcRenderTable();
     if (name === 'marketing-content') mcInit();
     if (name === 'finance')  finLoadData();
@@ -5547,66 +5583,128 @@
   // Client names are intentionally fictional (NOT real past clients from
   // Portfolio Produk's Airtable data), since these represent open/unclosed
   // pipeline deals, not delivered work.
-  // TODO: sambungkan ke Supabase project Nagara CRM setelah live — begitu
-  // itu terjadi, data jadi user-editable/externally-sourced, dan escapeHtml
-  // WAJIB ditambahkan di crmCardHtml/crmOpenDeal, sama seperti Portfolio
-  // Produk/Business Unit Monitor menangani data Airtable.
-  const CRM_STAGES = ['New', 'Contacted', 'Qualified', 'Proposal', 'Won', 'Lost'];
-
-  const CRM_MOCK_DEALS = [
-    { id: 'deal_01', dealName: 'Website + CRM', clientName: 'BPR Makmur Sejahtera', valueRupiah: 45000000, stage: 'New', enteredAt: '2026-08-20', notes: 'Rujukan dari klien existing, belum ada kontak langsung.' },
-    { id: 'deal_02', dealName: 'AI Agent WhatsApp', clientName: 'Klinik Sehat Selalu', valueRupiah: 18000000, stage: 'New', enteredAt: '2026-08-22', notes: 'Inbound dari iklan Meta Ads NADI.' },
-    { id: 'deal_03', dealName: 'Website Klinik + Booking', clientName: 'Klinik Ceria Dental', valueRupiah: 22000000, stage: 'Contacted', enteredAt: '2026-08-15', notes: 'Sudah dijadwalkan demo minggu depan.' },
-    { id: 'deal_04', dealName: 'Sistem Reservasi', clientName: 'Wisata Nusantara Travel', valueRupiah: 35000000, stage: 'Contacted', enteredAt: '2026-08-10', notes: 'Menunggu balasan soal kebutuhan integrasi payment.' },
-    { id: 'deal_05', dealName: 'Website + CRM + AI Agent', clientName: 'BPR Sentosa Abadi', valueRupiah: 65000000, stage: 'Qualified', enteredAt: '2026-08-05', notes: 'Budget sudah dikonfirmasi, proposal sedang disiapkan.' },
-    { id: 'deal_06', dealName: 'AI Agent WhatsApp', clientName: 'Klinik Kecantikan Radiance', valueRupiah: 15000000, stage: 'Qualified', enteredAt: '2026-08-08', notes: 'Decision maker sudah setuju, tinggal harga final.' },
-    { id: 'deal_07', dealName: 'Website + Booking Engine', clientName: 'Amara Trip & Tour', valueRupiah: 40000000, stage: 'Proposal', enteredAt: '2026-07-28', notes: 'Proposal terkirim 3 hari lalu, follow-up terjadwal H+3.' },
-    { id: 'deal_08', dealName: 'Sistem Reservasi + CRM', clientName: 'BPR Cahaya Mandiri', valueRupiah: 55000000, stage: 'Proposal', enteredAt: '2026-07-25', notes: 'Sedang nego termin pembayaran.' },
-    { id: 'deal_09', dealName: 'Website + CRM', clientName: 'Klinik Medika Prima', valueRupiah: 28000000, stage: 'Won', enteredAt: '2026-07-10', notes: 'Kontrak ditandatangani, onboarding mulai minggu depan.' },
-    { id: 'deal_10', dealName: 'AI Agent WhatsApp', clientName: 'Rahayu Tour Travel', valueRupiah: 12000000, stage: 'Won', enteredAt: '2026-07-05', notes: 'Sudah live, testimoni sedang diminta.' },
-    { id: 'deal_11', dealName: 'Website + Booking', clientName: 'BPR Tunas Harapan', valueRupiah: 30000000, stage: 'Lost', enteredAt: '2026-06-20', notes: 'Klien pilih vendor lain karena harga.' },
-    { id: 'deal_12', dealName: 'Sistem Reservasi', clientName: 'Klinik Sentosa Medika', valueRupiah: 20000000, stage: 'Lost', enteredAt: '2026-06-15', notes: 'Proyek ditunda internal klien, bukan karena kompetitor.' },
-  ];
-
-  function crmFmtValue(rupiah) {
-    return 'Rp ' + rupiah.toLocaleString('id-ID');
+  // ── CRM & Pipeline: data asli calon klien (Airtable → Supabase crm_leads) ──
+  // Dua produk: NADI (UMKM, base "Nagara CRM") dan Nagara EduKit (lembaga training, base "Nagara EduKit — Pipeline Prospek").
+  // Pesan WA HANYA terkirim setelah pemilik klik "Setujui & kirim" (server menegakkan batas 20/hari).
+  const CRM_STATUS = { baru: 'Baru', draft: 'Draf disiapkan', dihubungi: 'Sudah dihubungi', membalas: 'Membalas', tertarik: 'Tertarik', deal: 'Deal', tidak_tertarik: 'Tidak tertarik', jangan_hubungi: 'Jangan hubungi' };
+  const crm = { product: 'nadi', offset: 0, limit: 50, rows: [], timer: null };
+  async function crmApi(path, opts = {}) {
+    const r = await fetch(path, { credentials: 'same-origin', cache: 'no-store', ...opts, headers: { 'content-type': 'application/json', ...(opts.headers || {}) } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+    return j;
   }
-
-  function crmFmtDate(isoDate) {
-    return new Date(isoDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  function crmSetProduct(btn) {
+    document.querySelectorAll('#crm-tabs .vo-btn').forEach(b => b.classList.toggle('active', b === btn));
+    crm.product = btn.dataset.product; crm.offset = 0;
+    document.getElementById('crm-f-cat').innerHTML = '<option value="">Semua kategori</option>';
+    crmRender();
   }
-
-  function crmCardHtml(deal) {
-    return `<div class="crm-card" onclick="crmOpenDeal('${deal.id}')">
-      <div class="crm-card-name">${deal.dealName}</div>
-      <div class="crm-card-client">${deal.clientName}</div>
-      <div class="crm-card-value">${crmFmtValue(deal.valueRupiah)}</div>
-    </div>`;
+  function crmDebounce() { clearTimeout(crm.timer); crm.timer = setTimeout(() => { crm.offset = 0; crmLoad(); }, 350); }
+  function crmPage(d) { const n = crm.offset + d * crm.limit; if (n < 0 || (d > 0 && crm.rows.length < crm.limit)) return; crm.offset = n; crmLoad(); }
+  function crmRender() {
+    const st = document.getElementById('crm-f-status');
+    if (!st.options.length) st.innerHTML = '<option value="">Semua status</option>' + Object.entries(CRM_STATUS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+    crmLoad(); crmLoadQueue();
   }
-
-  function crmRenderKanban() {
-    const kanbanEl = document.getElementById('crm-kanban');
-    kanbanEl.innerHTML = CRM_STAGES.map(stage => {
-      const deals = CRM_MOCK_DEALS.filter(d => d.stage === stage);
-      const cards = deals.length ? deals.map(crmCardHtml).join('') : '<div class="pf-card-empty">Kosong</div>';
-      return `<div class="crm-col">
-        <div class="crm-col-header"><span>${stage}</span><span>${deals.length}</span></div>
-        ${cards}
-      </div>`;
-    }).join('');
+  async function crmLoad() {
+    const err = document.getElementById('crm-error'); err.style.display = 'none';
+    const qs = new URLSearchParams({ product: crm.product, limit: crm.limit, offset: crm.offset });
+    const q = document.getElementById('crm-q').value.trim(); if (q) qs.set('q', q);
+    const status = document.getElementById('crm-f-status').value; if (status) qs.set('status', status);
+    const cat = document.getElementById('crm-f-cat').value; if (cat) qs.set('category', cat);
+    let j;
+    try { j = await crmApi('/api/office/leads?' + qs); }
+    catch (e) { err.textContent = 'Belum bisa membaca data calon klien — ' + e.message; err.style.display = 'block'; return; }
+    crm.rows = j.rows;
+    const by = (k) => j.stats.reduce((m, r) => (m[r[k] || '-'] = (m[r[k] || '-'] || 0) + r.n, m), {});
+    const total = j.stats.reduce((s, r) => s + r.n, 0), byStatus = by('status'), byCat = by('category');
+    document.getElementById('crm-kpis').innerHTML = [
+      [total.toLocaleString('id-ID'), crm.product === 'edukit' ? 'lembaga training' : 'calon klien UMKM'],
+      [(byStatus.baru || 0).toLocaleString('id-ID'), 'belum dihubungi'],
+      [(byStatus.dihubungi || 0) + (byStatus.membalas || 0), 'dihubungi / membalas'],
+      [(byStatus.tertarik || 0) + ' / ' + (byStatus.deal || 0), 'tertarik / deal'],
+    ].map(([v, l]) => `<div class="aio-kpi"><b>${v}</b><span>${l}</span></div>`).join('');
+    const catSel = document.getElementById('crm-f-cat');
+    if (catSel.options.length <= 1) catSel.innerHTML += Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<option value="${escapeHtml(k)}">${escapeHtml(k)} (${n})</option>`).join('');
+    document.getElementById('crm-page-note').textContent = j.rows.length ? `${crm.offset + 1}–${crm.offset + j.rows.length}` : '';
+    document.getElementById('crm-body').innerHTML = j.rows.length ? j.rows.map(r => {
+      const cls = r.score >= 70 ? 'hi' : r.score >= 45 ? 'md' : '';
+      const opts = Object.entries(CRM_STATUS).map(([k, v]) => `<option value="${k}"${k === r.status ? ' selected' : ''}>${v}</option>`).join('');
+      return `<tr><td><span class="crm-score ${cls}" title="${escapeHtml(r.score_reason || '')}">${r.score}</span></td>
+        <td><span class="crm-name" onclick="crmOpenLead(${r.id})">${escapeHtml(r.name)}</span></td>
+        <td>${escapeHtml(r.segment || r.category || '-')}</td><td>${escapeHtml(r.city || '-')}</td>
+        <td>${r.wa ? '✓' : '<span title="Tidak ada nomor ponsel valid">—</span>'}</td>
+        <td><select class="crm-status" onchange="crmSetStatus(${r.id}, this.value)">${opts}</select></td></tr>`;
+    }).join('') : '<tr><td colspan="6">Belum ada data. Klik “Sinkron dari Airtable”.</td></tr>';
   }
-
-  function crmOpenDeal(id) {
-    const deal = CRM_MOCK_DEALS.find(d => d.id === id);
-    if (!deal) return;
-    openSharedModal(`
-      <h3>${deal.dealName}</h3>
-      <span class="pf-badge other">${deal.stage}</span>
-      <div class="pf-modal-field"><div class="pf-modal-field-label">Calon Klien</div><div class="pf-modal-field-value">${deal.clientName}</div></div>
-      <div class="pf-modal-field"><div class="pf-modal-field-label">Nilai Deal</div><div class="pf-modal-field-value">${crmFmtValue(deal.valueRupiah)}</div></div>
-      <div class="pf-modal-field"><div class="pf-modal-field-label">Masuk Pipeline</div><div class="pf-modal-field-value">${crmFmtDate(deal.enteredAt)}</div></div>
-      <div class="pf-modal-field"><div class="pf-modal-field-label">Catatan</div><div class="pf-modal-field-value">${deal.notes}</div></div>
-    `);
+  function crmOpenLead(id) {
+    const r = crm.rows.find(x => x.id === id); if (!r) return;
+    const f = (l, v) => v ? `<div class="pf-modal-field"><div class="pf-modal-field-label">${l}</div><div class="pf-modal-field-value">${v}</div></div>` : '';
+    openSharedModal(`<h3>${escapeHtml(r.name)}</h3><span class="pf-badge other">${CRM_STATUS[r.status] || r.status}</span>
+      ${f('Skor', r.score + ' — ' + escapeHtml(r.score_reason || ''))}
+      ${f('Kategori / Segmen', escapeHtml(r.segment || r.category || ''))}
+      ${f('Prioritas', escapeHtml(r.priority || r.prospect_level || ''))}
+      ${f('Kualitas data', escapeHtml(r.data_quality || ''))}
+      ${f('Kota', escapeHtml(r.city || ''))}
+      ${f('Contact person', escapeHtml(r.contact_person || ''))}
+      ${f('WhatsApp', r.wa ? '+' + escapeHtml(r.wa) : '')}
+      ${f('Email', escapeHtml(r.email || ''))}
+      ${f('Website', r.website && /^https?:\/\//.test(r.website) ? `<a href="${escapeHtml(r.website)}" target="_blank" rel="noopener noreferrer">${escapeHtml(r.website)}</a>` : '')}
+      ${f('Terakhir dihubungi', r.last_contacted_at ? new Date(r.last_contacted_at).toLocaleString('id-ID') : '')}`);
+  }
+  async function crmSetStatus(id, status) {
+    try { await crmApi('/api/office/lead', { method: 'POST', body: JSON.stringify({ id, status }) }); document.getElementById('crm-note').textContent = 'Status disimpan.'; }
+    catch (e) { document.getElementById('crm-note').textContent = 'Gagal simpan status: ' + e.message; }
+  }
+  async function crmSync() {
+    const btn = document.getElementById('crm-sync-btn'), note = document.getElementById('crm-note');
+    btn.disabled = true; note.textContent = 'Mengambil data dari Airtable & menghitung skor…';
+    try {
+      const j = await crmApi('/api/office/leads-sync', { method: 'POST', body: JSON.stringify({}) });
+      const parts = Object.entries(j.result || {}).map(([k, n]) => `${k === 'edukit' ? 'EduKit' : 'NADI'} ${n}`);
+      const errs = Object.entries(j.errors || {}).map(([k, m]) => `${k === 'edukit' ? 'EduKit' : 'NADI'}: ${m}`);
+      note.textContent = 'Sinkron selesai — ' + parts.join(', ') + (errs.length ? ' · Gagal ' + errs.join(' · ') : '');
+      document.getElementById('crm-f-cat').innerHTML = '<option value="">Semua kategori</option>';
+      crmLoad();
+    } catch (e) { note.textContent = 'Sinkron gagal: ' + e.message; }
+    finally { btn.disabled = false; }
+  }
+  async function crmUsul() {
+    const btn = document.getElementById('crm-usul-btn'), note = document.getElementById('crm-note');
+    btn.disabled = true; note.textContent = 'Usul sedang menulis draf pesan…';
+    try {
+      const j = await crmApi('/api/agents/usul', { method: 'POST', body: JSON.stringify({ product: crm.product, n: 5 }) });
+      note.textContent = j.drafted ? `${j.drafted} draf baru masuk antrean — periksa & setujui di bawah.` : (j.note || 'Tidak ada draf baru.');
+      crmLoadQueue(); crmLoad();
+    } catch (e) { note.textContent = 'Usul gagal: ' + e.message; }
+    finally { btn.disabled = false; }
+  }
+  async function crmLoadQueue() {
+    const box = document.getElementById('crm-queue');
+    let st; try { st = await officeFetch(); } catch (e) { box.innerHTML = `<div class="pf-card-empty">Gagal memuat antrean: ${escapeHtml(e.message)}</div>`; return; }
+    const items = st.approvals.filter(a => a.kind === 'outreach' && (a.payload?.product || 'nadi') === crm.product);
+    box.innerHTML = items.length ? items.map(a => `<div class="crm-q" id="q-${a.id}">
+        <div class="crm-q-head"><b>${escapeHtml(a.summary)}</b><span>${officeAgo(a.created_at)}</span></div>
+        <textarea id="qm-${a.id}" maxlength="1000">${escapeHtml(a.payload?.message || '')}</textarea>
+        <div class="crm-q-actions">
+          <button class="aio-btn" onclick="crmDecide('${a.id}','setuju')">Setujui &amp; kirim WA</button>
+          <button class="crm-btn-ghost" onclick="crmDecide('${a.id}','tolak')">Tolak (kembali ke daftar)</button>
+          <button class="crm-btn-ghost" onclick="crmDecide('${a.id}','tolak',true)">Tolak &amp; jangan hubungi</button>
+          <span id="qn-${a.id}"></span>
+        </div></div>`).join('') : '<div class="pf-card-empty">Tidak ada draf menunggu. Klik “Usul: siapkan 5 draf WA”.</div>';
+  }
+  async function crmDecide(id, decision, block) {
+    const card = document.getElementById('q-' + id), note = document.getElementById('qn-' + id);
+    card.querySelectorAll('button').forEach(b => b.disabled = true);
+    note.textContent = decision === 'setuju' ? 'Mengirim…' : 'Menyimpan…';
+    try {
+      const message = document.getElementById('qm-' + id).value;
+      const j = await crmApi('/api/office/approval', { method: 'POST', body: JSON.stringify({ id, decision, block: !!block, message }) });
+      note.textContent = j.status === 'terkirim' ? '✓ Terkirim' : '✓ ' + j.status;
+      setTimeout(() => { card.remove(); if (!document.querySelector('#crm-queue .crm-q')) crmLoadQueue(); }, 900);
+      crmLoad();
+    } catch (e) { note.textContent = 'Gagal: ' + e.message; card.querySelectorAll('button').forEach(b => b.disabled = false); }
   }
 
   // License status here is grounded in REAL data from Portfolio Produk's
