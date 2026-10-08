@@ -663,6 +663,8 @@
   .crm-score { display:inline-block; min-width:34px; text-align:center; font: 700 12px 'Space Grotesk', sans-serif; padding:3px 7px; border-radius: 20px; background: rgba(36,30,26,.08); }
   .crm-score.hi { background: rgba(46,158,91,.14); color:#2e7d4f; } .crm-score.md { background: rgba(245,166,35,.16); color:#a46a07; }
   .crm-pager { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-top:.7rem; font-size:12px; color: var(--sand-text2); }
+  .crm-selbar { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color:#fff; border-radius: 14px; padding: 10px 12px 10px 18px; display: none; gap: 10px; align-items: center; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 50; }
+  .crm-selbar.show { display: flex; }
   .crm-views { display:flex; gap:4px; border-bottom:1px solid var(--sand-border); margin-bottom:1.1rem; }
   .crm-view-btn { background:none; border:0; border-bottom:2px solid transparent; padding:8px 14px; font-family:inherit; font-size:13px; font-weight:600; color: var(--sand-text2); cursor:pointer; margin-bottom:-1px; }
   .crm-view-btn.active { color: var(--ink); border-bottom-color: var(--ink); }
@@ -1309,7 +1311,8 @@
       </div>
       <div class="aio-actions">
         <button class="aio-btn" id="crm-sync-btn" onclick="crmSync()">⟳ Sinkron dari Airtable</button>
-        <button class="aio-btn" id="crm-usul-btn" onclick="crmUsul()">✍️ Usul: siapkan 5 draf WA</button>
+        <button class="aio-btn" id="crm-usul-btn" onclick="crmUsul()">✍️ Usul: 5 skor tertinggi</button>
+        <button class="aio-btn" id="crm-usul-sel-btn" onclick="crmUsul(true)" disabled>✍️ Buat draf untuk yang dipilih (0)</button>
         <span id="crm-note"></span>
       </div>
       <div id="crm-error" class="aio-mock-banner" style="display:none"></div>
@@ -1326,10 +1329,11 @@
       </div>
       <div class="pf-table-wrap">
         <table class="pf-table">
-          <thead><tr><th>Skor</th><th>Nama</th><th>Kategori</th><th>Kota</th><th>WA</th><th>Status</th></tr></thead>
-          <tbody id="crm-body"><tr><td colspan="6">Memuat…</td></tr></tbody>
+          <thead><tr><th style="width:28px"><input type="checkbox" id="crm-sel-all" title="Pilih semua di halaman ini" onchange="crmSelAll(this.checked)"></th><th>Skor</th><th>Nama</th><th>Kategori</th><th>Kota</th><th>WA</th><th>Status</th></tr></thead>
+          <tbody id="crm-body"><tr><td colspan="7">Memuat…</td></tr></tbody>
         </table>
       </div>
+      <div class="crm-selbar" id="crm-selbar"><span id="crm-selbar-n"></span><button class="aio-btn" style="background:#25a35a" onclick="crmUsul(true)">✍️ Buat draf WA</button><button class="crm-btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.35)" onclick="crm.sel.clear();crmLoad()">Batal</button></div>
       <div class="crm-pager"><button class="vo-btn" onclick="crmPage(-1)">‹ Sebelumnya</button><span id="crm-page-note"></span><button class="vo-btn" onclick="crmPage(1)">Berikutnya ›</button></div>
       </div>
     </div>
@@ -5669,7 +5673,8 @@
   // Dua produk: NADI (UMKM, base "Nagara CRM") dan Nagara EduKit (lembaga training, base "Nagara EduKit — Pipeline Prospek").
   // Pesan WA HANYA terkirim setelah pemilik klik "Setujui & kirim" (server menegakkan batas 20/hari).
   const CRM_STATUS = { baru: 'Baru', draft: 'Draf disiapkan', dihubungi: 'Sudah dihubungi', membalas: 'Membalas', tertarik: 'Tertarik', deal: 'Deal', tidak_tertarik: 'Tidak tertarik', jangan_hubungi: 'Jangan hubungi' };
-  const crm = { product: 'nadi', offset: 0, limit: 50, rows: [], timer: null };
+  const crm = { product: 'nadi', offset: 0, limit: 50, rows: [], timer: null, sel: new Set() };
+  const crmSelectable = r => r.status === 'baru' && !!r.wa;
   async function crmApi(path, opts = {}) {
     const r = await fetch(path, { credentials: 'same-origin', cache: 'no-store', ...opts, headers: { 'content-type': 'application/json', ...(opts.headers || {}) } });
     const j = await r.json().catch(() => ({}));
@@ -5678,7 +5683,7 @@
   }
   function crmSetProduct(btn) {
     document.querySelectorAll('#crm-tabs .vo-btn').forEach(b => b.classList.toggle('active', b === btn));
-    crm.product = btn.dataset.product; crm.offset = 0;
+    crm.product = btn.dataset.product; crm.offset = 0; crm.sel.clear(); crmSelUpdate();
     document.getElementById('crm-f-cat').innerHTML = '<option value="">Semua kategori</option>';
     crmRender();
   }
@@ -5713,12 +5718,14 @@
     document.getElementById('crm-body').innerHTML = j.rows.length ? j.rows.map(r => {
       const cls = r.score >= 70 ? 'hi' : r.score >= 45 ? 'md' : '';
       const opts = Object.entries(CRM_STATUS).map(([k, v]) => `<option value="${k}"${k === r.status ? ' selected' : ''}>${v}</option>`).join('');
-      return `<tr><td><span class="crm-score ${cls}" title="${escapeHtml(r.score_reason || '')}">${r.score}</span></td>
+      const can = crmSelectable(r);
+      return `<tr><td><input type="checkbox" ${can ? '' : 'disabled title="Hanya kontak berstatus Baru dengan nomor WA yang bisa dipilih"'} ${crm.sel.has(r.id) ? 'checked' : ''} onchange="crmToggleSel(${r.id}, this.checked)"></td><td><span class="crm-score ${cls}" title="${escapeHtml(r.score_reason || '')}">${r.score}</span></td>
         <td><span class="crm-name" onclick="crmOpenLead(${r.id})">${escapeHtml(r.name)}</span></td>
         <td>${escapeHtml(r.segment || r.category || '-')}</td><td>${escapeHtml(r.city || '-')}</td>
         <td>${r.wa ? '✓' : '<span title="Tidak ada nomor ponsel valid">—</span>'}</td>
         <td><select class="crm-status" onchange="crmSetStatus(${r.id}, this.value)">${opts}</select></td></tr>`;
-    }).join('') : '<tr><td colspan="6">Belum ada data. Klik “Sinkron dari Airtable”.</td></tr>';
+    }).join('') : '<tr><td colspan="7">Belum ada data. Klik “Sinkron dari Airtable”.</td></tr>';
+    crmSelUpdate();
   }
   function crmOpenLead(id) {
     const r = crm.rows.find(x => x.id === id); if (!r) return;
@@ -5752,15 +5759,31 @@
     } catch (e) { note.textContent = 'Sinkron gagal: ' + e.message; }
     finally { btn.disabled = false; }
   }
-  async function crmUsul() {
-    const btn = document.getElementById('crm-usul-btn'), note = document.getElementById('crm-note');
+  function crmToggleSel(id, on) {
+    if (on && crm.sel.size >= 10) { document.getElementById('crm-note').textContent = 'Maksimal 10 kontak per sekali buat draf.'; crmLoad(); return; }
+    on ? crm.sel.add(id) : crm.sel.delete(id); crmSelUpdate();
+  }
+  function crmSelAll(on) {
+    crm.rows.filter(crmSelectable).forEach(r => { if (!on) crm.sel.delete(r.id); else if (crm.sel.size < 10) crm.sel.add(r.id); });
+    crmLoad();
+  }
+  function crmSelUpdate() {
+    const b = document.getElementById('crm-usul-sel-btn'); if (!b) return;
+    b.textContent = `✍️ Buat draf untuk yang dipilih (${crm.sel.size})`; b.disabled = !crm.sel.size;
+    const bar = document.getElementById('crm-selbar'); bar.classList.toggle('show', crm.sel.size > 0);
+    document.getElementById('crm-selbar-n').textContent = `${crm.sel.size} kontak dipilih (maks 10)`;
+  }
+  async function crmUsul(selected) {
+    const btn = document.getElementById(selected ? 'crm-usul-sel-btn' : 'crm-usul-btn'), note = document.getElementById('crm-note');
+    const body = selected ? { product: crm.product, lead_ids: [...crm.sel] } : { product: crm.product, n: 5 };
     btn.disabled = true; note.textContent = 'Usul sedang menulis draf pesan…';
     try {
-      const j = await crmApi('/api/agents/usul', { method: 'POST', body: JSON.stringify({ product: crm.product, n: 5 }) });
-      note.textContent = j.drafted ? `${j.drafted} draf baru masuk antrean — periksa & setujui di bawah.` : (j.note || 'Tidak ada draf baru.');
+      const j = await crmApi('/api/agents/usul', { method: 'POST', body: JSON.stringify(body) });
+      note.textContent = (j.drafted ? `${j.drafted} draf baru masuk antrean — periksa & setujui di bawah.` : (j.note || 'Tidak ada draf baru.')) + (j.skipped ? ` (${j.skipped} dilewati: bukan status Baru / tanpa WA)` : '');
+      if (selected) crm.sel.clear();
       crmLoadQueue(); crmLoad();
     } catch (e) { note.textContent = 'Usul gagal: ' + e.message; }
-    finally { btn.disabled = false; }
+    finally { btn.disabled = false; crmSelUpdate(); }
   }
   async function crmLoadQueue() {
     const box = document.getElementById('crm-queue');
