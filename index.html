@@ -663,6 +663,47 @@
   .crm-score { display:inline-block; min-width:34px; text-align:center; font: 700 12px 'Space Grotesk', sans-serif; padding:3px 7px; border-radius: 20px; background: rgba(36,30,26,.08); }
   .crm-score.hi { background: rgba(46,158,91,.14); color:#2e7d4f; } .crm-score.md { background: rgba(245,166,35,.16); color:#a46a07; }
   .crm-pager { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-top:.7rem; font-size:12px; color: var(--sand-text2); }
+  .crm-views { display:flex; gap:4px; border-bottom:1px solid var(--sand-border); margin-bottom:1.1rem; }
+  .crm-view-btn { background:none; border:0; border-bottom:2px solid transparent; padding:8px 14px; font-family:inherit; font-size:13px; font-weight:600; color: var(--sand-text2); cursor:pointer; margin-bottom:-1px; }
+  .crm-view-btn.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .crm-badge { display:inline-block; min-width:18px; padding:1px 6px; border-radius:10px; background:#25a35a; color:#fff; font-size:10.5px; text-align:center; margin-left:4px; }
+  .wa-lanes { display:grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap:8px; align-items:stretch; }
+  .wa-lane { background: var(--sand-card); border:1px solid var(--sand-border); border-radius:12px; padding:12px 14px; font-size:12.5px; color: var(--sand-text2); line-height:1.5; }
+  .wa-lane h4 { margin:0 0 4px; font: 600 13px 'Space Grotesk', sans-serif; color: var(--sand-text); }
+  .wa-arrow { align-self:center; color: var(--sand-text2); font-size:18px; }
+  .wa-pill { display:inline-block; font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:20px; margin-bottom:6px; }
+  .wa-pill.on { background: rgba(46,158,91,.14); color:#2e7d4f; } .wa-pill.off { background: rgba(245,166,35,.16); color:#a46a07; }
+  .wa-inbox { display:grid; grid-template-columns: 300px 1fr; border:1px solid var(--sand-border); border-radius:12px; overflow:hidden; background: var(--sand-card); min-height: 460px; }
+  .wa-list { border-right:1px solid var(--sand-border); display:flex; flex-direction:column; max-height:560px; }
+  .wa-filters { display:flex; gap:6px; padding:10px; border-bottom:1px solid var(--sand-border); flex-wrap:wrap; }
+  .wa-filters button { border:1px solid var(--sand-border); background:#fff; border-radius:20px; padding:3px 10px; font-family:inherit; font-size:11px; font-weight:600; color: var(--sand-text2); cursor:pointer; }
+  .wa-filters button.active { background: var(--ink); color:#fff; border-color: var(--ink); }
+  #wa-list-body { overflow-y:auto; flex:1; }
+  .wa-item { padding:10px 12px; border-bottom:1px solid var(--sand-border); cursor:pointer; font-size:12px; }
+  .wa-item:hover { background: rgba(36,30,26,.04); } .wa-item.active { background: rgba(36,30,26,.07); }
+  .wa-item-top { display:flex; justify-content:space-between; gap:6px; margin-bottom:3px; }
+  .wa-item-top b { color: var(--sand-text); font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .wa-item-top span { color: var(--sand-text2); font-size:10.5px; white-space:nowrap; }
+  .wa-item-last { color: var(--sand-text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .wa-tag { display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background: rgba(36,30,26,.08); color: var(--sand-text2); margin-right:4px; }
+  .wa-tag.membalas { background: rgba(37,163,90,.15); color:#1f7a45; } .wa-tag.tertarik { background: rgba(108,99,255,.14); color:#4b44c4; }
+  .wa-tag.deal { background: rgba(212,160,23,.2); color:#8a6400; } .wa-tag.jangan_hubungi, .wa-tag.tidak_tertarik { background: rgba(212,63,46,.12); color:#b0362a; }
+  .wa-thread { display:flex; flex-direction:column; max-height:560px; }
+  .wa-thread-head { padding:12px 16px; border-bottom:1px solid var(--sand-border); display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .wa-thread-head b { font-size:14px; color: var(--sand-text); }
+  .wa-msgs { flex:1; overflow-y:auto; padding:16px; background: #efe7da; display:flex; flex-direction:column; gap:8px; }
+  .wa-bubble { max-width: 72%; padding:8px 11px; border-radius:10px; font-size:13px; line-height:1.45; white-space:pre-wrap; box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+  .wa-bubble.out { align-self:flex-end; background:#d9f7c9; color:#1d2a1a; border-top-right-radius:3px; }
+  .wa-bubble.in { align-self:flex-start; background:#fff; color:#222; border-top-left-radius:3px; }
+  .wa-bubble small { display:block; font-size:10px; color: rgba(0,0,0,.45); margin-top:3px; text-align:right; }
+  .wa-compose { border-top:1px solid var(--sand-border); padding:10px 12px; display:flex; gap:8px; align-items:center; }
+  .wa-compose input { flex:1; border:1px solid var(--sand-border); border-radius:20px; padding:8px 14px; font-family:inherit; font-size:12.5px; background:#f6f2ea; color: var(--sand-text2); }
+  .wa-empty { margin:auto; text-align:center; color: var(--sand-text2); font-size:13px; padding:2rem; max-width:360px; line-height:1.6; }
+  .wa-bottom { display:grid; grid-template-columns: 3fr 2fr; gap:12px; margin-top:1rem; }
+  .wa-card { background: var(--sand-card); border:1px solid var(--sand-border); border-radius:12px; padding:14px 16px; }
+  .wa-steps { margin:0; padding-left:20px; font-size:12.5px; line-height:1.6; color: var(--sand-text2); }
+  .wa-steps b { color: var(--sand-text); } .wa-steps code { background: rgba(36,30,26,.08); padding:1px 5px; border-radius:4px; font-size:11px; }
+  @media (max-width: 900px) { .wa-lanes { grid-template-columns: 1fr; } .wa-arrow { transform: rotate(90deg); justify-self:center; } .wa-inbox, .wa-bottom { grid-template-columns: 1fr; } }
   .crm-name { cursor:pointer; font-weight:600; } .crm-name:hover { text-decoration: underline; }
 
   /* ── Marketing & Content ── */
@@ -1222,6 +1263,46 @@
 
     <!-- ─── Page: CRM & Pipeline ─── -->
     <div id="page-crm-pipeline" class="page-section">
+      <div class="crm-views">
+        <button class="crm-view-btn active" data-view="leads" onclick="crmSetView(this)">Calon klien &amp; outreach</button>
+        <button class="crm-view-btn" data-view="convo" onclick="crmSetView(this)">Percakapan WA <span id="crm-convo-badge" class="crm-badge" style="display:none"></span></button>
+      </div>
+      <div id="crm-view-convo" style="display:none">
+        <div class="wa-lanes" id="wa-lanes"></div>
+        <div class="aio-actions" style="margin-top:1rem">
+          <span class="crm-sub" id="wa-note"></span>
+          <span style="flex:1"></span>
+          <button class="crm-btn-ghost" id="wa-demo-btn" onclick="waToggleDemo()">Tampilkan contoh percakapan</button>
+          <button class="crm-btn-ghost" onclick="waLoad()">⟳ Muat ulang</button>
+        </div>
+        <div id="wa-demo-banner" class="aio-mock-banner" style="display:none">CONTOH — percakapan di bawah ini ilustrasi untuk membayangkan alurnya, bukan data asli. Klik “Sembunyikan contoh” untuk kembali ke data asli.</div>
+        <div class="wa-inbox">
+          <div class="wa-list">
+            <div class="wa-filters" id="wa-filters"></div>
+            <div id="wa-list-body"></div>
+          </div>
+          <div class="wa-thread" id="wa-thread"></div>
+        </div>
+        <div class="wa-bottom">
+          <div class="wa-card">
+            <h3 class="aio-h">Menyambungkan wacrm (WhatsApp Cloud API)</h3>
+            <ol class="wa-steps">
+              <li><b>Verifikasi Meta Business</b> untuk Nagara Digital Indonesia (dokumen usaha) di business.facebook.com.</li>
+              <li><b>Siapkan nomor baru khusus API</b> — nomor ini tidak bisa dipakai di aplikasi WhatsApp biasa. Jangan pakai nomor Fonnte.</li>
+              <li><b>Buat app WhatsApp di Meta for Developers</b>, ambil Phone Number ID &amp; token permanen (System User).</li>
+              <li><b>Deploy wacrm</b> (fork, Supabase terpisah, Vercel) lalu isi kredensial Meta di pengaturannya.</li>
+              <li><b>Buat template pesan</b> (kategori utility/marketing) untuk follow-up di luar jendela 24 jam, tunggu disetujui Meta.</li>
+              <li><b>Sambungkan ke dashboard:</b> set <code>WACRM_URL</code> di Vercel, lalu buat automasi di wacrm “pesan masuk → webhook” ke <code>/api/office/wa-inbound</code> dengan token.</li>
+              <li><b>Arahkan iklan Meta NADI</b> (klik-ke-WhatsApp) ke nomor Cloud API ini.</li>
+            </ol>
+          </div>
+          <div class="wa-card">
+            <h3 class="aio-h">Pesan dari nomor yang belum ada di CRM</h3>
+            <div id="wa-unmatched" class="crm-sub">Memuat…</div>
+          </div>
+        </div>
+      </div>
+      <div id="crm-view-leads">
       <div class="crm-tabs" id="crm-tabs">
         <button class="vo-btn active" data-product="nadi" onclick="crmSetProduct(this)">NADI · UMKM</button>
         <button class="vo-btn" data-product="edukit" onclick="crmSetProduct(this)">Nagara EduKit · Lembaga Training</button>
@@ -1250,6 +1331,7 @@
         </table>
       </div>
       <div class="crm-pager"><button class="vo-btn" onclick="crmPage(-1)">‹ Sebelumnya</button><span id="crm-page-note"></span><button class="vo-btn" onclick="crmPage(1)">Berikutnya ›</button></div>
+      </div>
     </div>
 
     <!-- ─── Page: Marketing & Content ─── -->
@@ -5705,6 +5787,108 @@
       setTimeout(() => { card.remove(); if (!document.querySelector('#crm-queue .crm-q')) crmLoadQueue(); }, 900);
       crmLoad();
     } catch (e) { note.textContent = 'Gagal: ' + e.message; card.querySelectorAll('button').forEach(b => b.disabled = false); }
+  }
+
+  // ── Percakapan WA: alur Fonnte (outreach) → balasan → wacrm/Cloud API (lanjutan) ──
+  const wa = { data: null, demo: false, filter: 'semua', sel: null };
+  function crmSetView(btn) {
+    document.querySelectorAll('.crm-view-btn').forEach(b => b.classList.toggle('active', b === btn));
+    const v = btn.dataset.view;
+    document.getElementById('crm-view-leads').style.display = v === 'leads' ? '' : 'none';
+    document.getElementById('crm-view-convo').style.display = v === 'convo' ? '' : 'none';
+    if (v === 'convo') waLoad();
+  }
+  function waDemoData() {
+    const t = (h) => new Date(Date.now() - h * 3600e3).toISOString();
+    const STOP = '\n\nBalas STOP jika tidak ingin dihubungi lagi.';
+    const out = (h, b) => ({ direction: 'out', channel: 'fonnte', body: b, created_at: t(h) });
+    const inn = (h, b, ch = 'fonnte') => ({ direction: 'in', channel: ch, body: b, created_at: t(h) });
+    const cv = (id, product, name, city, seg, status, messages) => ({ id, product, name, city, segment: seg, status, wa: '62812000000' + id, messages, updated_at: messages[messages.length - 1].created_at });
+    return {
+      channels: { fonnte: { connected: true }, cloud_api: { connected: false, url: null } },
+      unmatched: [{ wa: '6285711112222', body: 'Halo, saya lihat iklan NADI di Facebook, mau tanya harga website untuk bengkel.', created_at: t(3) }],
+      conversations: [
+        cv(1, 'edukit', 'LPPSDM (Bimteknas)', 'Jakarta', 'Bimtek ASN/Pemda', 'tertarik', [
+          out(30, 'Halo Tim LPPSDM, saya Imam dari Nagara Digital Indonesia. Kami punya Nagara EduKit, website siap pakai untuk lembaga diklat: jadwal bimtek, pendaftaran peserta online, dan rekap peserta. Boleh saya tunjukkan demo 15 menit?' + STOP),
+          inn(26, 'Siang Pak Imam. Boleh, kebetulan pendaftaran kami masih via Google Form. Bisa demo hari Kamis?'),
+          out(25, 'Bisa Pak, Kamis jam 10.00 via Zoom ya. Saya kirim tautannya besok pagi. Terima kasih!'),
+          inn(2, 'Baik, ditunggu. Mohon sekalian info biayanya per bulan.', 'cloud_api')]),
+        cv(2, 'nadi', 'Klinik Pratama Sehat', 'Bandung', 'Klinik & Kesehatan', 'membalas', [
+          out(20, 'Halo Klinik Pratama Sehat, saya Imam dari Nagara Digital Indonesia. Kami membantu klinik di Bandung punya website rapi yang muncul di Google dan terhubung ke WhatsApp untuk booking. Boleh saya kirim contoh tampilannya?' + STOP),
+          inn(5, 'Boleh kirim contohnya kak')]),
+        cv(3, 'edukit', 'Diorama Training', 'Jakarta', 'Korporat/Manajemen', 'dihubungi', [
+          out(8, 'Halo Tim Diorama Training, saya Imam dari Nagara Digital Indonesia. Nagara EduKit membantu lembaga training mengelola katalog & jadwal pelatihan serta pendaftaran peserta online tanpa tim IT. Berkenan saya kirim contoh tampilannya?' + STOP)]),
+        cv(4, 'nadi', 'Kost Putri Melati', 'Sumedang', 'Kost & Apartemen', 'jangan_hubungi', [
+          out(48, 'Halo Kost Putri Melati, saya Imam dari Nagara Digital Indonesia…' + STOP),
+          inn(47, 'STOP')]),
+      ],
+    };
+  }
+  function waToggleDemo() {
+    wa.demo = !wa.demo; wa.sel = null;
+    document.getElementById('wa-demo-btn').textContent = wa.demo ? 'Sembunyikan contoh' : 'Tampilkan contoh percakapan';
+    document.getElementById('wa-demo-banner').style.display = wa.demo ? '' : 'none';
+    waLoad();
+  }
+  async function waLoad() {
+    const note = document.getElementById('wa-note');
+    if (wa.demo) wa.data = waDemoData();
+    else {
+      try { wa.data = await crmApi('/api/office/conversations'); note.textContent = ''; }
+      catch (e) { note.textContent = 'Gagal memuat percakapan: ' + e.message; wa.data = { channels: {}, conversations: [], unmatched: [] }; }
+    }
+    waRender();
+  }
+  function waRender() {
+    const d = wa.data, ch = d.channels || {};
+    const pill = (on, yes, no) => `<span class="wa-pill ${on ? 'on' : 'off'}">${on ? yes : no}</span>`;
+    document.getElementById('wa-lanes').innerHTML = `
+      <div class="wa-lane">${pill(ch.fonnte?.connected, 'Aktif', 'Token belum di-set')}<h4>① Outreach awal · Fonnte</h4>Usul menyiapkan draf → Anda setujui di tab “Calon klien” → terkirim. Maks 20 pesan/hari, selalu dengan opsi STOP.</div>
+      <div class="wa-arrow">→</div>
+      <div class="wa-lane">${pill(true, 'Otomatis', '')}<h4>② Balasan masuk</h4>Balasan otomatis memindahkan kontak ke <b>Membalas</b> dan muncul di inbox ini. Balasan “STOP” → <b>Jangan hubungi</b> &amp; draf dibatalkan.</div>
+      <div class="wa-arrow">→</div>
+      <div class="wa-lane">${pill(ch.cloud_api?.connected, 'Tersambung', 'Belum disambungkan')}<h4>③ Percakapan lanjutan · wacrm</h4>Lewat WhatsApp Cloud API resmi: inbox bersama, AI reply, dan calon klien dari iklan klik-ke-WA. Data tetap kembali ke CRM ini.</div>`;
+    const counts = { semua: d.conversations.length };
+    d.conversations.forEach(c => counts[c.status] = (counts[c.status] || 0) + 1);
+    const F = [['semua', 'Semua'], ['membalas', 'Membalas'], ['tertarik', 'Tertarik'], ['dihubungi', 'Menunggu balasan'], ['deal', 'Deal']];
+    document.getElementById('wa-filters').innerHTML = F.map(([k, l]) => `<button class="${wa.filter === k ? 'active' : ''}" onclick="wa.filter='${k}';waRender()">${l} ${counts[k] || 0}</button>`).join('');
+    const badge = document.getElementById('crm-convo-badge');
+    if (counts.membalas) { badge.textContent = counts.membalas; badge.style.display = ''; } else badge.style.display = 'none';
+    const list = d.conversations.filter(c => wa.filter === 'semua' || c.status === wa.filter);
+    document.getElementById('wa-list-body').innerHTML = list.length ? list.map(c => {
+      const last = c.messages[c.messages.length - 1];
+      return `<div class="wa-item ${wa.sel === c.id ? 'active' : ''}" onclick="waSelect(${c.id})">
+        <div class="wa-item-top"><b>${escapeHtml(c.name)}</b><span>${last ? officeAgo(last.created_at) : ''}</span></div>
+        <div style="margin-bottom:3px"><span class="wa-tag">${c.product === 'edukit' ? 'EduKit' : 'NADI'}</span><span class="wa-tag ${c.status}">${CRM_STATUS[c.status] || c.status}</span></div>
+        <div class="wa-item-last">${last ? (last.direction === 'in' ? '↩ ' : 'Anda: ') + escapeHtml(last.body.split('\n')[0]) : 'Belum ada riwayat pesan'}</div></div>`;
+    }).join('') : `<div class="wa-empty">${d.conversations.length ? 'Tidak ada percakapan di filter ini.' : 'Belum ada percakapan. Percakapan muncul setelah Anda menyetujui &amp; mengirim pesan dari antrean di tab “Calon klien”.'}</div>`;
+    waRenderThread();
+    const um = d.unmatched || [];
+    document.getElementById('wa-unmatched').innerHTML = um.length ? um.map(m => `<div style="margin-bottom:8px"><b>+${escapeHtml(m.wa)}</b> · ${officeAgo(m.created_at)}<br>${escapeHtml(m.body.slice(0, 160))}</div>`).join('')
+      : 'Belum ada. Pesan dari nomor baru (misalnya dari iklan) akan tampil di sini supaya bisa dijadikan calon klien.';
+  }
+  function waSelect(id) { wa.sel = id; waRender(); }
+  function waRenderThread() {
+    const box = document.getElementById('wa-thread');
+    const c = wa.data.conversations.find(x => x.id === wa.sel);
+    if (!c) { box.innerHTML = '<div class="wa-empty">Pilih percakapan di kiri untuk melihat riwayat pesan.</div>'; return; }
+    const ch = wa.data.channels?.cloud_api || {};
+    const opts = Object.entries(CRM_STATUS).map(([k, v]) => `<option value="${k}"${k === c.status ? ' selected' : ''}>${v}</option>`).join('');
+    const fmt = (iso) => new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    box.innerHTML = `<div class="wa-thread-head"><b>${escapeHtml(c.name)}</b>
+        <span class="crm-sub">${escapeHtml([c.segment || c.category, c.city].filter(Boolean).join(' · '))}${c.wa ? ' · +' + escapeHtml(c.wa) : ''}</span>
+        <span style="flex:1"></span>
+        <select class="crm-status" style="border:1px solid var(--sand-border);border-radius:8px;padding:5px 8px;font-family:inherit;font-size:12px" onchange="waSetStatus(${c.id}, this.value)">${opts}</select>
+        ${ch.url ? `<a class="crm-btn-ghost" style="text-decoration:none" href="${escapeHtml(ch.url)}" target="_blank" rel="noopener noreferrer">Buka di wacrm ↗</a>` : `<button class="crm-btn-ghost" disabled title="Set WACRM_URL setelah wacrm di-deploy">Buka di wacrm ↗</button>`}</div>
+      <div class="wa-msgs" id="wa-msgs">${c.messages.length ? c.messages.map(m => `<div class="wa-bubble ${m.direction}">${escapeHtml(m.body)}<small>${m.channel === 'cloud_api' ? 'Cloud API · ' : ''}${fmt(m.created_at)}</small></div>`).join('') : '<div class="wa-empty">Belum ada pesan tercatat.</div>'}</div>
+      <div class="wa-compose"><input disabled placeholder="${ch.url ? 'Balas percakapan ini dari wacrm (tombol di atas)' : 'Membalas dari sini tersedia setelah wacrm (Cloud API) tersambung'}"><button class="aio-btn" disabled>Kirim</button></div>`;
+    const m = document.getElementById('wa-msgs'); m.scrollTop = m.scrollHeight;
+  }
+  async function waSetStatus(id, status) {
+    const c = wa.data.conversations.find(x => x.id === id); if (c) c.status = status;
+    if (wa.demo) { waRender(); return; }
+    try { await crmApi('/api/office/lead', { method: 'POST', body: JSON.stringify({ id, status }) }); waRender(); }
+    catch (e) { document.getElementById('wa-note').textContent = 'Gagal simpan status: ' + e.message; }
   }
 
   // License status here is grounded in REAL data from Portfolio Produk's

@@ -78,6 +78,12 @@ module.exports = async (req, res) => {
       }
     }
 
+    // Teruskan ke CRM Command Center: riwayat percakapan, status "membalas", STOP → jangan hubungi
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try { await require('../../lib/inbound').handleInbound({ wa: noWA, text: message, channel: 'fonnte', meta: { source: 'fonnte', device } }) }
+      catch (e) { console.error('[webhook-wa] crm error:', e.message) }
+    }
+
     return res.status(200).json({ status: 'ok' })
   } catch (err) {
     console.error('[webhook-wa] error:', err.message)

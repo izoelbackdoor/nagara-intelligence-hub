@@ -14,6 +14,7 @@ const { requireAuth, safeEqual, sendJson } = require('../../lib/session');
 const { sb } = require('../../lib/supabase');
 const { scoreLead, scoreEdukit, normWa, pickWa } = require('../../lib/leads');
 const { sendWa } = require('../../lib/wa');
+const { handleInbound, logOutbound } = require('../../lib/inbound');
 
 const LEVELS = ['info', 'teknis', 'peringatan', 'bahaya'];
 const clip = (s, n) => String(s ?? '').slice(0, n);
@@ -191,12 +192,46 @@ async function decideApproval(b, res) {
     }
     await sb(`office_approvals?id=eq.${a.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'disetujui', decided_at: now, payload: { ...(a.payload || {}), message, sent_at: now } } });
     await sb(`crm_leads?id=eq.${lead.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'dihubungi', last_contacted_at: now, updated_at: now } });
+    await logOutbound({ lead_id: lead.id, wa: lead.wa, text: message, channel: 'fonnte', meta: { approval_id: a.id } });
     await sb('office_events', { method: 'POST', prefer: 'return=minimal', body: { unit_key: unit, desk_key: a.desk_key, level: 'info', message: `Disetujui & terkirim via WA: ${a.summary}`.slice(0, 500) } });
     return sendJson(res, 200, { ok: true, status: 'terkirim' });
   }
   await sb(`office_approvals?id=eq.${a.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'disetujui', decided_at: now, note: String(b.note || '').slice(0, 300) } });
   await sb('office_events', { method: 'POST', prefer: 'return=minimal', body: { unit_key: unit, desk_key: a.desk_key, level: 'info', message: `Disetujui Anda: ${a.summary}`.slice(0, 500) } });
   return sendJson(res, 200, { ok: true, status: 'disetujui' });
+}
+
+
+// ── Percakapan WA ────────────────────────────────────────────────
+const CONVO_STATUS = ['dihubungi', 'membalas', 'tertarik', 'deal', 'tidak_tertarik', 'jangan_hubungi'];
+async function readConversations(req, res) {
+  const q = req.query || {};
+  const f = [`select=id,product,name,wa,city,category,segment,status,score,last_contacted_at,updated_at,contact_person`,
+    `status=in.(${CONVO_STATUS.join(',')})`, 'order=updated_at.desc', 'limit=100'];
+  if (['nadi', 'edukit'].includes(q.product)) f.push(`product=eq.${q.product}`);
+  const leads = await sb('crm_leads?' + f.join('&'));
+  const ids = leads.map(l => l.id);
+  const msgs = ids.length ? await sb(`crm_messages?select=id,lead_id,direction,channel,body,created_at&lead_id=in.(${ids.join(',')})&order=created_at&limit=2000`) : [];
+  const byLead = {};
+  for (const m of msgs) (byLead[m.lead_id] = byLead[m.lead_id] || []).push(m);
+  const unmatched = await sb('crm_messages?select=id,wa,direction,channel,body,created_at&lead_id=is.null&direction=eq.in&order=created_at.desc&limit=30');
+  return sendJson(res, 200, {
+    channels: {
+      fonnte: { connected: !!process.env.FONNTE_TOKEN, role: 'Outreach awal (lewat antrean persetujuan)' },
+      cloud_api: { connected: !!process.env.WACRM_URL, url: process.env.WACRM_URL || null, role: 'Percakapan lanjutan & inbound iklan (wacrm · WhatsApp Cloud API)' },
+    },
+    conversations: leads.map(l => ({ ...l, messages: byLead[l.id] || [] })),
+    unmatched,
+  });
+}
+
+async function waInbound(req, body, res) {
+  const token = process.env.WA_INBOUND_TOKEN || process.env.OFFICE_INGEST_TOKEN || '';
+  const got = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (token.length < 32 || !safeEqual(got, token)) return sendJson(res, 401, { error: 'Token tidak valid' });
+  const b = body || {};
+  const r = await handleInbound({ wa: b.from || b.wa || b.sender, text: b.text || b.message || b.body, channel: b.channel === 'fonnte' ? 'fonnte' : 'cloud_api', meta: { source: String(b.source || 'wacrm').slice(0, 40) } });
+  return sendJson(res, r.ok ? 200 : 400, r);
 }
 
 module.exports = async (req, res) => {
@@ -207,11 +242,13 @@ module.exports = async (req, res) => {
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
   try {
     if (action === 'state' && req.method === 'POST') return await ingest(req, res); // laporan agen (token)
+    if (action === 'wa-inbound' && req.method === 'POST') return await waInbound(req, body, res); // webhook wacrm/n8n (token)
     if (!requireAuth(req, res)) return;                                         // selebihnya wajib login
     if (action === 'state' && req.method === 'GET') return await readState(res);
     if (action === 'leads' && req.method === 'GET') return await readLeads(req, res);
     if (action === 'leads-sync' && req.method === 'POST') return await syncLeads(body || {}, res);
     if (action === 'lead' && req.method === 'POST') return await updateLead(body || {}, res);
+    if (action === 'conversations' && req.method === 'GET') return await readConversations(req, res);
     if (action === 'approval' && req.method === 'POST') return await decideApproval(body || {}, res);
     return sendJson(res, 405, { error: 'Aksi tidak dikenal' });
   } catch (e) {

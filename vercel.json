@@ -57,7 +57,7 @@
       "dest": "/api/auth.js?action=$1"
     },
     {
-      "src": "/api/office/(state|leads|leads-sync|lead|approval)",
+      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound)",
       "dest": "/api/office/state.js?action=$1"
     },
     {
