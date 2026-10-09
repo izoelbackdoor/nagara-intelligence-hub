@@ -5779,7 +5779,7 @@
     btn.disabled = true; note.textContent = 'Usul sedang menulis draf pesan…';
     try {
       const j = await crmApi('/api/agents/usul', { method: 'POST', body: JSON.stringify(body) });
-      note.textContent = (j.drafted ? `${j.drafted} draf baru masuk antrean — periksa & setujui di bawah.` : (j.note || 'Tidak ada draf baru.')) + (j.skipped ? ` (${j.skipped} dilewati: bukan status Baru / tanpa WA)` : '');
+      note.textContent = (j.drafted ? `${j.drafted} draf baru masuk antrean — periksa & setujui di bawah.` : (j.note || 'Tidak ada draf baru.')) + (j.source === 'template' ? ' Catatan: AI sedang tidak tersedia (cek saldo API Anthropic), jadi draf memakai template — silakan edit sebelum kirim.' : '') + (j.skipped ? ` (${j.skipped} dilewati: bukan status Baru / tanpa WA)` : '');
       if (selected) crm.sel.clear();
       crmLoadQueue(); crmLoad();
     } catch (e) { note.textContent = 'Usul gagal: ' + e.message; }
@@ -5790,14 +5790,14 @@
     let st; try { st = await officeFetch(); } catch (e) { box.innerHTML = `<div class="pf-card-empty">Gagal memuat antrean: ${escapeHtml(e.message)}</div>`; return; }
     const items = st.approvals.filter(a => a.kind === 'outreach' && (a.payload?.product || 'nadi') === crm.product);
     box.innerHTML = items.length ? items.map(a => `<div class="crm-q" id="q-${a.id}">
-        <div class="crm-q-head"><b>${escapeHtml(a.summary)}</b><span>${officeAgo(a.created_at)}</span></div>
+        <div class="crm-q-head"><b>${escapeHtml(a.summary)}${a.payload?.source === 'template' ? ' <span class="wa-tag">template</span>' : ''}</b><span>${officeAgo(a.created_at)}</span></div>
         <textarea id="qm-${a.id}" maxlength="1000">${escapeHtml(a.payload?.message || '')}</textarea>
         <div class="crm-q-actions">
           <button class="aio-btn" onclick="crmDecide('${a.id}','setuju')">Setujui &amp; kirim WA</button>
           <button class="crm-btn-ghost" onclick="crmDecide('${a.id}','tolak')">Tolak (kembali ke daftar)</button>
           <button class="crm-btn-ghost" onclick="crmDecide('${a.id}','tolak',true)">Tolak &amp; jangan hubungi</button>
           <span id="qn-${a.id}"></span>
-        </div></div>`).join('') : '<div class="pf-card-empty">Tidak ada draf menunggu. Klik “Usul: siapkan 5 draf WA”.</div>';
+        </div></div>`).join('') : '<div class="pf-card-empty">Tidak ada draf menunggu. Centang calon klien di tabel lalu klik “Buat draf WA”, atau klik “Usul: 5 skor tertinggi”.</div>';
   }
   async function crmDecide(id, decision, block) {
     const card = document.getElementById('q-' + id), note = document.getElementById('qn-' + id);
