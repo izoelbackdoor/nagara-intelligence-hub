@@ -1,15 +1,20 @@
 /**
  * Nagara Robot Trading — Signal Webhook
  * POST: Terima sinyal dari Python bot atau TradingView
- * GET:  Kembalikan sinyal terbaru untuk dashboard
+ *       Wajib secret = env ROBOT_WEBHOOK_SECRET (min. 16 karakter), dikirim lewat
+ *       header "X-Nagara-Secret" atau field "secret" di body (TradingView tidak bisa set header).
+ *       Bila env belum di-set, semua sinyal ditolak (503) — tidak ada secret default.
+ * GET:  Kembalikan sinyal terbaru untuk dashboard (wajib login).
  *
  * Catatan: Vercel Serverless Functions bersifat stateless.
  * Sinyal di-buffer di memory per instance (ephemeral).
- * Untuk produksi, ganti dengan KV store (Vercel KV / Redis).
+ * Untuk produksi, ganti dengan KV store / tabel Supabase.
  */
 
-const WEBHOOK_SECRET = process.env.ROBOT_WEBHOOK_SECRET || "nagara_robot_secret_2025";
-const MAX_SIGNALS    = 100; // max sinyal yang disimpan
+const { requireAuth, safeEqual, sendJson } = require("../../lib/session");
+
+const MAX_SIGNALS = 100; // max sinyal yang disimpan
+const SECRET_FIELDS = ["secret", "passphrase", "token", "key"];
 
 // In-memory buffer (per Vercel instance, ephemeral)
 if (!global._robotSignals) {
@@ -23,86 +28,90 @@ function addSignal(signal) {
   }
 }
 
+/** Salinan body tanpa field rahasia, supaya secret tidak ikut tersimpan / tampil di GET. */
+function withoutSecrets(body) {
+  const out = {};
+  for (const [k, v] of Object.entries(body || {})) {
+    if (!SECRET_FIELDS.includes(k.toLowerCase())) out[k] = v;
+  }
+  return out;
+}
+
+const clip = (s, n) => String(s ?? "").slice(0, n);
+
 module.exports = async (req, res) => {
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
   if (req.method === "OPTIONS") {
-    return res.status(200).end();
+    res.statusCode = 204;
+    return res.end();
   }
 
-  // ── GET: ambil sinyal terbaru ──────────────────────────────────
+  // ── GET: ambil sinyal terbaru (dashboard, wajib login) ────────────
   if (req.method === "GET") {
-    const limit  = parseInt(req.query.limit || "20", 10);
-    const pair   = req.query.pair || null;
-    let signals  = global._robotSignals;
-    if (pair) {
-      signals = signals.filter(s => s.pair && s.pair.toLowerCase() === pair.toLowerCase());
-    }
-    return res.status(200).json({
-      ok:      true,
-      count:   signals.length,
-      signals: signals.slice(0, limit),
-    });
+    if (!requireAuth(req, res)) return;
+    const q = req.query || {};
+    const limit = Math.min(Math.max(parseInt(q.limit || "20", 10) || 20, 1), MAX_SIGNALS);
+    const pair = q.pair ? String(q.pair).toLowerCase() : null;
+    let signals = global._robotSignals;
+    if (pair) signals = signals.filter(s => s.pair && String(s.pair).toLowerCase() === pair);
+    return sendJson(res, 200, { ok: true, count: signals.length, signals: signals.slice(0, limit) });
   }
 
-  // ── POST: terima sinyal baru ───────────────────────────────────
+  // ── POST: terima sinyal baru (bot / TradingView, wajib secret) ────
   if (req.method === "POST") {
-    let body = req.body;
+    const expected = process.env.ROBOT_WEBHOOK_SECRET || "";
+    if (expected.length < 16) {
+      return sendJson(res, 503, { ok: false, error: "Webhook robot belum dikonfigurasi (ROBOT_WEBHOOK_SECRET)" });
+    }
 
-    // Parse JSON jika belum
+    let body = req.body;
     if (typeof body === "string") {
       try { body = JSON.parse(body); } catch { body = {}; }
     }
+    body = body && typeof body === "object" ? body : {};
 
-    // Validasi secret
-    const secret = body.secret || req.headers["x-nagara-secret"];
-    if (secret !== WEBHOOK_SECRET) {
-      return res.status(401).json({ ok: false, error: "Unauthorized" });
+    const given = req.headers["x-nagara-secret"] || body.secret || "";
+    if (!safeEqual(given, expected)) {
+      return sendJson(res, 401, { ok: false, error: "Unauthorized" });
     }
 
-    // Tentukan source
-    const source = body.source || "python_bot";
+    const source = body.source === "tradingview" ? "tradingview" : "python_bot";
 
     // Normalise payload dari TradingView (format berbeda)
     let signal;
     if (source === "tradingview") {
+      const raw = withoutSecrets(body);
       signal = {
         source:    "tradingview",
-        signal:    (body.action || body.signal || "HOLD").toUpperCase(),
-        pair:      body.ticker || body.pair || "UNKNOWN",
-        price:     parseFloat(body.close || body.price || 0),
-        strategy:  body.strategy_name || body.strategy || "TradingView Alert",
-        reason:    body.comment || body.reason || body.message || "",
+        signal:    clip(body.action || body.signal || "HOLD", 20).toUpperCase(),
+        pair:      clip(body.ticker || body.pair || "UNKNOWN", 40),
+        price:     parseFloat(body.close || body.price || 0) || 0,
+        strategy:  clip(body.strategy_name || body.strategy || "TradingView Alert", 120),
+        reason:    clip(body.comment || body.reason || body.message || "", 500),
         dry_run:   false,
         bot_name:  "TradingView",
-        timestamp: body.time || new Date().toISOString(),
-        raw:       body,
+        timestamp: clip(body.time || new Date().toISOString(), 40),
+        raw:       JSON.stringify(raw).length < 4000 ? raw : undefined,
       };
     } else {
       // Format dari Python bot
       signal = {
         source:    "python_bot",
-        signal:    (body.signal || "HOLD").toUpperCase(),
-        pair:      body.pair   || "UNKNOWN",
-        price:     parseFloat(body.price  || 0),
-        strategy:  body.strategy || "",
-        reason:    body.reason   || "",
-        dry_run:   body.dry_run  !== undefined ? body.dry_run : true,
-        bot_name:  body.bot_name || "Nagara Bot",
+        signal:    clip(body.signal || "HOLD", 20).toUpperCase(),
+        pair:      clip(body.pair || "UNKNOWN", 40),
+        price:     parseFloat(body.price || 0) || 0,
+        strategy:  clip(body.strategy || "", 120),
+        reason:    clip(body.reason || "", 500),
+        dry_run:   body.dry_run !== undefined ? !!body.dry_run : true,
+        bot_name:  clip(body.bot_name || "Nagara Bot", 60),
         pnl:       body.pnl !== undefined ? parseFloat(body.pnl) : null,
-        timestamp: body.timestamp || new Date().toISOString(),
+        timestamp: clip(body.timestamp || new Date().toISOString(), 40),
       };
     }
 
     addSignal(signal);
-
     console.log(`[Robot Signal] ${signal.source} | ${signal.signal} ${signal.pair} @ ${signal.price}`);
-
-    return res.status(200).json({ ok: true, received: signal });
+    return sendJson(res, 200, { ok: true, received: signal });
   }
 
-  return res.status(405).json({ ok: false, error: "Method not allowed" });
+  return sendJson(res, 405, { ok: false, error: "Method not allowed" });
 };

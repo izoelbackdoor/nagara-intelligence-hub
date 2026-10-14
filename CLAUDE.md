@@ -53,6 +53,6 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 
 ## Catatan teknis yang diketahui
 
-- `api/robot/signal.js` memakai secret default di kode bila `ROBOT_WEBHOOK_SECRET` kosong, dan menyimpan sinyal di memori (hilang tiap cold start).
+- `api/robot/signal.js`: POST wajib `ROBOT_WEBHOOK_SECRET` (min. 16 karakter; tanpa env → 503, tidak ada secret default), GET wajib login. Sinyal masih disimpan di memori (hilang tiap cold start) — kandidat pindah ke Supabase.
 - `api/openwa/proxy.js` meneruskan request ke URL dari header `X-OpenWA-URL` dengan CORS `*`; pastikan tetap di balik login.
 - `api/inbox/*` campur gaya (Airtable, `https` manual); kode baru ikuti pola `lib/` (fetch + Supabase).
