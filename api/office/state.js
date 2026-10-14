@@ -8,6 +8,10 @@
  *           level?:"info"|"teknis"|"peringatan"|"bahaya", message?:string,
  *           kind?:string, summary?:string, meta?:object }
  *
+ * Penawaran:  GET quote-settings | POST quote-settings | GET quotes[?id] | POST quote {op?: save|status|send|duplicate}
+ *             GET/POST /penawaran/<token> → quote-view (publik, untuk klien)
+ * Helpdesk:   GET tickets[?id] | POST ticket {op?: create|update|reply|from-lead}
+ *
  * Env (server saja): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OFFICE_INGEST_TOKEN
  */
 const { requireAuth, safeEqual, sendJson } = require('../../lib/session');
@@ -15,6 +19,8 @@ const { sb } = require('../../lib/supabase');
 const { scoreLead, scoreEdukit, normWa, pickWa } = require('../../lib/leads');
 const { sendWa } = require('../../lib/wa');
 const { handleInbound, logOutbound } = require('../../lib/inbound');
+const sales = require('../../lib/sales');
+const hd = require('../../lib/helpdesk');
 
 const LEVELS = ['info', 'teknis', 'peringatan', 'bahaya'];
 const clip = (s, n) => String(s ?? '').slice(0, n);
@@ -168,10 +174,11 @@ async function decideApproval(b, res) {
   if (!a) return sendJson(res, 404, { error: 'Persetujuan tidak ditemukan' });
   if (a.status !== 'menunggu') return sendJson(res, 409, { error: 'Sudah diputuskan sebelumnya' });
   const now = new Date().toISOString();
-  const unit = a.kind === 'outreach' ? 'studio' : null;
+  const unit = ['outreach', 'penawaran'].includes(a.kind) ? 'studio' : null;
   if (b.decision === 'tolak') {
     await sb(`office_approvals?id=eq.${a.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'ditolak', note: String(b.note || '').slice(0, 300), decided_at: now } });
-    if (a.lead_id) await sb(`crm_leads?id=eq.${a.lead_id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: b.block ? 'jangan_hubungi' : 'baru', updated_at: now } });
+    if (a.lead_id && a.kind === 'outreach') await sb(`crm_leads?id=eq.${a.lead_id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: b.block ? 'jangan_hubungi' : 'baru', updated_at: now } });
+    if (a.kind === 'penawaran' && a.payload?.quote_id) await sales.markBackToDraft(a.payload.quote_id);
     await sb('office_events', { method: 'POST', prefer: 'return=minimal', body: { unit_key: unit, desk_key: a.desk_key, level: 'info', message: `Ditolak Anda: ${a.summary}`.slice(0, 500) } });
     return sendJson(res, 200, { ok: true, status: 'ditolak' });
   }
@@ -193,6 +200,29 @@ async function decideApproval(b, res) {
     await sb(`office_approvals?id=eq.${a.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'disetujui', decided_at: now, payload: { ...(a.payload || {}), message, sent_at: now } } });
     await sb(`crm_leads?id=eq.${lead.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'dihubungi', last_contacted_at: now, updated_at: now } });
     await logOutbound({ lead_id: lead.id, wa: lead.wa, text: message, channel: 'fonnte', meta: { approval_id: a.id } });
+    await sb('office_events', { method: 'POST', prefer: 'return=minimal', body: { unit_key: unit, desk_key: a.desk_key, level: 'info', message: `Disetujui & terkirim via WA: ${a.summary}`.slice(0, 500) } });
+    return sendJson(res, 200, { ok: true, status: 'terkirim' });
+  }
+  if (a.kind === 'penawaran') {
+    const wa = normWa(a.payload?.wa);
+    if (!wa) return sendJson(res, 400, { error: 'Nomor WA klien tidak valid' });
+    if (a.lead_id) {
+      const l = (await sb(`crm_leads?select=status&id=eq.${a.lead_id}`))[0];
+      if (l?.status === 'jangan_hubungi') return sendJson(res, 400, { error: 'Kontak ini ditandai jangan dihubungi' });
+    }
+    const message = String(b.message || a.payload?.message || '').trim().slice(0, 1500);
+    if (!message) return sendJson(res, 400, { error: 'Pesan kosong' });
+    try { await sendWa(wa, message); }
+    catch (e) {
+      await sb('office_events', { method: 'POST', prefer: 'return=minimal', body: { unit_key: unit, desk_key: a.desk_key, level: 'peringatan', message: `Gagal kirim penawaran via WA: ${e.message}`.slice(0, 500) } });
+      return sendJson(res, 502, { error: 'Gagal kirim WA: ' + e.message });
+    }
+    await sb(`office_approvals?id=eq.${a.id}`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'disetujui', decided_at: now, payload: { ...(a.payload || {}), message, sent_at: now } } });
+    await sales.markSent(a.payload.quote_id, now);
+    if (a.lead_id) {
+      await sb(`crm_leads?id=eq.${a.lead_id}&status=in.(baru,draft,dihubungi,membalas)`, { method: 'PATCH', prefer: 'return=minimal', body: { status: 'tertarik', last_contacted_at: now, updated_at: now } });
+      await logOutbound({ lead_id: a.lead_id, wa, text: message, channel: 'fonnte', meta: { approval_id: a.id, quote_id: a.payload.quote_id } });
+    }
     await sb('office_events', { method: 'POST', prefer: 'return=minimal', body: { unit_key: unit, desk_key: a.desk_key, level: 'info', message: `Disetujui & terkirim via WA: ${a.summary}`.slice(0, 500) } });
     return sendJson(res, 200, { ok: true, status: 'terkirim' });
   }
@@ -239,10 +269,14 @@ module.exports = async (req, res) => {
     return sendJson(res, 500, { error: 'Database kantor belum terhubung: set SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY di Vercel.' });
   const action = (req.query && req.query.action) || 'state';
   let body = req.body;
-  if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); }
+    catch { body = Object.fromEntries(new URLSearchParams(body)); } // form HTML (halaman penawaran klien)
+  }
   try {
     if (action === 'state' && req.method === 'POST') return await ingest(req, res); // laporan agen (token)
     if (action === 'wa-inbound' && req.method === 'POST') return await waInbound(req, body, res); // webhook wacrm/n8n (token)
+    if (action === 'quote-view' && ['GET', 'POST'].includes(req.method)) return await sales.publicQuote(req, res, req.query?.t, body || {}); // klien (token di URL)
     if (!requireAuth(req, res)) return;                                         // selebihnya wajib login
     if (action === 'state' && req.method === 'GET') return await readState(res);
     if (action === 'leads' && req.method === 'GET') return await readLeads(req, res);
@@ -250,8 +284,45 @@ module.exports = async (req, res) => {
     if (action === 'lead' && req.method === 'POST') return await updateLead(body || {}, res);
     if (action === 'conversations' && req.method === 'GET') return await readConversations(req, res);
     if (action === 'approval' && req.method === 'POST') return await decideApproval(body || {}, res);
+    // ── Penawaran & kalkulator ──
+    if (action === 'quote-settings' && req.method === 'GET') return sendJson(res, 200, await sales.getSettings());
+    if (action === 'quote-settings' && req.method === 'POST') return sendJson(res, 200, { ok: true, settings: await sales.saveSettings(body?.settings) });
+    if (action === 'quotes' && req.method === 'GET') {
+      if (req.query?.id) {
+        const q = await sales.getQuote(req.query.id);
+        if (!q) return sendJson(res, 404, { error: 'Penawaran tidak ditemukan' });
+        if (req.query.preview) { // pratinjau dokumen klien untuk pemilik (termasuk draf)
+          res.statusCode = 200; res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
+          return res.end(sales.renderQuotePage({ ...q, status: q.status === 'draf' || q.status === 'menunggu_kirim' ? 'pratinjau' : q.status }, q.status === 'draf' || q.status === 'menunggu_kirim' ? 'PRATINJAU — belum dikirim ke klien.' : null));
+        }
+        return sendJson(res, 200, { quote: q });
+      }
+      return sendJson(res, 200, { rows: await sales.listQuotes(req.query || {}) });
+    }
+    if (action === 'quote' && req.method === 'POST') {
+      const b = body || {};
+      if (b.op === 'status') return sendJson(res, 200, await sales.setQuoteStatus(b.id, b.status, b.note));
+      if (b.op === 'send') return sendJson(res, 200, await sales.requestSend(req, b.id, b.message));
+      if (b.op === 'duplicate') return sendJson(res, 200, { ok: true, quote: await sales.duplicateQuote(b.id) });
+      return sendJson(res, 200, { ok: true, quote: await sales.saveQuote(b) });
+    }
+    // ── Helpdesk ──
+    if (action === 'tickets' && req.method === 'GET') {
+      if (req.query?.id) return sendJson(res, 200, await hd.getTicket(req.query.id));
+      return sendJson(res, 200, await hd.listTickets(req.query || {}));
+    }
+    if (action === 'ticket' && req.method === 'POST') {
+      const b = body || {};
+      if (b.op === 'update') return sendJson(res, 200, await hd.updateTicket(b));
+      if (b.op === 'reply') return sendJson(res, 200, await hd.replyTicket(b));
+      if (b.op === 'from-lead') return sendJson(res, 200, { ok: true, ticket: await hd.ticketFromLead(b.lead_id) });
+      return sendJson(res, 200, { ok: true, ticket: await hd.createTicket(b) });
+    }
     return sendJson(res, 405, { error: 'Aksi tidak dikenal' });
   } catch (e) {
+    if (e.status) return sendJson(res, e.status, { error: e.message });
+    if (/(sales_|hd_)\w*: HTTP 404/.test(e.message) || /^\w+ (sales_|hd_)[\w]*: HTTP 404/.test(e.message))
+      return sendJson(res, 503, { error: 'Tabel penawaran/helpdesk belum dibuat — jalankan supabase/migrations/20261014_penawaran_helpdesk.sql di Supabase SQL Editor.', code: 'migrasi' });
     return sendJson(res, 502, { error: 'Gagal mengakses database kantor: ' + e.message });
   }
 };

@@ -2,11 +2,13 @@
  * Router karyawan AI (satu serverless function supaya tetap di bawah batas 12 fungsi Vercel Hobby).
  *   /api/agents/arah  → brief Chief of Staff (cron CRON_SECRET atau login)
  *   /api/agents/usul  → draf WA perkenalan ke antrean persetujuan (login saja), body { product, n }
+ *   /api/agents/rawat → triase tiket helpdesk + draf balasan (login saja), body { ticket_id }
  */
 const { sendJson } = require('../../lib/session');
 const { whoCalls } = require('../../lib/agents/common');
 const runArah = require('../../lib/agents/arah');
 const runUsul = require('../../lib/agents/usul');
+const runRawat = require('../../lib/agents/rawat');
 
 module.exports = async (req, res) => {
   const who = whoCalls(req);
@@ -20,6 +22,10 @@ module.exports = async (req, res) => {
   if (agent === 'usul') {
     if (req.method !== 'POST') return sendJson(res, 405, { error: 'Gunakan POST' });
     return runUsul(who, body || {}, res, sendJson);
+  }
+  if (agent === 'rawat') {
+    if (req.method !== 'POST') return sendJson(res, 405, { error: 'Gunakan POST' });
+    return runRawat(who, body || {}, res, sendJson);
   }
   return sendJson(res, 404, { error: 'Agen tidak dikenal' });
 };

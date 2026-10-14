@@ -708,6 +708,99 @@
   @media (max-width: 900px) { .wa-lanes { grid-template-columns: 1fr; } .wa-arrow { transform: rotate(90deg); justify-self:center; } .wa-inbox, .wa-bottom { grid-template-columns: 1fr; } }
   .crm-name { cursor:pointer; font-weight:600; } .crm-name:hover { text-decoration: underline; }
 
+  /* ── Penawaran & Kalkulator ── */
+  .qt-grid { display:grid; grid-template-columns: minmax(0,1fr) 340px; gap:16px; align-items:start; }
+  .qt-main { display:grid; gap:14px; min-width:0; }
+  .qt-side { position: sticky; top: 12px; }
+  .qt-card { background: var(--sand-card); border:1px solid var(--sand-border); border-radius:12px; padding:14px 16px; }
+  .qt-card-head { display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:.6rem; }
+  .qt-card-head .aio-h { margin:0; }
+  .qt-form { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px 14px; }
+  .qt-form label, .qt-override { display:flex; flex-direction:column; gap:4px; font-size:11.5px; color: var(--sand-text2); font-weight:600; }
+  .qt-form .qt-wide { grid-column: 1 / -1; }
+  .qt-form input, .qt-form select, .qt-form textarea, .qt-override input, .qt-set input, .qt-set select, .qt-set textarea, .qt-table input, .qt-table select, .hd-form input, .hd-form select, .hd-form textarea {
+    border:1px solid var(--sand-border); border-radius:8px; padding:7px 9px; font-family:inherit; font-size:13px; background:#fff; color: var(--ink); font-weight:400; width:100%; }
+  .qt-form textarea { resize: vertical; }
+  .qt-lead-pick { position:relative; margin-bottom:10px; }
+  .qt-lead-pick input { width:100%; border:1px solid var(--sand-border); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:13px; background:#fff; color:var(--ink); }
+  .qt-lead-results { position:absolute; left:0; right:0; top:100%; z-index:20; background:#fff; border:1px solid var(--sand-border); border-radius:10px; box-shadow:0 12px 30px rgba(36,30,26,.15); max-height:280px; overflow:auto; display:none; }
+  .qt-lead-results.show { display:block; }
+  .qt-lead-results button { display:block; width:100%; text-align:left; background:none; border:0; border-bottom:1px solid #f0e9dc; padding:8px 12px; font-family:inherit; font-size:12.5px; color:var(--ink); cursor:pointer; }
+  .qt-lead-results button:hover { background: rgba(36,30,26,.05); }
+  .qt-lead-results small { color: var(--sand-text2); }
+  .qt-table-wrap { margin-bottom:0; }
+  .qt-table td { vertical-align: middle; padding:7px 10px; }
+  .qt-table th.num, .qt-table td.num, .pf-table th.num, .pf-table td.num { text-align:right; white-space:nowrap; }
+  .qt-table input[type=number] { width:96px; text-align:right; padding:5px 7px; }
+  .qt-table input.qt-fixed { width:120px; }
+  .qt-table select { width:auto; padding:5px 7px; }
+  .qt-table tr.off td:not(:first-child) { opacity:.45; }
+  .qt-table tr.qt-group td { background:#faf6f0; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color: var(--sand-text2); font-weight:700; padding:6px 10px; }
+  .qt-table .qt-sub { display:block; font-size:11px; color: var(--sand-text2); }
+  .qt-sum { border-top: 4px solid var(--brand-red); }
+  .qt-sum-label { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color: var(--sand-text2); font-weight:700; }
+  .qt-sum-price { font: 700 30px 'Space Grotesk', sans-serif; color: var(--ink); margin:2px 0; }
+  .qt-sum-tier { font-size:12.5px; color: var(--sand-text2); margin-bottom:10px; }
+  .qt-sum-tier b { color: var(--ink); }
+  .qt-warn { background: rgba(212,63,46,.1); color:#a8321f; border-radius:8px; padding:8px 10px; font-size:12px; margin-top:8px; font-weight:600; }
+  .qt-sum-sec { margin:14px 0 4px; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color: var(--sand-text2); font-weight:700; border-top:1px dashed var(--sand-border); padding-top:10px; }
+  .qt-sum-table { width:100%; font-size:12.5px; border-collapse:collapse; }
+  .qt-sum-table td { padding:3px 0; color: var(--ink); }
+  .qt-sum-table td:last-child { text-align:right; font-weight:600; white-space:nowrap; }
+  .qt-sum-table tr.strong td { font-weight:700; border-top:1px solid var(--sand-border); padding-top:6px; }
+  .qt-sum-table td.muted { color: var(--sand-text2); }
+  .qt-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; align-items:center; }
+  .qt-btn-brand { background: var(--brand-gradient); }
+  .qt-status { display:inline-block; font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:20px; background: rgba(36,30,26,.08); color: var(--sand-text2); white-space:nowrap; }
+  .qt-status.menunggu_kirim { background: rgba(245,166,35,.18); color:#9a6106; }
+  .qt-status.terkirim { background: rgba(59,130,246,.14); color:#1d5fc2; }
+  .qt-status.diterima { background: rgba(46,158,91,.16); color:#1f7a45; }
+  .qt-status.ditolak, .qt-status.kedaluwarsa { background: rgba(212,63,46,.12); color:#b0362a; }
+  .qt-rowact { display:flex; gap:6px; flex-wrap:wrap; }
+  .qt-rowact button { background:none; border:1px solid var(--sand-border); border-radius:7px; padding:3px 8px; font-family:inherit; font-size:11px; font-weight:600; color: var(--ink); cursor:pointer; white-space:nowrap; }
+  .qt-rowact button:hover { background: rgba(36,30,26,.05); }
+  .qt-set { display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:10px 14px; }
+  .qt-set label { display:flex; flex-direction:column; gap:4px; font-size:11.5px; color: var(--sand-text2); font-weight:600; }
+  .qt-set-block { margin-bottom:1.1rem; }
+  .qt-set-table td { padding:5px 6px; }
+  .qt-set-table input { padding:5px 7px; font-size:12.5px; }
+  .qt-set-table input[type=number] { width:90px; }
+  @media (max-width: 1100px) { .qt-grid { grid-template-columns: 1fr; } .qt-side { position: static; } }
+  @media (max-width: 640px) { .qt-form { grid-template-columns: 1fr; } }
+
+  /* ── Helpdesk ── */
+  .hd-nav-badge { display:inline-block; min-width:18px; padding:1px 6px; border-radius:10px; background: var(--brand-red); color:#fff; font-size:10.5px; text-align:center; margin-left:auto; }
+  .hd-inbox { grid-template-columns: 340px 1fr; min-height: 560px; }
+  .hd-inbox .wa-list, .hd-inbox .wa-thread { max-height: 680px; }
+  #hd-list-body { overflow-y:auto; flex:1; }
+  .hd-item { padding:10px 12px; border-bottom:1px solid var(--sand-border); cursor:pointer; font-size:12px; border-left:3px solid transparent; }
+  .hd-item:hover { background: rgba(36,30,26,.04); } .hd-item.active { background: rgba(36,30,26,.07); }
+  .hd-item.p-urgent { border-left-color:#d43f2e; } .hd-item.p-tinggi { border-left-color:#f08a24; }
+  .hd-item-subj { color: var(--sand-text); margin:2px 0 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hd-tag { display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background: rgba(36,30,26,.08); color: var(--sand-text2); margin-right:4px; white-space:nowrap; }
+  .hd-tag.urgent { background: rgba(212,63,46,.15); color:#b0362a; } .hd-tag.tinggi { background: rgba(240,138,36,.18); color:#a35a0b; }
+  .hd-tag.rendah { background: rgba(107,114,128,.12); color:#5b6170; }
+  .hd-tag.baru { background: rgba(59,130,246,.14); color:#1d5fc2; } .hd-tag.menunggu_klien { background: rgba(36,30,26,.08); }
+  .hd-tag.selesai, .hd-tag.ditutup { background: rgba(46,158,91,.15); color:#1f7a45; }
+  .hd-sla { font-size:10.5px; font-weight:700; white-space:nowrap; }
+  .hd-sla.late { color:#c0392b; } .hd-sla.soon { color:#b97a0e; } .hd-sla.ok { color: var(--sand-text2); font-weight:600; }
+  .hd-head-meta { display:flex; gap:8px; flex-wrap:wrap; align-items:center; width:100%; }
+  .hd-head-meta select { border:1px solid var(--sand-border); border-radius:8px; padding:5px 8px; font-family:inherit; font-size:12px; background:#fff; color: var(--ink); }
+  .hd-summary { margin:0; padding:10px 16px; border-bottom:1px solid var(--sand-border); font-size:12.5px; color: var(--ink); background:#fbf8f3; line-height:1.5; }
+  .hd-summary b { color: var(--sand-text2); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; margin-right:6px; }
+  .wa-bubble.note { align-self:center; background:#fff7d6; color:#5c4a00; font-size:12px; max-width:86%; border-radius:8px; }
+  .hd-compose { border-top:1px solid var(--sand-border); padding:10px 12px; display:grid; gap:8px; }
+  .hd-compose textarea { width:100%; min-height:96px; border:1px solid var(--sand-border); border-radius:9px; padding:9px 10px; font-family:inherit; font-size:13px; line-height:1.5; background:#fff; color: var(--ink); resize: vertical; }
+  .hd-compose-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; font-size:12px; color: var(--sand-text2); }
+  .hd-ai-btn { background: #fff; border:1px solid #c9b8f5; color:#5b3fc4; border-radius:9px; padding:7px 12px; font-family:inherit; font-weight:600; font-size:12px; cursor:pointer; }
+  .hd-ai-btn:disabled { opacity:.6; cursor:wait; }
+  .hd-side-info { font-size:12px; color: var(--sand-text2); padding:8px 16px; border-bottom:1px solid var(--sand-border); display:flex; gap:14px; flex-wrap:wrap; }
+  .hd-side-info a, .hd-link { color: var(--ink); font-weight:600; cursor:pointer; text-decoration:underline; }
+  .hd-form { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px 14px; margin-top:12px; }
+  .hd-form label { display:flex; flex-direction:column; gap:4px; font-size:11.5px; color: var(--sand-text2); font-weight:600; }
+  .hd-form .wide { grid-column: 1 / -1; }
+  @media (max-width: 900px) { .hd-inbox { grid-template-columns: 1fr; } .hd-form { grid-template-columns: 1fr; } }
+
   /* ── Marketing & Content ── */
   .mc-snapshot-note { font-size: 11.5px; color: var(--sand-text2); margin: -0.5rem 0 1rem; }
   .mc-status-paused { color: #d43f2e; }
@@ -1077,6 +1170,14 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         CRM &amp; Pipeline
       </button>
+      <button class="nav-item" id="nav-penawaran" onclick="showPage('penawaran')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+        Penawaran &amp; Kalkulator
+      </button>
+      <button class="nav-item" id="nav-helpdesk" onclick="showPage('helpdesk')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+        Helpdesk <span id="hd-nav-badge" class="hd-nav-badge" style="display:none"></span>
+      </button>
       <button class="nav-item" id="nav-marketing-content" onclick="showPage('marketing-content')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         Marketing &amp; Content
@@ -1336,6 +1437,120 @@
       <div class="crm-selbar" id="crm-selbar"><span id="crm-selbar-n"></span><button class="aio-btn" style="background:#25a35a" onclick="crmUsul(true)">✍️ Buat draf WA</button><button class="crm-btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.35)" onclick="crm.sel.clear();crmLoad()">Batal</button></div>
       <div class="crm-pager"><button class="vo-btn" onclick="crmPage(-1)">‹ Sebelumnya</button><span id="crm-page-note"></span><button class="vo-btn" onclick="crmPage(1)">Berikutnya ›</button></div>
       </div>
+    </div>
+
+    <!-- ─── Page: Penawaran & Kalkulator (js/sales-ui.js, js/quote-calc.js) ─── -->
+    <div id="page-penawaran" class="page-section">
+      <div class="crm-views" id="qt-views">
+        <button class="crm-view-btn active" data-view="calc" onclick="qtSetView('calc')">Kalkulator</button>
+        <button class="crm-view-btn" data-view="list" onclick="qtSetView('list')">Daftar penawaran <span id="qt-badge" class="crm-badge" style="display:none"></span></button>
+        <button class="crm-view-btn" data-view="settings" onclick="qtSetView('settings')">Pengaturan harga</button>
+      </div>
+      <div id="qt-error" class="aio-mock-banner" style="display:none"></div>
+
+      <div id="qt-view-calc">
+        <div class="qt-grid">
+          <div class="qt-main">
+            <div class="qt-card">
+              <div class="qt-card-head"><h3 class="aio-h">Klien</h3><span class="crm-sub" id="qt-editing"></span></div>
+              <div class="qt-lead-pick">
+                <input id="qt-lead-q" type="search" placeholder="Cari calon klien di CRM (nama / kota)…" oninput="qtLeadSearch()" autocomplete="off">
+                <div id="qt-lead-results" class="qt-lead-results"></div>
+              </div>
+              <div class="qt-form">
+                <label>Nama klien / usaha<input id="qt-client" maxlength="200" placeholder="mis. Klinik Pratama Sehat"></label>
+                <label>Contact person<input id="qt-contact" maxlength="200" placeholder="opsional"></label>
+                <label>WhatsApp<input id="qt-wa" maxlength="30" placeholder="08…"></label>
+                <label>Email<input id="qt-email" maxlength="200" placeholder="opsional"></label>
+                <label class="qt-wide">Judul proyek<input id="qt-title" maxlength="200" value="Pembuatan Website"></label>
+              </div>
+              <div class="crm-sub" id="qt-lead-note"></div>
+            </div>
+
+            <div class="qt-card">
+              <div class="qt-card-head"><h3 class="aio-h">Komponen pekerjaan</h3><span class="crm-sub">Centang yang dibutuhkan klien · jam &amp; biaya tetap bisa diubah per klien</span></div>
+              <div class="pf-table-wrap qt-table-wrap"><table class="pf-table qt-table"><thead><tr><th style="width:30px"></th><th>Komponen</th><th class="num">Jam</th><th class="num">Biaya tetap (Rp)</th><th class="num">Subtotal</th></tr></thead><tbody id="qt-comp-body"></tbody></table></div>
+            </div>
+
+            <div class="qt-card">
+              <div class="qt-card-head"><h3 class="aio-h">Fitur khusus</h3><span class="crm-sub">Jam dasar × pengali kompleksitas → masuk ke baris “Fitur khusus”</span></div>
+              <div class="pf-table-wrap qt-table-wrap"><table class="pf-table qt-table"><thead><tr><th style="width:30px"></th><th>Fitur</th><th class="num">Jam dasar</th><th>Kompleksitas</th><th class="num">Jam</th></tr></thead><tbody id="qt-feat-body"></tbody></table></div>
+            </div>
+
+            <div class="qt-card">
+              <h3 class="aio-h">Hosting, revisi &amp; catatan</h3>
+              <div class="qt-form">
+                <label>Jenis server<select id="qt-server" onchange="qtRecalc()"></select></label>
+                <label>Batas revisi<input id="qt-rev" type="number" min="0" max="50" oninput="qtRecalc()"></label>
+                <label class="qt-wide">Catatan internal (tidak tampil ke klien)<textarea id="qt-notes" maxlength="2000" rows="2"></textarea></label>
+              </div>
+            </div>
+          </div>
+
+          <aside class="qt-side">
+            <div class="qt-card qt-sum">
+              <div class="qt-sum-label">Harga ditawarkan ke klien</div>
+              <div class="qt-sum-price" id="qt-offer-show">—</div>
+              <div class="qt-sum-tier" id="qt-tier-show"></div>
+              <label class="qt-override">Ubah harga tawar (opsional)<input id="qt-offer" type="number" min="0" step="500000" placeholder="otomatis" oninput="qtRecalc()"></label>
+              <div id="qt-warn" class="qt-warn" style="display:none"></div>
+              <div class="qt-sum-sec">Internal — tidak tampil ke klien</div>
+              <table class="qt-sum-table" id="qt-sum-table"></table>
+              <div class="qt-sum-sec">Biaya berulang (ditagih tiap tahun)</div>
+              <table class="qt-sum-table" id="qt-rec-table"></table>
+              <div class="qt-actions">
+                <button class="aio-btn" onclick="qtSave()">Simpan draf</button>
+                <button class="aio-btn qt-btn-brand" onclick="qtSave('send')">Simpan &amp; siapkan kirim WA</button>
+                <button class="crm-btn-ghost" onclick="qtSave('preview')">Pratinjau dokumen klien ↗</button>
+                <button class="crm-btn-ghost" onclick="qtNew()">Penawaran baru</button>
+              </div>
+              <div class="crm-sub" id="qt-save-note"></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div id="qt-view-list" style="display:none">
+        <div class="aio-kpis" id="qt-kpis"></div>
+        <h3 class="aio-h">Menunggu persetujuan kirim <span class="crm-sub">— penawaran terkirim ke klien hanya setelah Anda klik “Setujui &amp; kirim WA”</span></h3>
+        <div id="qt-queue" class="crm-queue" style="margin-bottom:1.5rem"><div class="pf-card-empty">Memuat…</div></div>
+        <div class="crm-filters">
+          <select id="qt-f-status" onchange="qtLoadList()"><option value="">Semua status</option></select>
+          <span style="flex:1"></span>
+          <button class="crm-btn-ghost" onclick="qtLoadList()">⟳ Muat ulang</button>
+        </div>
+        <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>No.</th><th>Klien</th><th>Paket</th><th class="num">Harga</th><th class="num">Per tahun</th><th>Status</th><th>Berlaku s.d.</th><th>Aksi</th></tr></thead><tbody id="qt-list-body"><tr><td colspan="8">Memuat…</td></tr></tbody></table></div>
+      </div>
+
+      <div id="qt-view-settings" style="display:none">
+        <div class="aio-mock-banner">Angka bawaan diambil dari file <b>Kalkulator_Harga_Website_NADI.xlsx</b> dan masih contoh, kecuali harga tier. Ganti dengan angka riil NADI. Perubahan hanya berlaku untuk penawaran yang dihitung setelah disimpan; penawaran lama menyimpan asumsinya sendiri.</div>
+        <div id="qt-settings-form"></div>
+        <div class="qt-actions" style="margin-top:1rem">
+          <button class="aio-btn" onclick="qtSaveSettings()">Simpan pengaturan</button>
+          <button class="crm-btn-ghost" onclick="qtResetSettings()">Kembalikan ke angka bawaan</button>
+          <span class="crm-sub" id="qt-settings-note"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Page: Helpdesk (js/sales-ui.js) ─── -->
+    <div id="page-helpdesk" class="page-section">
+      <div id="hd-error" class="aio-mock-banner" style="display:none"></div>
+      <div class="aio-kpis" id="hd-kpis"></div>
+      <div class="crm-filters">
+        <select id="hd-f-status" onchange="hdLoad()">
+          <option value="terbuka">Terbuka</option><option value="baru">Baru</option><option value="dibuka">Dibuka</option><option value="menunggu_klien">Menunggu klien</option><option value="selesai">Selesai</option><option value="ditutup">Ditutup</option><option value="semua">Semua</option>
+        </select>
+        <select id="hd-f-priority" onchange="hdLoad()"><option value="">Semua prioritas</option></select>
+        <select id="hd-f-category" onchange="hdLoad()"><option value="">Semua kategori</option></select>
+        <input id="hd-q" type="search" placeholder="Cari klien / subjek / nomor tiket…" oninput="hdDebounce()">
+        <button class="aio-btn" onclick="hdNewTicketForm()">+ Tiket baru</button>
+      </div>
+      <div class="wa-inbox hd-inbox">
+        <div class="wa-list"><div id="hd-list-body"></div></div>
+        <div class="wa-thread" id="hd-thread"><div class="wa-empty">Pilih tiket di kiri.</div></div>
+      </div>
+      <div class="crm-sub" style="margin-top:.7rem">SLA = batas waktu balasan kita berikutnya sejak pesan klien terakhir: urgent 2 jam · tinggi 4 jam · normal 24 jam · rendah 48 jam. WA dari klien berstatus <b>Deal</b> otomatis menjadi tiket. Balasan hanya terkirim saat Anda klik kirim.</div>
     </div>
 
     <!-- ─── Page: Marketing & Content ─── -->
@@ -4964,6 +5179,9 @@
   <!-- No async/defer: the inline script right below needs window.PortfolioData
        synchronously at parse time, so this must load and execute first. -->
   <script src="/js/portfolio-data.js"></script>
+  <!-- Penawaran & Helpdesk: kalkulator murni + UI (fungsi dipanggil saat halaman dibuka) -->
+  <script src="/js/quote-calc.js"></script>
+  <script src="/js/sales-ui.js"></script>
 <script>
   // ── Auth (server-side: /api/auth/*, kredensial hanya di env Vercel) ──
   function enterDashboard() {
@@ -5055,6 +5273,8 @@
     'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Calon klien NADI & Nagara EduKit — data asli Airtable, skor otomatis, outreach dengan persetujuan' },
     'marketing-content': { title: 'Marketing & Content',     sub: 'Meta Ads (snapshot) & antrian konten 11 Facebook Page' },
     'legal-compliance':  { title: 'Legal & Compliance',      sub: 'Checklist lisensi & UU PDP (sebagian data asli, sebagian ilustratif)' },
+    'penawaran':         { title: 'Penawaran & Kalkulator',  sub: 'Kalkulator harga NADI → penawaran bernomor → kirim WA lewat persetujuan → klien setujui online' },
+    'helpdesk':          { title: 'Helpdesk',                sub: 'Tiket support klien NADI — SLA, draf balasan agen Rawat, kirim via WA/email' },
   };
 
   function showPage(name) {
@@ -5088,12 +5308,14 @@
     document.querySelector('.main').scrollTop = 0;
 
     // Page-specific loaders
-    if (name === 'overview')  ovInit();
+    if (name === 'overview')  { ovInit(); if (typeof hdRefreshBadge === 'function') hdRefreshBadge(); }
     if (name === 'portfolio') pfInit();
     if (name === 'business-unit') bumInit();
     if (name === 'ai-orchestration') aioRenderTable();
     if (name === 'virtual-office') { const f = document.getElementById('vo-frame'); if (f && !f.getAttribute('src')) f.src = '/office/'; }
     if (name === 'crm-pipeline') crmRender();
+    if (name === 'penawaran') qtInit();
+    if (name === 'helpdesk') hdInit();
     if (name === 'legal-compliance') lcRenderTable();
     if (name === 'marketing-content') mcInit();
     if (name === 'finance')  finLoadData();
@@ -5740,7 +5962,8 @@
       ${f('WhatsApp', r.wa ? '+' + escapeHtml(r.wa) : '')}
       ${f('Email', escapeHtml(r.email || ''))}
       ${f('Website', r.website && /^https?:\/\//.test(r.website) ? `<a href="${escapeHtml(r.website)}" target="_blank" rel="noopener noreferrer">${escapeHtml(r.website)}</a>` : '')}
-      ${f('Terakhir dihubungi', r.last_contacted_at ? new Date(r.last_contacted_at).toLocaleString('id-ID') : '')}`);
+      ${f('Terakhir dihubungi', r.last_contacted_at ? new Date(r.last_contacted_at).toLocaleString('id-ID') : '')}
+      <div class="qt-actions"><button class="aio-btn qt-btn-brand" onclick="qtFromLead(crm.rows.find(x => x.id === ${r.id}))">Buat penawaran</button><button class="crm-btn-ghost" onclick="hdFromLead(${r.id})">Buat tiket helpdesk</button></div>`);
   }
   async function crmSetStatus(id, status) {
     try { await crmApi('/api/office/lead', { method: 'POST', body: JSON.stringify({ id, status }) }); document.getElementById('crm-note').textContent = 'Status disimpan.'; }
@@ -5902,6 +6125,7 @@
         <span class="crm-sub">${escapeHtml([c.segment || c.category, c.city].filter(Boolean).join(' · '))}${c.wa ? ' · +' + escapeHtml(c.wa) : ''}</span>
         <span style="flex:1"></span>
         <select class="crm-status" style="border:1px solid var(--sand-border);border-radius:8px;padding:5px 8px;font-family:inherit;font-size:12px" onchange="waSetStatus(${c.id}, this.value)">${opts}</select>
+        ${wa.demo ? '' : `<button class="crm-btn-ghost" onclick="qtFromLead(wa.data.conversations.find(x => x.id === ${c.id}))">Buat penawaran</button><button class="crm-btn-ghost" onclick="hdFromLead(${c.id})">Jadikan tiket</button>`}
         ${ch.url ? `<a class="crm-btn-ghost" style="text-decoration:none" href="${escapeHtml(ch.url)}" target="_blank" rel="noopener noreferrer">Buka di wacrm ↗</a>` : `<button class="crm-btn-ghost" disabled title="Set WACRM_URL setelah wacrm di-deploy">Buka di wacrm ↗</button>`}</div>
       <div class="wa-msgs" id="wa-msgs">${c.messages.length ? c.messages.map(m => `<div class="wa-bubble ${m.direction}">${escapeHtml(m.body)}<small>${m.channel === 'cloud_api' ? 'Cloud API · ' : ''}${fmt(m.created_at)}</small></div>`).join('') : '<div class="wa-empty">Belum ada pesan tercatat.</div>'}</div>
       <div class="wa-compose"><input disabled placeholder="${ch.url ? 'Balas percakapan ini dari wacrm (tombol di atas)' : 'Membalas dari sini tersedia setelah wacrm (Cloud API) tersambung'}"><button class="aio-btn" disabled>Kirim</button></div>`;

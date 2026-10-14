@@ -2,7 +2,7 @@
   "name": "nagara-intelligence-hub",
   "version": "1.0.0",
   "scripts": {
-    "test": "node --test 'js/*.test.js'"
+    "test": "node --test 'js/*.test.js' 'lib/*.test.js'"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",

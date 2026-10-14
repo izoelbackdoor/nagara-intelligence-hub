@@ -13,11 +13,14 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 
 | Path | Isi |
 |---|---|
-| `index.html` | Seluruh dashboard (±9.800 baris, HTML+CSS+JS vanilla, tanpa build step) |
+| `index.html` | Seluruh dashboard (±10.000 baris, HTML+CSS+JS vanilla, tanpa build step) |
+| `js/quote-calc.js` | Kalkulator harga NADI (murni, browser + server) — port dari `Kalkulator_Harga_Website_NADI.xlsx`. Tes: `js/quote-calc.test.js` |
+| `js/sales-ui.js` | UI halaman **Penawaran & Kalkulator** dan **Helpdesk** (dimuat index.html) |
 | `office/` | Virtual Office hasil build (statis). **Jangan edit langsung** — sumbernya `office-src/` |
 | `office-src/` | Vite + React + TS, fork Claude Office (MIT). Build: `npm install && npm run build`, salin `dist/*` ke `../office/` (pertahankan `office/3d.html` & `LICENSE-claude-office.txt`) |
 | `api/` | Vercel Node functions (CommonJS, `module.exports = async (req, res)`) |
-| `lib/` | Helper server: `session.js` (auth), `supabase.js` (REST), `wa.js` (Fonnte), `leads.js` (skor prospek), `inbound.js` (WA masuk → CRM), `agents/` |
+| `lib/` | Helper server: `session.js` (auth), `supabase.js` (REST), `wa.js` (Fonnte), `leads.js` (skor prospek), `inbound.js` (WA masuk → CRM/helpdesk), `sales.js` (penawaran + halaman klien), `helpdesk.js` (tiket, SLA, triase), `agents/` |
+| `supabase/migrations/` | SQL migrasi, dijalankan manual di Supabase SQL Editor (aditif, aman diulang) |
 | `kb/` | Knowledge base untuk AI draft balasan (`api/inbox/ai-draft.js` membaca file ini) |
 | `docs/` | Cara agen (n8n/Hermes) lapor ke Virtual Office; workflow n8n siap import |
 | `scripts/` | Utilitas lokal: `setup-secrets.js` / `hash-password.js` (DASH_PASS_HASH), import kontak ke Airtable |
@@ -37,9 +40,23 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 - Model: `claude-haiku-4-5-20251001` lewat fetch langsung ke Messages API (`CLAUDE_API_KEY`). Biaya dicatat di `office_costs`; batas harian per meja $0.5.
 - **Arah** (Chief of Staff): brief pagi/sore via Vercel Cron (00:00 & 10:00 UTC = 07:00 & 17:00 WIB), opsional email ke pemilik.
 - **Usul** (outreach): menyusun draf WA perkenalan dari `crm_leads` → `office_approvals`. Jika AI gagal → draf template (`templateMessage`).
+- **Rawat** (helpdesk, meja Studio NADI): `/api/agents/rawat` {ticket_id} → ringkasan, saran kategori/prioritas, draf balasan dari `kb/` (tanpa `pricing.md` — angka hanya dari penawaran klien). Draf hanya mengisi kotak balasan.
 - Prinsip tidak bisa ditawar: **tidak ada pesan ke klien tanpa persetujuan pemilik.** Kirim WA hanya terjadi di `decideApproval` (klik "Setujui & kirim"). Batas: 20 draf/hari, 20 antrean, 20 kirim/hari. Setiap pesan wajib berakhir dengan opsi "Balas STOP"; balasan STOP → `jangan_hubungi`.
 - Agen tidak boleh mengarang klaim/harga/testimoni di luar `OFFERS` di `usul.js`.
 - Semua aksi agen dicatat di `office_events` (level: info · teknis · peringatan · bahaya).
+
+## Penawaran (lib/sales.js)
+
+- Angka selalu dihitung ulang di server dengan `js/quote-calc.js`; asumsi di tabel `sales_settings` (key `kalkulator`), snapshot asumsi disimpan per penawaran.
+- **Tarif per jam, jam kerja, biaya dasar & margin tidak boleh masuk dokumen klien** — dokumen hanya memakai `result.client` (`clientView`).
+- Alur: draf → `op: send` membuat approval `kind: penawaran` (desk `usul`) → pemilik "Setujui & kirim WA" → `terkirim` → klien buka `/penawaran/<token 64 hex>` (publik, `noindex`, CSP) → setujui online → `diterima` + lead `deal`.
+- Hanya draf yang bisa diedit; selain itu duplikat. Draf/menunggu kirim tidak bisa dibuka lewat link publik.
+
+## Helpdesk (lib/helpdesk.js)
+
+- WA masuk dari lead berstatus `deal` atau nomor dengan tiket terbuka → tiket (`routeInbound`, dipanggil `lib/inbound.js`, error tidak boleh menggagalkan webhook). STOP tidak jadi tiket.
+- SLA = batas balasan kita berikutnya sejak pesan klien terakhir (urgent 2j · tinggi 4j · normal 24j · rendah 48j); dikosongkan saat kita membalas / menunggu klien.
+- Balasan WA/email hanya lewat klik pemilik (`op: reply`); kontak `jangan_hubungi` diblok.
 
 ## WhatsApp
 
@@ -49,7 +66,7 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 
 ## Tes
 
-`npm test` → `node --test 'js/*.test.js'` (data portofolio). Belum ada tes untuk `api/` & `lib/`.
+`npm test` → `node --test 'js/*.test.js' 'lib/*.test.js'` (data portofolio, kalkulator — termasuk contoh angka di panduan kalkulator, triase helpdesk). Alur API penawaran/helpdesk sudah diuji end-to-end terhadap Postgres + PostgREST lokal, tapi skrip ujinya belum masuk repo.
 
 ## Catatan teknis yang diketahui
 

@@ -15,8 +15,21 @@
       "use": "@vercel/static"
     },
     {
+      "src": "js/quote-calc.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "js/sales-ui.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "api/**/*.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "kb/**"
+        ]
+      }
     }
   ],
   "routes": [
@@ -57,11 +70,11 @@
       "dest": "/api/auth.js?action=$1"
     },
     {
-      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound)",
+      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view)",
       "dest": "/api/office/state.js?action=$1"
     },
     {
-      "src": "/api/agents/(arah|usul)",
+      "src": "/api/agents/(arah|usul|rawat)",
       "dest": "/api/agents/run.js?agent=$1"
     },
     {
@@ -73,12 +86,24 @@
       "dest": "/js/portfolio-data.js"
     },
     {
+      "src": "/js/quote-calc.js",
+      "dest": "/js/quote-calc.js"
+    },
+    {
+      "src": "/js/sales-ui.js",
+      "dest": "/js/sales-ui.js"
+    },
+    {
       "src": "/office/?",
       "dest": "/office/index.html"
     },
     {
       "src": "/office/(.*)",
       "dest": "/office/$1"
+    },
+    {
+      "src": "/penawaran/([a-f0-9]{64})/?",
+      "dest": "/api/office/state.js?action=quote-view&t=$1"
     },
     {
       "src": "/(.*)",
