@@ -665,6 +665,8 @@
   .crm-pager { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-top:.7rem; font-size:12px; color: var(--sand-text2); }
   .crm-selbar { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color:#fff; border-radius: 14px; padding: 10px 12px 10px 18px; display: none; gap: 10px; align-items: center; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 50; }
   .crm-selbar.show { display: flex; }
+  .crm-selbar-msg { font-size: 12px; color: #ffd9a8; max-width: 360px; }
+  .crm-selbar-msg:empty { display: none; }
   .crm-views { display:flex; gap:4px; border-bottom:1px solid var(--sand-border); margin-bottom:1.1rem; }
   .crm-view-btn { background:none; border:0; border-bottom:2px solid transparent; padding:8px 14px; font-family:inherit; font-size:13px; font-weight:600; color: var(--sand-text2); cursor:pointer; margin-bottom:-1px; }
   .crm-view-btn.active { color: var(--ink); border-bottom-color: var(--ink); }
@@ -1434,7 +1436,7 @@
           <tbody id="crm-body"><tr><td colspan="7">Memuat…</td></tr></tbody>
         </table>
       </div>
-      <div class="crm-selbar" id="crm-selbar"><span id="crm-selbar-n"></span><button class="aio-btn" style="background:#25a35a" onclick="crmUsul(true)">✍️ Buat draf WA</button><button class="crm-btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.35)" onclick="crm.sel.clear();crmLoad()">Batal</button></div>
+      <div class="crm-selbar" id="crm-selbar"><span id="crm-selbar-n"></span><span id="crm-selbar-msg" class="crm-selbar-msg"></span><button class="aio-btn" style="background:#25a35a" onclick="crmUsul(true)">✍️ Buat draf WA</button><button class="crm-btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.35)" onclick="crm.sel.clear();crmLoad()">Batal</button></div>
       <div class="crm-pager"><button class="vo-btn" onclick="crmPage(-1)">‹ Sebelumnya</button><span id="crm-page-note"></span><button class="vo-btn" onclick="crmPage(1)">Berikutnya ›</button></div>
       </div>
     </div>
@@ -5895,7 +5897,7 @@
   // Dua produk: NADI (UMKM, base "Nagara CRM") dan Nagara EduKit (lembaga training, base "Nagara EduKit — Pipeline Prospek").
   // Pesan WA HANYA terkirim setelah pemilik klik "Setujui & kirim" (server menegakkan batas 20/hari).
   const CRM_STATUS = { baru: 'Baru', draft: 'Draf disiapkan', dihubungi: 'Sudah dihubungi', membalas: 'Membalas', tertarik: 'Tertarik', deal: 'Deal', tidak_tertarik: 'Tidak tertarik', jangan_hubungi: 'Jangan hubungi' };
-  const crm = { product: 'nadi', offset: 0, limit: 50, rows: [], timer: null, sel: new Set() };
+  const crm = { product: 'nadi', offset: 0, limit: 50, rows: [], timer: null, sel: new Set(), capacity: null, selMsgLock: false };
   const crmSelectable = r => r.status === 'baru' && !!r.wa;
   async function crmApi(path, opts = {}) {
     const r = await fetch(path, { credentials: 'same-origin', cache: 'no-store', ...opts, headers: { 'content-type': 'application/json', ...(opts.headers || {}) } });
@@ -5925,7 +5927,7 @@
     let j;
     try { j = await crmApi('/api/office/leads?' + qs); }
     catch (e) { err.textContent = 'Belum bisa membaca data calon klien — ' + e.message; err.style.display = 'block'; return; }
-    crm.rows = j.rows;
+    crm.rows = j.rows; crm.capacity = j.capacity || null;
     const by = (k) => j.stats.reduce((m, r) => (m[r[k] || '-'] = (m[r[k] || '-'] || 0) + r.n, m), {});
     const total = j.stats.reduce((s, r) => s + r.n, 0), byStatus = by('status'), byCat = by('category');
     document.getElementById('crm-kpis').innerHTML = [
@@ -5994,18 +5996,28 @@
     const b = document.getElementById('crm-usul-sel-btn'); if (!b) return;
     b.textContent = `✍️ Buat draf untuk yang dipilih (${crm.sel.size})`; b.disabled = !crm.sel.size;
     const bar = document.getElementById('crm-selbar'); bar.classList.toggle('show', crm.sel.size > 0);
-    document.getElementById('crm-selbar-n').textContent = `${crm.sel.size} kontak dipilih (maks 10)`;
+    const cap = crm.capacity;
+    document.getElementById('crm-selbar-n').textContent = `${crm.sel.size} kontak dipilih (maks 10)` + (cap ? ` · sisa kuota draf: ${cap.room}` : '');
+    const over = cap && crm.sel.size > cap.room;
+    if (over && !crm.selMsgLock) document.getElementById('crm-selbar-msg').textContent = cap.room
+      ? `Hanya ${cap.room} draf pertama yang dibuat (${cap.queued} draf masih menunggu persetujuan, ${cap.made_24h} dibuat 24 jam terakhir).`
+      : `Kuota penuh: ${cap.queued} draf masih menunggu persetujuan — setujui/tolak dulu di antrean.`;
+    else if (!crm.selMsgLock) document.getElementById('crm-selbar-msg').textContent = '';
   }
   async function crmUsul(selected) {
     const btn = document.getElementById(selected ? 'crm-usul-sel-btn' : 'crm-usul-btn'), note = document.getElementById('crm-note');
     const body = selected ? { product: crm.product, lead_ids: [...crm.sel] } : { product: crm.product, n: 5 };
-    btn.disabled = true; note.textContent = 'Usul sedang menulis draf pesan…';
+    const selMsg = document.getElementById('crm-selbar-msg');
+    const show = (t) => { note.textContent = t; if (selected) { selMsg.textContent = t; crm.selMsgLock = true; setTimeout(() => { crm.selMsgLock = false; }, 8000); } };
+    btn.disabled = true; show('Usul sedang menulis draf pesan…');
     try {
       const j = await crmApi('/api/agents/usul', { method: 'POST', body: JSON.stringify(body) });
-      note.textContent = (j.drafted ? `${j.drafted} draf baru masuk antrean — periksa & setujui di bawah.` : (j.note || 'Tidak ada draf baru.')) + (j.source === 'template' ? ' Catatan: AI sedang tidak tersedia (cek saldo API Anthropic), jadi draf memakai template — silakan edit sebelum kirim.' : '') + (j.skipped ? ` (${j.skipped} dilewati: bukan status Baru / tanpa WA)` : '');
-      if (selected) crm.sel.clear();
+      const deferred = j.deferred || [];
+      show((j.drafted ? `${j.drafted} draf baru masuk antrean — periksa & setujui di bawah.` : (j.note || 'Tidak ada draf baru.')) + (j.source === 'template' ? ' Catatan: AI sedang tidak tersedia (cek saldo API Anthropic), jadi draf memakai template — silakan edit sebelum kirim.' : '') + (j.skipped ? ` (${j.skipped} dilewati: bukan status Baru / tanpa WA)` : '') + (deferred.length ? ` ${deferred.length} kontak belum dibuatkan karena kuota — masih tercentang, coba lagi setelah antrean diputuskan.` : ''));
+      if (selected) { crm.sel.clear(); deferred.forEach(id => crm.sel.add(id)); }
       crmLoadQueue(); crmLoad();
-    } catch (e) { note.textContent = 'Usul gagal: ' + e.message; }
+      if (j.drafted) document.getElementById('crm-queue').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) { show('Usul gagal: ' + e.message); }
     finally { btn.disabled = false; crmSelUpdate(); }
   }
   async function crmLoadQueue() {

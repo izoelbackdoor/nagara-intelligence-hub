@@ -86,8 +86,12 @@ async function readLeads(req, res) {
   if (q.status && LEAD_STATUS.includes(q.status)) f.push(`status=eq.${q.status}`);
   if (q.category) f.push(`or=(category.eq.${encodeURIComponent(q.category)},segment.eq.${encodeURIComponent(q.category)})`);
   if (q.q) { const t = encodeURIComponent(`*${String(q.q).replace(/[*,()]/g, ' ').slice(0, 60)}*`); f.push(`and=(or(name.ilike.${t},city.ilike.${t}))`); }
-  const [rows, stats] = await Promise.all([sb('crm_leads?' + f.join('&')), sb(`crm_product_stats?select=category,status,n,avg_score&product=eq.${product}`)]);
-  return sendJson(res, 200, { product, rows, stats, limit, offset });
+  const since = new Date(Date.now() - 864e5).toISOString();
+  const [rows, stats, made, queued] = await Promise.all([sb('crm_leads?' + f.join('&')), sb(`crm_product_stats?select=category,status,n,avg_score&product=eq.${product}`),
+    sb(`office_approvals?select=id&kind=eq.outreach&created_at=gte.${since}`), sb('office_approvals?select=id&kind=eq.outreach&status=eq.menunggu')]);
+  // Sama dengan batas di lib/agents/usul.js (20 draf/24 jam, 20 menunggu).
+  const capacity = { made_24h: made.length, queued: queued.length, room: Math.max(0, Math.min(20 - made.length, 20 - queued.length)) };
+  return sendJson(res, 200, { product, rows, stats, limit, offset, capacity });
 }
 
 async function airtableAll(token, base, table, onRecord) {
