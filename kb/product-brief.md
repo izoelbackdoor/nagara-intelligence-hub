@@ -1,14 +1,14 @@
-# Nagara Digital Indonesia — Product Brief
+# Nagara Digital Lab Indonesia — Product Brief
 
 ## Tentang Kami
-Nagara Digital Indonesia (NADI) adalah perusahaan teknologi yang membantu bisnis — terutama BPR dan UMKM — tumbuh dengan solusi digital terpadu: website profesional, sistem CRM, blast marketing (WA + Email), dan AI agent.
+Nagara Digital Lab Indonesia (NADI) adalah perusahaan teknologi yang membantu bisnis — terutama BPR dan UMKM — tumbuh dengan solusi digital terpadu: website profesional, sistem CRM, blast marketing (WA + Email), dan AI agent.
 
 ## Layanan Utama
 
 ### 1. Website Profesional
-- Desain custom untuk BPR, klinik, travel, kuliner, dan bisnis lain
-- Mobile-friendly, SEO-ready, cepat
-- Termasuk hosting 1 tahun
+- Desain disesuaikan brand (berbasis template premium; desain custom dari nol sebagai opsi) untuk BPR, klinik, travel, kuliner, dan bisnis lain
+- Mobile-friendly; SEO dasar tersedia sebagai tambahan
+- Hosting & pemeliharaan ditagih terpisah (mulai Rp 490.000/bulan), domain Rp 280.000/tahun
 
 ### 2. CRM + Blast Marketing
 - Database kontak terstruktur di Airtable

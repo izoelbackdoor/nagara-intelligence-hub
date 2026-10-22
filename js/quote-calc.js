@@ -29,7 +29,7 @@
     ],
     complexity: { sederhana: 1, menengah: 1.5, kompleks: 2 },
     validDays: 14,
-    defaultRevisions: 2,
+    defaultRevisions: 3,
     paymentTerms: '50% di muka saat persetujuan, 50% saat website siap live.',
     company: { name: 'Nagara Digital Lab Indonesia (NADI)', city: 'Bandung', wa: '0858-8777-9036', email: 'halo@nagaraku.id', web: 'nagaraku.id', signer: 'Imam' },
     groups: ['Desain', 'Development', 'Konten', 'Lisensi', 'Integrasi', 'Lainnya'],

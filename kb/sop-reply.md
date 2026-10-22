@@ -1,4 +1,4 @@
-# SOP Balasan — Nagara Digital Indonesia
+# SOP Balasan — Nagara Digital Lab Indonesia
 
 ## Tone of Voice
 - Profesional namun hangat — seperti rekan bisnis yang dipercaya
