@@ -590,3 +590,122 @@ function alertInline(e) {
   const n = document.getElementById('crm-note') || document.getElementById('wa-note');
   if (n) n.innerHTML = 'Gagal membuat tiket: ' + qtMigrationMsg(e);
 }
+
+// ════════════════════ OUTREACH & BRIEF NADI ════════════════════
+// Hanya baca: pengiriman WA, balasan bot, dan penawaran diatur workflow n8n (NADI 2/3/4).
+const ON_TAHAP_CLASS = { '1. Dihubungi': 't1', '2. Membalas': 't2', '3. Tertarik': 't3', '5. Deal': 't5', 'x. Menolak': 'tx' };
+const ON_JENIS = {
+  outreach: ['✅ Perkenalan terkirim', ''], outreach_gagal: ['⚠️ Gagal kirim', 'color:#b04a12'],
+  bot: ['🤖 Balasan bot', ''], brief_ideal: ['📄 Penawaran (ideal)', ''], brief_hemat: ['📄 Penawaran (hemat)', ''], brief_zoom: ['📅 Konfirmasi Zoom', ''],
+};
+const on = { data: null, view: 'klien', timer: null };
+const onRp = n => (n == null || n === '') ? '—' : QuoteCalc.formatRp(Number(n));
+const onFmt = iso => iso ? new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+const onTahapLabel = t => String(t || '').replace(/^[0-9x]\.\s*/, '');
+
+function onInit() {
+  onLoad();
+  clearInterval(on.timer);
+  on.timer = setInterval(() => { if (!document.hidden) onLoad(true); }, 60000);
+}
+function onStop() { clearInterval(on.timer); on.timer = null; }
+
+async function onLoad(quiet) {
+  const err = document.getElementById('on-error');
+  try {
+    on.data = await crmApi('/api/office/nadi-progress');
+    err.style.display = 'none';
+  } catch (e) {
+    err.innerHTML = /404|nadi_v_/.test(e.message)
+      ? '<b>View database belum ada.</b> Jalankan <code>supabase/migrations/20261022_nadi_progres_views.sql</code> di Supabase SQL Editor.'
+      : escapeHtml(e.message);
+    err.style.display = 'block';
+    if (!quiet) return;
+  }
+  if (!on.data) return;
+  const r = on.data.ringkasan || {};
+  document.getElementById('on-kpis').innerHTML = [
+    [r.dihubungi_hari_ini ?? 0, 'dihubungi hari ini'],
+    [r.total_dihubungi ?? 0, 'total sudah dihubungi'],
+    [r.membalas ?? 0, 'membalas chat'],
+    [r.brief_masuk ?? 0, 'brief masuk'],
+    [r.penawaran_berjalan ?? 0, 'penawaran berjalan'],
+    [r.deal ?? 0, 'deal'],
+    [onRp(r.nilai_pipeline), 'nilai pipeline (harga penawaran)', 'font-size:19px'],
+    [escapeHtml(r.kirim_berikutnya_wib || '—'), `kirim berikutnya · sisa antrean ${Number(r.sisa_antrean || 0).toLocaleString('id-ID')}`, 'font-size:19px'],
+  ].map(([v, l, st]) => `<div class="aio-kpi"><b style="${st || ''}">${v}</b><span>${l}</span></div>`).join('');
+  const sel = document.getElementById('on-f-tahap'), cur = sel.value;
+  const tahaps = [...new Set(on.data.progres.map(p => p.tahap))].sort();
+  sel.innerHTML = '<option value="">Semua tahap</option>' + tahaps.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(onTahapLabel(t))}</option>`).join('');
+  sel.value = tahaps.includes(cur) ? cur : '';
+  const aktif = on.data.penawaran.filter(b => !['Deal', 'Batal', 'Ditolak'].includes(b.status)).length;
+  const badge = document.getElementById('on-badge-brief');
+  badge.textContent = aktif; badge.style.display = aktif ? '' : 'none';
+  document.getElementById('on-updated').textContent = 'Diperbarui ' + new Date(on.data.generated_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  onRender();
+}
+
+function onSetView(v) {
+  on.view = v;
+  document.querySelectorAll('#on-views .crm-view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  ['klien', 'brief', 'aktivitas'].forEach(k => { document.getElementById('on-view-' + k).style.display = k === v ? '' : 'none'; });
+}
+
+function onRender() {
+  if (!on.data) return;
+  const tahap = document.getElementById('on-f-tahap').value;
+  const q = document.getElementById('on-q').value.trim().toLowerCase();
+  const rows = on.data.progres.filter(p => (!tahap || p.tahap === tahap) && (!q || `${p.nama} ${p.kategori} ${p.kota}`.toLowerCase().includes(q)));
+  document.getElementById('on-klien-body').innerHTML = rows.length ? rows.map(p => `
+    <tr class="on-row" onclick="onOpen(${Number(p.id)})">
+      <td><b>${escapeHtml(p.nama)}</b><span class="on-muted">${escapeHtml(p.kategori || '')}${p.kota ? ' · ' + escapeHtml(p.kota) : ''}</span></td>
+      <td><span class="on-tahap ${ON_TAHAP_CLASS[p.tahap] || ''}">${escapeHtml(onTahapLabel(p.tahap))}</span></td>
+      <td>${p.dipegang === 'Bot' ? '🤖 Bot' : '👤 Imam'}</td>
+      <td style="white-space:nowrap">${escapeHtml(p.dihubungi_wib || '—')}</td>
+      <td>${p.pesan_terakhir_klien ? `${escapeHtml(p.pesan_terakhir_klien)}<span class="on-muted">${escapeHtml(p.balas_terakhir_wib || '')}${p.ringkasan_bot ? ' · ' + escapeHtml(p.ringkasan_bot) : ''}</span>` : '<span class="on-muted">Belum membalas</span>'}</td>
+      <td>${p.wa_link ? `<a href="${escapeHtml(p.wa_link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">WA ↗</a>` : ''}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="crm-sub" style="padding:18px">Belum ada calon klien di filter ini.</td></tr>';
+
+  document.getElementById('on-brief-body').innerHTML = on.data.penawaran.length ? on.data.penawaran.map(b => {
+    const pen = b.penawaran_aktif ?? b.harga_penawaran, bot = b.bottom_aktif ?? b.harga_bottom;
+    const rek = b.rekomendasi_status || (b.rekomendasi && typeof b.rekomendasi === 'object' ? b.rekomendasi.status : b.rekomendasi);
+    const zoom = b.lanjut_via === 'zoom' && b.jadwal_zoom && b.jadwal_zoom !== '-' ? b.jadwal_zoom : '';
+    const ang = /^\d+$/.test(String(b.anggaran || '')) ? onRp(b.anggaran) : (b.anggaran || '—');
+    return `<tr${b.lead_id ? ` class="on-row" onclick="onOpen(${Number(b.lead_id)})"` : ''}>
+      <td style="white-space:nowrap">${escapeHtml(b.masuk_wib || '')}</td>
+      <td><b>${escapeHtml(b.nama_usaha || '')}</b><span class="on-muted">${escapeHtml(b.nama_pic || '')}${b.kota ? ' · ' + escapeHtml(b.kota) : ''}</span></td>
+      <td>${escapeHtml(b.jenis_proyek || '')}</td>
+      <td><span class="on-tahap ${b.status === 'Deal' ? 't5' : b.status === 'Negosiasi' ? 't3' : 't1'}">${escapeHtml(b.status || '')}</span>${zoom ? `<span class="on-muted">Zoom: ${escapeHtml(zoom)}</span>` : ''}</td>
+      <td class="on-num"><b>${onRp(pen)}</b><span class="on-muted">${b.versi_dikirim ? 'versi ' + escapeHtml(b.versi_dikirim) + ' terkirim' : b.versi_dikirim === null ? 'belum dikirim' : ''}${b.harga_deal ? ' · deal ' + onRp(b.harga_deal) : ''}</span></td>
+      <td class="on-num">${onRp(bot)}</td>
+      <td>${escapeHtml(ang)}${rek ? `<span class="on-muted">${escapeHtml(String(rek).replace(/_/g, ' '))}</span>` : ''}</td>
+      <td>${escapeHtml(b.lanjut_via === 'zoom' ? 'Zoom' : b.lanjut_via === 'wa' ? 'WhatsApp' : (b.lanjut_via || ''))}</td>
+      <td>${b.wa_link ? `<a href="${escapeHtml(b.wa_link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">WA ↗</a>` : ''}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="9" class="crm-sub" style="padding:18px">Belum ada brief masuk dari brief.nagaraku.id.</td></tr>';
+
+  document.getElementById('on-akt-body').innerHTML = on.data.aktivitas.length ? on.data.aktivitas.map(a => {
+    const [label, st] = ON_JENIS[a.jenis] || [a.jenis, ''];
+    return `<tr class="on-row" onclick="onOpen(${Number(a.lead_id)})">
+      <td style="white-space:nowrap">${onFmt(a.created_at)}</td>
+      <td><b>${escapeHtml(a.nama)}</b><span class="on-muted">${escapeHtml(a.kategori)}</span></td>
+      <td style="white-space:nowrap;${st}">${label}</td>
+      <td>${a.alasan ? `<span style="color:#b04a12">${escapeHtml(a.alasan)}</span>` : `<span class="on-muted" style="margin:0">${escapeHtml(a.cuplikan)}</span>`}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="4" class="crm-sub" style="padding:18px">Belum ada aktivitas kirim.</td></tr>';
+}
+
+async function onOpen(leadId) {
+  openSharedModal('<p class="crm-sub">Memuat percakapan…</p>');
+  let d;
+  try { d = await crmApi('/api/office/nadi-progress?lead=' + encodeURIComponent(leadId)); }
+  catch (e) { openSharedModal(`<p>${escapeHtml(e.message)}</p>`); return; }
+  const l = d.lead, b = d.briefs[0];
+  openSharedModal(`
+    <h3>${escapeHtml(l.business || l.name)}</h3>
+    <p class="crm-sub" style="margin:4px 0 8px">${escapeHtml(l.category || '')}${l.city ? ' · ' + escapeHtml(l.city) : ''} · status ${escapeHtml(l.status)} · ${l.bot_aktif ? '🤖 dibalas bot' : '👤 dipegang Imam'}</p>
+    ${l.bot_summary ? `<p class="on-info"><b>Catatan bot:</b> ${escapeHtml(l.bot_summary)}</p>` : ''}
+    ${b ? `<p class="on-info"><b>Brief:</b> ${escapeHtml(b.jenis_proyek || '')} · ${escapeHtml(b.status || '')} · penawaran ${onRp(b.penawaran_aktif ?? b.harga_penawaran)} · bottom ${onRp(b.bottom_aktif ?? b.harga_bottom)}${b.anggaran ? ' · anggaran klien ' + escapeHtml(/^\d+$/.test(String(b.anggaran)) ? onRp(b.anggaran) : b.anggaran) : ''}</p>` : ''}
+    <div class="on-thread">${d.messages.length ? d.messages.map(m => `<div class="wa-bubble ${m.direction === 'in' ? 'in' : 'out'}">${escapeHtml(m.body)}<small>${m.direction === 'in' ? '' : (ON_JENIS[m.meta?.jenis]?.[0] || 'Keluar') + ' · '}${onFmt(m.created_at)}</small></div>`).join('') : '<div class="wa-empty">Belum ada pesan.</div>'}</div>
+    ${l.wa ? `<p style="margin-top:12px"><a class="aio-btn" style="text-decoration:none;display:inline-block" href="https://wa.me/${escapeHtml(String(l.wa).replace(/\D/g, '').replace(/^0/, '62'))}" target="_blank" rel="noopener">Buka di WhatsApp</a></p>` : ''}`);
+}

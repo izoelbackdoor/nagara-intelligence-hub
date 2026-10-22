@@ -19,7 +19,7 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 | `office/` | Virtual Office hasil build (statis). **Jangan edit langsung** — sumbernya `office-src/` |
 | `office-src/` | Vite + React + TS, fork Claude Office (MIT). Build: `npm install && npm run build`, salin `dist/*` ke `../office/` (pertahankan `office/3d.html` & `LICENSE-claude-office.txt`) |
 | `api/` | Vercel Node functions (CommonJS, `module.exports = async (req, res)`) |
-| `lib/` | Helper server: `session.js` (auth), `supabase.js` (REST), `wa.js` (Fonnte), `leads.js` (skor prospek), `inbound.js` (WA masuk → CRM/helpdesk), `sales.js` (penawaran + halaman klien), `helpdesk.js` (tiket, SLA, triase), `agents/` |
+| `lib/` | Helper server: `session.js` (auth), `supabase.js` (REST), `wa.js` (Fonnte), `leads.js` (skor prospek), `inbound.js` (WA masuk → CRM/helpdesk), `sales.js` (penawaran + halaman klien), `helpdesk.js` (tiket, SLA, triase), `nadi-progress.js` (halaman Outreach & Brief NADI, hanya baca), `agents/` |
 | `supabase/migrations/` | SQL migrasi, dijalankan manual di Supabase SQL Editor (aditif, aman diulang) |
 | `kb/` | Knowledge base untuk AI draft balasan (`api/inbox/ai-draft.js` membaca file ini) |
 | `docs/` | Cara agen (n8n/Hermes) lapor ke Virtual Office; workflow n8n siap import |
@@ -57,6 +57,11 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 - WA masuk dari lead berstatus `deal` atau nomor dengan tiket terbuka → tiket (`routeInbound`, dipanggil `lib/inbound.js`, error tidak boleh menggagalkan webhook). STOP tidak jadi tiket.
 - SLA = batas balasan kita berikutnya sejak pesan klien terakhir (urgent 2j · tinggi 4j · normal 24j · rendah 48j); dikosongkan saat kita membalas / menunggu klien.
 - Balasan WA/email hanya lewat klik pemilik (`op: reply`); kontak `jangan_hubungi` diblok.
+
+## Outreach & Brief NADI (n8n)
+
+- Halaman **Outreach & Brief NADI** (`js/sales-ui.js`, `on*`) membaca `GET /api/office/nadi-progress[?lead=id]` → view `nadi_v_ringkasan`, `nadi_v_progres`, `nadi_v_penawaran` (`supabase/migrations/20261022_nadi_progres_views.sql`) + `crm_messages`.
+- Hanya baca. Outreach WA dari 0858, balasan bot, dan kirim penawaran berjalan di n8n (n8n.nagaraku.id, workflow NADI 2/3/4) + form brief.nagaraku.id — bukan lewat antrean persetujuan dashboard.
 
 ## WhatsApp
 

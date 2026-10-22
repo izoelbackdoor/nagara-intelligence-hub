@@ -70,7 +70,7 @@
       "dest": "/api/auth.js?action=$1"
     },
     {
-      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view)",
+      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view|nadi-progress)",
       "dest": "/api/office/state.js?action=$1"
     },
     {

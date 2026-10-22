@@ -670,6 +670,15 @@
   .crm-views { display:flex; gap:4px; border-bottom:1px solid var(--sand-border); margin-bottom:1.1rem; }
   .crm-view-btn { background:none; border:0; border-bottom:2px solid transparent; padding:8px 14px; font-family:inherit; font-size:13px; font-weight:600; color: var(--sand-text2); cursor:pointer; margin-bottom:-1px; }
   .crm-view-btn.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .on-tahap { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; background:rgba(36,30,26,.08); white-space:nowrap; }
+  .on-tahap.t1 { background:#e8eefc; color:#2a4b9b; } .on-tahap.t2 { background:#fff2d6; color:#8a5a00; } .on-tahap.t3 { background:#ffe3d1; color:#b04a12; }
+  .on-tahap.t5 { background:#d9f2e2; color:#1d6b3c; } .on-tahap.tx { background:#f3e3e3; color:#9b2a2a; }
+  .on-row { cursor:pointer; } .on-row:hover td { background: rgba(225,29,44,.04); }
+  .on-num { text-align:right; font-variant-numeric: tabular-nums; white-space:nowrap; }
+  .on-muted { color: var(--sand-text2); font-size:11.5px; display:block; margin-top:2px; }
+  .on-info { font-size:13px; margin:0 0 8px; color: var(--ink); line-height:1.5; }
+  .on-info b { color: var(--ink); }
+  .on-thread { background:#efe7da; border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; margin-top:10px; }
   .crm-badge { display:inline-block; min-width:18px; padding:1px 6px; border-radius:10px; background:#25a35a; color:#fff; font-size:10.5px; text-align:center; margin-left:4px; }
   .wa-lanes { display:grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap:8px; align-items:stretch; }
   .wa-lane { background: var(--sand-card); border:1px solid var(--sand-border); border-radius:12px; padding:12px 14px; font-size:12.5px; color: var(--sand-text2); line-height:1.5; }
@@ -1172,6 +1181,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         CRM &amp; Pipeline
       </button>
+      <button class="nav-item" id="nav-outreach-nadi" onclick="showPage('outreach-nadi')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+        Outreach &amp; Brief NADI
+      </button>
       <button class="nav-item" id="nav-penawaran" onclick="showPage('penawaran')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
         Penawaran &amp; Kalkulator
@@ -1438,6 +1451,33 @@
       </div>
       <div class="crm-selbar" id="crm-selbar"><span id="crm-selbar-n"></span><span id="crm-selbar-msg" class="crm-selbar-msg"></span><button class="aio-btn" style="background:#25a35a" onclick="crmUsul(true)">✍️ Buat draf WA</button><button class="crm-btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.35)" onclick="crm.sel.clear();crmLoad()">Batal</button></div>
       <div class="crm-pager"><button class="vo-btn" onclick="crmPage(-1)">‹ Sebelumnya</button><span id="crm-page-note"></span><button class="vo-btn" onclick="crmPage(1)">Berikutnya ›</button></div>
+      </div>
+    </div>
+
+    <!-- ─── Page: Outreach & Brief NADI (js/sales-ui.js) — data dari n8n/Fonnte/brief.nagaraku.id ─── -->
+    <div id="page-outreach-nadi" class="page-section">
+      <div id="on-error" class="aio-mock-banner" style="display:none"></div>
+      <div class="aio-kpis" id="on-kpis"></div>
+      <div class="crm-views" id="on-views">
+        <button class="crm-view-btn active" data-view="klien" onclick="onSetView('klien')">Calon klien</button>
+        <button class="crm-view-btn" data-view="brief" onclick="onSetView('brief')">Brief &amp; penawaran <span id="on-badge-brief" class="crm-badge" style="display:none"></span></button>
+        <button class="crm-view-btn" data-view="aktivitas" onclick="onSetView('aktivitas')">Aktivitas kirim</button>
+        <span style="flex:1"></span>
+        <span class="crm-sub" id="on-updated" style="align-self:center"></span>
+        <button class="vo-btn" style="margin:0 0 6px 8px" onclick="onLoad()">↻ Muat ulang</button>
+      </div>
+      <div id="on-view-klien">
+        <div class="crm-filters" style="margin-bottom:10px">
+          <select id="on-f-tahap" onchange="onRender()"><option value="">Semua tahap</option></select>
+          <input id="on-q" type="search" placeholder="Cari nama / kategori…" oninput="onRender()">
+        </div>
+        <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Calon klien</th><th>Tahap</th><th>Dipegang</th><th>Dihubungi</th><th>Balasan terakhir klien</th><th></th></tr></thead><tbody id="on-klien-body"></tbody></table></div>
+      </div>
+      <div id="on-view-brief" style="display:none">
+        <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Masuk</th><th>Usaha</th><th>Proyek</th><th>Status</th><th style="text-align:right">Penawaran</th><th style="text-align:right">Bottom</th><th>Anggaran klien</th><th>Lanjut via</th><th></th></tr></thead><tbody id="on-brief-body"></tbody></table></div>
+      </div>
+      <div id="on-view-aktivitas" style="display:none">
+        <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Waktu</th><th>Calon klien</th><th>Jenis</th><th>Keterangan</th></tr></thead><tbody id="on-akt-body"></tbody></table></div>
       </div>
     </div>
 
@@ -5275,6 +5315,7 @@
     'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Calon klien NADI & Nagara EduKit — data asli Airtable, skor otomatis, outreach dengan persetujuan' },
     'marketing-content': { title: 'Marketing & Content',     sub: 'Meta Ads (snapshot) & antrian konten 11 Facebook Page' },
     'legal-compliance':  { title: 'Legal & Compliance',      sub: 'Checklist lisensi & UU PDP (sebagian data asli, sebagian ilustratif)' },
+    'outreach-nadi':     { title: 'Outreach & Brief NADI',  sub: 'WA otomatis dari 0858 (n8n + Fonnte), balasan bot, brief brief.nagaraku.id, harga penawaran & bottom' },
     'penawaran':         { title: 'Penawaran & Kalkulator',  sub: 'Kalkulator harga NADI → penawaran bernomor → kirim WA lewat persetujuan → klien setujui online' },
     'helpdesk':          { title: 'Helpdesk',                sub: 'Tiket support klien NADI — SLA, draf balasan agen Rawat, kirim via WA/email' },
   };
@@ -5316,6 +5357,8 @@
     if (name === 'ai-orchestration') aioRenderTable();
     if (name === 'virtual-office') { const f = document.getElementById('vo-frame'); if (f && !f.getAttribute('src')) f.src = '/office/'; }
     if (name === 'crm-pipeline') crmRender();
+    if (name === 'outreach-nadi') onInit();
+    else if (typeof onStop === 'function') onStop();
     if (name === 'penawaran') qtInit();
     if (name === 'helpdesk') hdInit();
     if (name === 'legal-compliance') lcRenderTable();

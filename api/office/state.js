@@ -11,6 +11,7 @@
  * Penawaran:  GET quote-settings | POST quote-settings | GET quotes[?id] | POST quote {op?: save|status|send|duplicate}
  *             GET/POST /penawaran/<token> → quote-view (publik, untuk klien)
  * Helpdesk:   GET tickets[?id] | POST ticket {op?: create|update|reply|from-lead}
+ * Outreach NADI (n8n): GET nadi-progress[?lead=<id>] → ringkasan, calon klien, brief, aktivitas / percakapan
  *
  * Env (server saja): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OFFICE_INGEST_TOKEN
  */
@@ -21,6 +22,7 @@ const { sendWa } = require('../../lib/wa');
 const { handleInbound, logOutbound } = require('../../lib/inbound');
 const sales = require('../../lib/sales');
 const hd = require('../../lib/helpdesk');
+const nadi = require('../../lib/nadi-progress');
 
 const LEVELS = ['info', 'teknis', 'peringatan', 'bahaya'];
 const clip = (s, n) => String(s ?? '').slice(0, n);
@@ -309,6 +311,11 @@ module.exports = async (req, res) => {
       if (b.op === 'send') return sendJson(res, 200, await sales.requestSend(req, b.id, b.message));
       if (b.op === 'duplicate') return sendJson(res, 200, { ok: true, quote: await sales.duplicateQuote(b.id) });
       return sendJson(res, 200, { ok: true, quote: await sales.saveQuote(b) });
+    }
+    // ── Outreach WA otomatis & brief NADI (hanya baca) ──
+    if (action === 'nadi-progress' && req.method === 'GET') {
+      if (req.query?.lead) return sendJson(res, 200, await nadi.readConversation(req.query.lead));
+      return sendJson(res, 200, await nadi.readProgress());
     }
     // ── Helpdesk ──
     if (action === 'tickets' && req.method === 'GET') {
