@@ -72,6 +72,13 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 - Data: `GET /api/office/produksi[?id=<uuid>]` → RPC `hub_produksi(p_id)`. Hanya baca; keputusan tetap di **Hari Ini**.
 - Tim lain menambah menu dengan pola yang sama (satu file `js/<tim>-ui.js` + satu RPC `hub_<tim>()` + satu aksi di `state.js`).
 
+## Konten NADI (js/konten.js)
+
+- Menu **Konten NADI** untuk tim Marketing (`mkt-*`) + Studio Desain: form **Minta materi** (langsung ke penulis per kanal, maks 8 materi, satu per hari), review draf (setujui / revisi / tolak / setujui semua), detail isi siap salin, tandai sudah diposting, rencana mingguan + arahan Kepala Marketing, status agen.
+- Data: `GET /api/office/konten[?id=<uuid>]` → RPC `hub_konten()` / `hub_konten_detail(p_id)`. Aksi: `POST /api/office/konten {op}` → `hub_konten_aksi(p)`; keputusan draf memakai logika `tim_aksi` yang sama dengan halaman n8n.
+- `mkt_rencana.jenis`: `mingguan` (unik per minggu, dibuat `mkt_mulai_minggu`) atau `permintaan` (dari menu ini). Migrasi: `supabase/migrations/20261023_hub_konten.sql`.
+- Penulis dijalankan workflow n8n **NADI 7 - Marketing & Sales**; tanpa workflow itu permintaan hanya mengantre (halaman menampilkan peringatan).
+
 ## Outreach & Brief NADI (n8n)
 
 - Halaman **Outreach & Brief NADI** (`js/sales-ui.js`, `on*`) membaca `GET /api/office/nadi-progress[?lead=id]` → view `nadi_v_ringkasan`, `nadi_v_progres`, `nadi_v_penawaran` (`supabase/migrations/20261022_nadi_progres_views.sql`) + `crm_messages`.
