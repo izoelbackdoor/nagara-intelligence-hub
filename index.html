@@ -780,6 +780,24 @@
   @media (max-width: 640px) { .qt-form { grid-template-columns: 1fr; } }
 
   /* ── Helpdesk ── */
+  /* Hari Ini (js/hari-ini.js) */
+  .hi-h { font: 600 15px 'Space Grotesk', sans-serif; color: var(--sand-text); margin: 1.4rem 0 .6rem; }
+  .hi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+  .hi-card { background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 12px; padding: 14px 16px; color: var(--ink); font-size: 13px; }
+  .hi-card-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .hi-tim { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--brand-orange); }
+  .hi-sub { font-weight: 600; }
+  .hi-judul { white-space: pre-wrap; margin: 6px 0; line-height: 1.45; }
+  .hi-muted { font-size: 11.5px; color: var(--sand-text2); }
+  .hi-warn { font-size: 12px; color: #a35a00; margin: 4px 0; }
+  .hi-pesan-box { white-space: pre-wrap; background: #f6f1e7; border-radius: 8px; padding: 10px; margin: 8px 0; font-size: 12.5px; }
+  .hi-input { width: 100%; box-sizing: border-box; border: 1px solid var(--sand-border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 12.5px; margin: 6px 0; background: #fff; color: var(--ink); }
+  .hi-aksi-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .hi-aksi { flex: 1 1 100%; } .hi-aksi .vo-btn { width: 100%; }
+  .hi-utama { background: var(--brand-orange); border-color: var(--brand-orange); color: #fff; }
+  .hi-hasil { font-size: 12px; margin-top: 6px; color: var(--sand-text2); }
+  .hi-empty { background: var(--sand-card); border: 1px dashed var(--sand-border); border-radius: 12px; padding: 14px 16px; font-size: 12.5px; color: var(--sand-text2); }
+  @media (max-width: 640px) { .hi-grid { grid-template-columns: 1fr; } }
   .hd-nav-badge { display:inline-block; min-width:18px; padding:1px 6px; border-radius:10px; background: var(--brand-red); color:#fff; font-size:10.5px; text-align:center; margin-left:auto; }
   .hd-inbox { grid-template-columns: 340px 1fr; min-height: 560px; }
   .hd-inbox .wa-list, .hd-inbox .wa-thread { max-height: 680px; }
@@ -1157,6 +1175,10 @@
     </div>
 
     <div class="nav-section">
+      <button class="nav-item" id="nav-hari-ini" onclick="showPage('hari-ini')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Hari Ini <span id="hi-nav-badge" class="hd-nav-badge" style="display:none"></span>
+      </button>
       <button class="nav-item active" id="nav-overview" onclick="showPage('overview')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Overview
@@ -1242,6 +1264,28 @@
     <!-- ══ PAGES ══ -->
 
     <!-- ─── Page: Overview ─── -->
+    <!-- ─── Page: Hari Ini (js/hari-ini.js) — semua keputusan dari semua tim, satu tempat ─── -->
+    <div id="page-hari-ini" class="page-section">
+      <div id="hi-error" class="aio-mock-banner" style="display:none"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="flex:1"></span>
+        <span class="crm-sub" id="hi-updated"></span><button class="vo-btn" onclick="hiLoad()">↻ Muat ulang</button></div>
+      <div class="aio-kpis" id="hi-kpis"></div>
+      <div class="hi-h">Putuskan di sini — Produksi &amp; follow-up Sales</div>
+      <div class="hi-grid" id="hi-keputusan"></div>
+      <div class="hi-h">Menunggu Anda di tim lain</div>
+      <div id="hi-lain"></div>
+      <div id="hi-masalah-wrap" style="display:none">
+        <div class="hi-h" style="color:#c0392b">Masalah 7 hari terakhir</div>
+        <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Waktu</th><th>Meja</th><th>Tugas</th><th>Status</th></tr></thead><tbody id="hi-masalah"></tbody></table></div>
+      </div>
+      <div class="hi-h">Meeting</div>
+      <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Waktu</th><th>Calon klien</th><th>Platform</th><th>Link</th><th>Riset</th></tr></thead><tbody id="hi-meeting"></tbody></table></div>
+      <div class="hi-h">Proyek produksi</div>
+      <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Kode</th><th>Klien</th><th>Status</th><th>Tugas</th><th>Uji</th><th>Target</th><th></th></tr></thead><tbody id="hi-proyek"></tbody></table></div>
+      <div class="hi-h">Agen & biaya token</div>
+      <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Unit</th><th>Agen</th><th>Status</th><th style="text-align:right">Hari ini / budget</th><th style="text-align:right">7 hari</th><th style="text-align:right">Antre</th><th style="text-align:right">Gagal</th></tr></thead><tbody id="hi-biaya"></tbody></table></div>
+    </div>
+
     <div id="page-overview" class="page-section active">
       <div id="ov-error" class="pf-error" style="display:none;">
         <span id="ov-error-msg"></span>
@@ -5224,6 +5268,7 @@
   <!-- Penawaran & Helpdesk: kalkulator murni + UI (fungsi dipanggil saat halaman dibuka) -->
   <script src="/js/quote-calc.js"></script>
   <script src="/js/sales-ui.js"></script>
+  <script src="/js/hari-ini.js"></script>
 <script>
   // ── Auth (server-side: /api/auth/*, kredensial hanya di env Vercel) ──
   function enterDashboard() {
@@ -5232,7 +5277,8 @@
     dash.style.display = 'block';
     dash.classList.add('fade-in');
     updateClock();
-    showPage('overview');
+    const awal = (location.hash || '').slice(1);
+    showPage(awal && PAGE_META[awal] && document.getElementById('page-' + awal) ? awal : 'hari-ini');
     officeFetch().catch(() => {});
   }
 
@@ -5307,6 +5353,7 @@
 
   // ── Navigation ──
   const PAGE_META = {
+    'hari-ini':          { title: 'Hari Ini',               sub: 'Semua yang menunggu keputusan Anda dari semua tim, biaya token, masalah, meeting & proyek' },
     'overview':          { title: 'Overview',               sub: 'Ringkasan seluruh business unit' },
     'portfolio':         { title: 'Portfolio Produk',        sub: 'Status governance & progres semua produk NGI' },
     'business-unit':     { title: 'Business Unit Monitor',   sub: 'Produk & metrik operasional per unit bisnis' },
@@ -5357,6 +5404,8 @@
     if (name === 'ai-orchestration') aioRenderTable();
     if (name === 'virtual-office') { const f = document.getElementById('vo-frame'); if (f && !f.getAttribute('src')) f.src = '/office/'; }
     if (name === 'crm-pipeline') crmRender();
+    if (name === 'hari-ini') hiInit();
+    else if (typeof hiStop === 'function') hiStop();
     if (name === 'outreach-nadi') onInit();
     else if (typeof onStop === 'function') onStop();
     if (name === 'penawaran') qtInit();

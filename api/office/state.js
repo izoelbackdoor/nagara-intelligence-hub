@@ -174,11 +174,59 @@ async function updateLead(b, res) {
   return sendJson(res, 200, { ok: true });
 }
 
+// ── Hari Ini: semua yang menunggu keputusan pemilik, dari semua tim ──
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const rpc = (fn, body) => sb(`rpc/${fn}`, { method: 'POST', body: body || {} });
+
+// Approval Produksi (office_approvals berproyek) dijalankan oleh prod_aksi di database — satu logika
+// yang sama dengan link Telegram, supaya status proyek, tugas, dan antrean WA ikut bergerak.
+async function decideProd(id, aksi, nilai) {
+  if (!UUID_RE.test(String(id))) return { status: 400, body: { error: 'id tidak valid' } };
+  if (!['setuju', 'tolak'].includes(aksi)) return { status: 400, body: { error: 'aksi harus setuju/tolak' } };
+  const a = (await sb(`office_approvals?select=id,token,project_id&id=eq.${id}`))[0];
+  if (!a || !a.project_id) return { status: 404, body: { error: 'Persetujuan produksi tidak ditemukan' } };
+  const r = await rpc('prod_aksi', { p_id: a.id, p_token: a.token, p_aksi: aksi, p_nilai: nilai ? String(nilai).slice(0, 4000) : null });
+  return { status: r?.ok ? 200 : 409, body: r?.ok ? { ok: true, info: r.info } : { error: r?.info || 'Gagal' } };
+}
+
+// Follow-up Sales: kirim WA langsung dari server (Fonnte), lalu catat hasilnya lewat RPC yang sama dengan n8n.
+async function decideFollowup(id, aksi, pesan) {
+  const fid = parseInt(id);
+  if (!fid || !['kirim', 'lewati'].includes(aksi)) return { status: 400, body: { error: 'id/aksi tidak valid' } };
+  const f = (await sb(`sales_followups?select=id,approve_token,status&id=eq.${fid}`))[0];
+  if (!f) return { status: 404, body: { error: 'Follow-up tidak ditemukan' } };
+  if (f.status !== 'menunggu_persetujuan') return { status: 409, body: { error: 'Follow-up ini sudah berstatus ' + f.status } };
+  if (aksi === 'kirim' && pesan != null && String(pesan).trim()) await rpc('hub_followup_ubah', { p_id: fid, p_pesan: String(pesan) });
+  const r = await rpc('sales_followup_aksi', { p_id: fid, p_token: f.approve_token, p_aksi: aksi });
+  if (!r?.ok) return { status: 409, body: { error: r?.info || 'Gagal' } };
+  if (!r.kirim) return { status: 200, body: { ok: true, info: r.info } };
+  let sent;
+  try { sent = await sendWa(r.wa, r.pesan); }
+  catch (e) {
+    await rpc('sales_followup_result', { p_id: fid, p_ok: false, p_pesan: r.pesan, p_ref: null, p_reason: String(e.message).slice(0, 300) });
+    return { status: 502, body: { error: 'Gagal kirim WA: ' + e.message } };
+  }
+  await rpc('sales_followup_result', { p_id: fid, p_ok: true, p_pesan: r.pesan, p_ref: String(sent?.id?.[0] ?? sent?.id ?? '').slice(0, 80) || null, p_reason: null });
+  return { status: 200, body: { ok: true, info: r.info } };
+}
+
+async function putuskan(b, res) {
+  const r = b.sumber === 'prod' ? await decideProd(b.id, b.aksi, b.nilai)
+    : b.sumber === 'followup' ? await decideFollowup(b.id, b.aksi, b.pesan)
+      : { status: 400, body: { error: 'sumber tidak dikenal' } };
+  return sendJson(res, r.status, r.body);
+}
+
 async function decideApproval(b, res) {
-  const rows = await sb(`office_approvals?select=id,desk_key,kind,summary,status,payload,lead_id&id=eq.${encodeURIComponent(b.id)}`);
+  const rows = await sb(`office_approvals?select=id,desk_key,kind,summary,status,payload,lead_id,project_id&id=eq.${encodeURIComponent(b.id)}`);
   const a = rows[0];
   if (!a) return sendJson(res, 404, { error: 'Persetujuan tidak ditemukan' });
   if (a.status !== 'menunggu') return sendJson(res, 409, { error: 'Sudah diputuskan sebelumnya' });
+  // Approval Produksi: jangan sekadar ditandai disetujui — jalankan aksinya (DP, kirim WA, UAT, dst.)
+  if (a.project_id) {
+    const r = await decideProd(a.id, b.decision === 'tolak' ? 'tolak' : b.decision === 'setuju' ? 'setuju' : '', b.value || b.note);
+    return sendJson(res, r.status, r.body);
+  }
   const now = new Date().toISOString();
   const unit = ['outreach', 'penawaran'].includes(a.kind) ? 'studio' : null;
   if (b.decision === 'tolak') {
@@ -290,6 +338,8 @@ module.exports = async (req, res) => {
     if (action === 'lead' && req.method === 'POST') return await updateLead(body || {}, res);
     if (action === 'conversations' && req.method === 'GET') return await readConversations(req, res);
     if (action === 'approval' && req.method === 'POST') return await decideApproval(body || {}, res);
+    if (action === 'hari-ini' && req.method === 'GET') return sendJson(res, 200, await rpc('hub_hari_ini'));
+    if (action === 'putuskan' && req.method === 'POST') return await putuskan(body || {}, res);
     // ── Penawaran & kalkulator ──
     if (action === 'quote-settings' && req.method === 'GET') return sendJson(res, 200, await sales.getSettings());
     if (action === 'quote-settings' && req.method === 'POST') return sendJson(res, 200, { ok: true, settings: await sales.saveSettings(body?.settings) });

@@ -58,6 +58,14 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 - SLA = batas balasan kita berikutnya sejak pesan klien terakhir (urgent 2j · tinggi 4j · normal 24j · rendah 48j); dikosongkan saat kita membalas / menunggu klien.
 - Balasan WA/email hanya lewat klik pemilik (`op: reply`); kontak `jangan_hubungi` diblok.
 
+## Hari Ini (js/hari-ini.js) — halaman pembuka setelah login
+
+- Satu tempat untuk semua yang menunggu keputusan pemilik dari semua tim (standar: Project doc `claude/standar-command-center.md` — satu pintu, tidak ada subdomain per tim).
+- Data: `GET /api/office/hari-ini` → RPC `hub_hari_ini()` = `cc_tim_nadi()` + `keputusan` (approval Produksi + follow-up Sales yang menunggu persetujuan).
+- Keputusan di halaman: `POST /api/office/putuskan {sumber: prod|followup, id, aksi, nilai?, pesan?}`. Produksi dijalankan RPC `prod_aksi` (logika sama dengan link Telegram); follow-up dikirim via Fonnte dari server lalu dicatat `sales_followup_result`.
+- `decideApproval`: approval berproyek (`project_id`) **wajib** lewat `prod_aksi` — jangan hanya ditandai disetujui.
+- Tim lain (desain, konten, penawaran) tampil di "Menunggu Anda di tim lain" dengan tombol ke halaman review masing-masing. Link Telegram Produksi & follow-up mengarah ke `<hub_url>/#hari-ini` (`nadi_config.cfg.hub_url`). URL `/#<halaman>` membuka halaman itu setelah login.
+
 ## Outreach & Brief NADI (n8n)
 
 - Halaman **Outreach & Brief NADI** (`js/sales-ui.js`, `on*`) membaca `GET /api/office/nadi-progress[?lead=id]` → view `nadi_v_ringkasan`, `nadi_v_progres`, `nadi_v_penawaran` (`supabase/migrations/20261022_nadi_progres_views.sql`) + `crm_messages`.

@@ -23,6 +23,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "js/hari-ini.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "api/**/*.js",
       "use": "@vercel/node",
       "config": {
@@ -70,7 +74,7 @@
       "dest": "/api/auth.js?action=$1"
     },
     {
-      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view|nadi-progress)",
+      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view|nadi-progress|hari-ini|putuskan)",
       "dest": "/api/office/state.js?action=$1"
     },
     {
