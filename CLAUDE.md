@@ -30,6 +30,7 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 
 - **Batas Vercel Hobby: 12 serverless functions.** Saat ini 11 file di `api/` (file berawalan `_` tidak dihitung). Jangan tambah file function baru — tambahkan aksi ke router yang ada (`api/office/state.js?action=…`, `api/agents/run.js?agent=…`, `api/auth.js?action=…`) dan daftarkan route di `vercel.json`.
 - Setiap route baru wajib ditambahkan di `vercel.json` → `routes`, **sebelum** catch-all `/(.*)` → `index.html`.
+- File JS statis baru (`js/*.js`) wajib didaftarkan **dua kali** di `vercel.json`: di `builds` (`@vercel/static`) **dan** di `routes` (`/js/<file>.js`). Tanpa route, file itu dijawab dengan `index.html` oleh catch-all → script gagal dimuat dan tombol halaman tidak bisa diklik (pernah terjadi pada `hari-ini.js` & `produksi-ui.js`).
 - Auth: cookie HMAC `ngi_session` (`lib/session.js`). Endpoint untuk dashboard pakai `requireAuth`/`withAuth`. Endpoint mesin-ke-mesin pakai Bearer token + `safeEqual` (`OFFICE_INGEST_TOKEN`, `WA_INBOUND_TOKEN`, `CRON_SECRET`), minimal 32/16 karakter.
 - Secret hanya di env Vercel. Jangan menulis token/API key di kode, HTML, atau localStorage. `.env*` di-ignore.
 - Supabase diakses hanya dari server dengan service role (`lib/supabase.js`), lewat PostgREST. Nilai dari user harus di-`encodeURIComponent` atau divalidasi (int/enum) sebelum masuk query string.
