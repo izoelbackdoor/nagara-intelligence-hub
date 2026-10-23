@@ -31,6 +31,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "js/konten.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "api/**/*.js",
       "use": "@vercel/node",
       "config": {
@@ -78,7 +82,7 @@
       "dest": "/api/auth.js?action=$1"
     },
     {
-      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view|nadi-progress|hari-ini|putuskan|produksi)",
+      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view|nadi-progress|hari-ini|putuskan|produksi|konten)",
       "dest": "/api/office/state.js?action=$1"
     },
     {
@@ -100,6 +104,18 @@
     {
       "src": "/js/sales-ui.js",
       "dest": "/js/sales-ui.js"
+    },
+    {
+      "src": "/js/hari-ini.js",
+      "dest": "/js/hari-ini.js"
+    },
+    {
+      "src": "/js/konten.js",
+      "dest": "/js/konten.js"
+    },
+    {
+      "src": "/js/produksi-ui.js",
+      "dest": "/js/produksi-ui.js"
     },
     {
       "src": "/office/?",

@@ -12,6 +12,7 @@
  *             GET/POST /penawaran/<token> → quote-view (publik, untuk klien)
  * Helpdesk:   GET tickets[?id] | POST ticket {op?: create|update|reply|from-lead}
  * Outreach NADI (n8n): GET nadi-progress[?lead=<id>] → ringkasan, calon klien, brief, aktivitas / percakapan
+ * Konten NADI: GET konten[?id] (hub_konten / hub_konten_detail) | POST konten {op} (hub_konten_aksi)
  *
  * Env (server saja): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OFFICE_INGEST_TOKEN
  */
@@ -210,6 +211,16 @@ async function decideFollowup(id, aksi, pesan) {
   return { status: 200, body: { ok: true, info: r.info } };
 }
 
+// ── Konten NADI (tim Marketing): minta materi, keputusan draf, tandai terbit ──
+const KONTEN_OP = ['minta', 'setujui', 'revisi', 'tolak', 'setujui_semua', 'terbit', 'mulai_minggu', 'arahan'];
+async function kontenAksi(b, res) {
+  if (!KONTEN_OP.includes(b.op)) return sendJson(res, 400, { error: 'Aksi tidak dikenal' });
+  if (JSON.stringify(b).length > 8000) return sendJson(res, 413, { error: 'Isian terlalu panjang' });
+  for (const k of ['id', 'rencana_id']) if (b[k] != null && !UUID_RE.test(String(b[k]))) return sendJson(res, 400, { error: k + ' tidak valid' });
+  const r = await rpc('hub_konten_aksi', { p: b });
+  return sendJson(res, r?.ok ? 200 : 409, r?.ok ? r : { error: r?.info || 'Gagal' });
+}
+
 async function putuskan(b, res) {
   const r = b.sumber === 'prod' ? await decideProd(b.id, b.aksi, b.nilai)
     : b.sumber === 'followup' ? await decideFollowup(b.id, b.aksi, b.pesan)
@@ -346,6 +357,14 @@ module.exports = async (req, res) => {
       const r = await rpc('hub_produksi', { p_id: id || null });
       return r ? sendJson(res, 200, r) : sendJson(res, 404, { error: 'Proyek tidak ditemukan' });
     }
+    if (action === 'konten' && req.method === 'GET') {
+      if (req.query?.id) {
+        if (!UUID_RE.test(String(req.query.id))) return sendJson(res, 400, { error: 'id tidak valid' });
+        return sendJson(res, 200, await rpc('hub_konten_detail', { p_id: req.query.id }));
+      }
+      return sendJson(res, 200, await rpc('hub_konten'));
+    }
+    if (action === 'konten' && req.method === 'POST') return await kontenAksi(body || {}, res);
     // ── Penawaran & kalkulator ──
     if (action === 'quote-settings' && req.method === 'GET') return sendJson(res, 200, await sales.getSettings());
     if (action === 'quote-settings' && req.method === 'POST') return sendJson(res, 200, { ok: true, settings: await sales.saveSettings(body?.settings) });

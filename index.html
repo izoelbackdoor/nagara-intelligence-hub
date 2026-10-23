@@ -823,6 +823,27 @@
   .pr-sec { margin-top: 16px; } .pr-sec-h { font: 600 13.5px 'Space Grotesk', sans-serif; margin-bottom: 6px; }
   .pr-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; } .pr-chips span { background: #f6f1e7; border-radius: 8px; padding: 3px 9px; font-size: 11.5px; }
   .pr-putaran { margin-bottom: 8px; } .pr-uji, .pr-kep { display: flex; align-items: flex-start; gap: 8px; margin: 5px 0; } .pr-uji .pr-isi, .pr-kep .pr-isi { flex: 1; }
+  /* Konten NADI (js/konten.js) */
+  .kt-atas { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; margin-top: 12px; align-items: start; }
+  .kt-kanal { display: grid; grid-template-columns: 150px 1fr 64px; gap: 8px; align-items: center; font-size: 12.5px; }
+  .hd-form .kt-kanal label { display: flex; flex-direction: row; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .kt-kanal .hi-input { margin: 3px 0; }
+  .kt-batch { margin-bottom: 12px; }
+  .kt-ringkas { font-size: 12.5px; margin: 6px 0; white-space: pre-wrap; color: var(--sand-text); }
+  .kt-table td { vertical-align: top; }
+  .kt-clip { max-width: 420px; }
+  .kt-aksi { white-space: nowrap; } .kt-aksi .vo-btn { margin: 2px 0; display: block; width: 100%; }
+  .kt-detail { background: #fbf8f3; border-radius: 10px; padding: 12px 14px; color: var(--ink); }
+  .kt-detail-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; }
+  .kt-blok { margin: 10px 0; }
+  .kt-blok-h { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--sand-text2); display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .kt-pre { white-space: pre-wrap; background: #fff; border: 1px solid var(--sand-border); border-radius: 8px; padding: 9px 11px; font-size: 12.5px; line-height: 1.5; max-height: 420px; overflow: auto; }
+  .kt-salin { padding: 2px 8px; font-size: 10.5px; text-transform: none; letter-spacing: 0; }
+  .kt-img { max-width: 100%; border-radius: 8px; margin: 4px 0; display: block; }
+  .kt-keputusan { border-top: 1px solid var(--sand-border); margin-top: 10px; padding-top: 8px; }
+  .kt-toast { position: fixed; right: 20px; bottom: 20px; background: var(--ink); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 13px; z-index: 50; max-width: 420px; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+  .kt-toast.gagal { background: #b0362a; }
+  @media (max-width: 900px) { .kt-atas, .kt-detail-grid { grid-template-columns: 1fr; } .kt-kanal { grid-template-columns: 1fr 1fr 56px; } }
   .hd-nav-badge { display:inline-block; min-width:18px; padding:1px 6px; border-radius:10px; background: var(--brand-red); color:#fff; font-size:10.5px; text-align:center; margin-left:auto; }
   .hd-inbox { grid-template-columns: 340px 1fr; min-height: 560px; }
   .hd-inbox .wa-list, .hd-inbox .wa-thread { max-height: 680px; }
@@ -1244,6 +1265,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
         Helpdesk <span id="hd-nav-badge" class="hd-nav-badge" style="display:none"></span>
       </button>
+      <button class="nav-item" id="nav-konten" onclick="showPage('konten')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        Konten NADI <span id="kt-nav-badge" class="hd-nav-badge" style="display:none"></span>
+      </button>
       <button class="nav-item" id="nav-marketing-content" onclick="showPage('marketing-content')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         Marketing &amp; Content
@@ -1347,6 +1372,43 @@
       <div id="pr-view-aktivitas" style="display:none">
         <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Waktu</th><th>Agen</th><th>Level</th><th>Kejadian</th></tr></thead><tbody id="pr-akt"></tbody></table></div>
       </div>
+    </div>
+
+    <!-- ─── Page: Konten NADI (js/konten.js) — tim Marketing: minta materi, review draf, jadwal posting ─── -->
+    <div id="page-konten" class="page-section">
+      <div id="kt-error" class="aio-mock-banner" style="display:none"></div>
+      <div id="kt-warn"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="flex:1"></span>
+        <span class="crm-sub" id="kt-updated"></span><button class="vo-btn" onclick="ktLoad()">↻ Muat ulang</button></div>
+      <div class="aio-kpis" id="kt-kpis"></div>
+      <div class="kt-atas">
+        <div class="hi-card">
+          <div class="hi-h" style="margin-top:0">Minta materi</div>
+          <div class="hi-muted">Langsung ke penulis per kanal (tanpa menunggu rencana mingguan). Draf kembali ke halaman ini untuk Anda setujui; visual dikerjakan Studio Desain setelah disetujui.</div>
+          <div class="hd-form">
+            <label class="wide">Judul permintaan<input id="kt-f-judul" class="hi-input" maxlength="120" placeholder="mis. Booking online untuk klinik gigi"></label>
+            <label class="wide">Arahan — apa yang ingin disampaikan, untuk siapa, bahan yang boleh dipakai
+              <textarea id="kt-f-brief" class="hi-input" rows="4" maxlength="2000" placeholder="mis. Tunjukkan repotnya janji temu lewat chat manual dan bagaimana sistem booking online merapikannya. Boleh menyebut proyek klinik yang sudah kami kerjakan tanpa angka hasil."></textarea></label>
+            <label>Sasaran (opsional)<input id="kt-f-target" class="hi-input" maxlength="200" placeholder="mis. Pemilik klinik gigi di Bandung"></label>
+            <label>Ajakan / CTA (opsional)<input id="kt-f-cta" class="hi-input" maxlength="200" placeholder="Default: isi brief di brief.nagaraku.id"></label>
+            <div class="wide"><div class="hi-muted" style="font-weight:600">Kanal, format &amp; jumlah</div><div id="kt-f-kanal"></div></div>
+            <label id="kt-f-kw" style="display:none">Keyword blog (opsional)<input id="kt-f-keyword" class="hi-input" maxlength="80" placeholder="mis. aplikasi booking klinik"></label>
+            <label>Mulai tayang<input id="kt-f-mulai" class="hi-input" type="date"></label>
+          </div>
+          <div class="hi-aksi-row" style="align-items:center"><button class="vo-btn hi-utama" onclick="ktKirimPermintaan(this)">Kirim ke tim</button>
+            <span class="hi-muted" id="kt-f-total"></span></div>
+          <div class="hi-muted" style="margin-top:6px">Aturan tetap berlaku: tanpa kata AI, tanpa harga/diskon, tanpa klaim yang tidak bisa dibuktikan. Satu materi per hari mulai tanggal di atas.</div>
+        </div>
+        <div class="hi-card">
+          <div class="hi-h" style="margin-top:0">Rencana mingguan</div>
+          <div id="kt-mingguan"></div>
+        </div>
+      </div>
+      <div class="hi-h">Konten</div>
+      <div id="kt-batch"></div>
+      <div class="hi-h">Tim konten &amp; Studio Desain</div>
+      <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Unit</th><th>Agen</th><th>Status</th><th style="text-align:right">Antre</th><th>Terakhir kerja</th><th style="text-align:right">Hari ini / budget</th><th style="text-align:right">Gagal 7h</th></tr></thead><tbody id="kt-tim"></tbody></table></div>
+      <div id="kt-toast" class="kt-toast" style="display:none"></div>
     </div>
 
     <div id="page-overview" class="page-section active">
@@ -5333,6 +5395,7 @@
   <script src="/js/sales-ui.js"></script>
   <script src="/js/hari-ini.js"></script>
   <script src="/js/produksi-ui.js"></script>
+  <script src="/js/konten.js"></script>
 <script>
   // ── Auth (server-side: /api/auth/*, kredensial hanya di env Vercel) ──
   function enterDashboard() {
@@ -5430,6 +5493,7 @@
     'outreach-nadi':     { title: 'Outreach & Brief NADI',  sub: 'WA otomatis dari 0858 (n8n + Fonnte), balasan bot, brief brief.nagaraku.id, harga penawaran & bottom' },
     'penawaran':         { title: 'Penawaran & Kalkulator',  sub: 'Kalkulator harga NADI → penawaran bernomor → kirim WA lewat persetujuan → klien setujui online' },
     'helpdesk':          { title: 'Helpdesk',                sub: 'Tiket support klien NADI — SLA, draf balasan agen Rawat, kirim via WA/email' },
+    'konten':            { title: 'Konten NADI',             sub: 'Tim Marketing: minta materi, review draf, visual Studio Desain, jadwal posting' },
   };
 
   function showPage(name) {
@@ -5472,6 +5536,8 @@
     if (name === 'produksi') prInit();
     if (name === 'hari-ini') hiInit();
     else if (typeof hiStop === 'function') hiStop();
+    if (name === 'konten') ktInit();
+    else if (typeof ktStop === 'function') ktStop();
     if (name === 'outreach-nadi') onInit();
     else if (typeof onStop === 'function') onStop();
     if (name === 'penawaran') qtInit();
