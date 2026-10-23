@@ -823,6 +823,30 @@
   .pr-sec { margin-top: 16px; } .pr-sec-h { font: 600 13.5px 'Space Grotesk', sans-serif; margin-bottom: 6px; }
   .pr-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; } .pr-chips span { background: #f6f1e7; border-radius: 8px; padding: 3px 9px; font-size: 11.5px; }
   .pr-putaran { margin-bottom: 8px; } .pr-uji, .pr-kep { display: flex; align-items: flex-start; gap: 8px; margin: 5px 0; } .pr-uji .pr-isi, .pr-kep .pr-isi { flex: 1; }
+  /* Studio Desain (js/desain-ui.js) */
+  .ds-joblist { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 12px; }
+  .ds-job { display: flex; gap: 12px; background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 12px; padding: 12px; color: var(--ink); font-size: 12.5px; cursor: pointer; }
+  .ds-job:hover, .ds-job:focus-visible { border-color: var(--brand-orange); outline: none; }
+  .ds-thumb { flex: 0 0 84px; height: 104px; border-radius: 8px; background: #efe8da; overflow: hidden; display: flex; align-items: center; justify-content: center; font: 700 11px 'Space Grotesk', sans-serif; color: var(--sand-text2); }
+  .ds-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ds-job-body { flex: 1; min-width: 0; } .ds-job-judul { font-weight: 600; margin: 3px 0 2px; }
+  .ds-modal { max-width: 1040px; }
+  .ds-putus { background: #fbf3e8; border: 1px solid rgba(255,122,46,.35); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .ds-palet { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; } .ds-palet div { width: 104px; font-size: 11.5px; display: flex; flex-direction: column; }
+  .ds-palet i { display: block; height: 40px; border-radius: 8px; border: 1px solid var(--sand-border); margin-bottom: 4px; }
+  .ds-grup { margin: 10px 0 18px; } .ds-grup-h { font: 600 13px 'Space Grotesk', sans-serif; margin-bottom: 8px; color: var(--brand-orange); }
+  .ds-frame-wrap { border: 1px solid var(--sand-border); border-radius: 10px; overflow: hidden; margin-bottom: 10px; background: #fff; }
+  .ds-frame-bar { display: flex; gap: 8px; align-items: center; padding: 7px 10px; font-size: 12px; border-bottom: 1px solid var(--sand-border); background: #fbf8f3; }
+  .ds-frame-bar a { color: var(--brand-orange); font-weight: 600; text-decoration: none; }
+  .ds-frame { width: 100%; height: 560px; border: 0; display: block; background: #fff; }
+  .ds-galeri { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 10px; }
+  .ds-media { margin: 0; background: #fff; border: 1px solid var(--sand-border); border-radius: 10px; padding: 8px; font-size: 12px; }
+  .ds-media img, .ds-media video { width: 100%; border-radius: 6px; display: block; background: #efe8da; }
+  .ds-media-kosong { aspect-ratio: 4/5; border-radius: 6px; background: #efe8da; display: flex; align-items: center; justify-content: center; color: var(--sand-text2); font-size: 12px; }
+  .ds-media figcaption { margin-top: 6px; } .ds-media summary { cursor: pointer; color: var(--brand-orange); font-size: 11.5px; }
+  .ds-teks { margin: 6px 0; } .ds-teks summary { cursor: pointer; font-size: 12.5px; margin-bottom: 4px; }
+  .ds-cek { display: flex; flex-wrap: wrap; gap: 6px 16px; } .ds-cek label { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; font-size: 12.5px; color: var(--ink); }
+  @media (max-width: 640px) { .ds-joblist { grid-template-columns: 1fr; } .ds-frame { height: 460px; } }
   /* Konten NADI (js/konten.js) */
   .kt-atas { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; margin-top: 12px; align-items: start; }
   .kt-kanal { display: grid; grid-template-columns: 150px 1fr 64px; gap: 8px; align-items: center; font-size: 12.5px; }
@@ -1265,6 +1289,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
         Helpdesk <span id="hd-nav-badge" class="hd-nav-badge" style="display:none"></span>
       </button>
+      <button class="nav-item" id="nav-desain" onclick="showPage('desain')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+        Studio Desain <span id="ds-nav-badge" class="hd-nav-badge" style="display:none"></span>
+      </button>
       <button class="nav-item" id="nav-konten" onclick="showPage('konten')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
         Konten NADI <span id="kt-nav-badge" class="hd-nav-badge" style="display:none"></span>
@@ -1371,6 +1399,69 @@
       </div>
       <div id="pr-view-aktivitas" style="display:none">
         <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Waktu</th><th>Agen</th><th>Level</th><th>Kejadian</th></tr></thead><tbody id="pr-akt"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ─── Page: Studio Desain (js/desain-ui.js) — alur, tim & jobdesk, job + hasil desain, job baru ─── -->
+    <div id="page-desain" class="page-section">
+      <div id="ds-error" class="aio-mock-banner" style="display:none"></div>
+      <div id="ds-warn"></div>
+      <div class="aio-kpis" id="ds-kpis"></div>
+      <div class="crm-views" id="ds-views">
+        <button class="crm-view-btn active" data-view="alur" onclick="dsSetView('alur')">Alur kerja</button>
+        <button class="crm-view-btn" data-view="tim" onclick="dsSetView('tim')">Tim &amp; jobdesk</button>
+        <button class="crm-view-btn" data-view="job" onclick="dsSetView('job')">Job &amp; hasil</button>
+        <button class="crm-view-btn" data-view="baru" onclick="dsSetView('baru')">+ Job baru</button>
+        <button class="crm-view-btn" data-view="aktivitas" onclick="dsSetView('aktivitas')">Aktivitas</button>
+        <span style="flex:1"></span>
+        <span class="crm-sub" id="ds-updated" style="align-self:center"></span>
+        <button class="vo-btn" style="margin:0 0 6px 8px" onclick="dsLoad()">↻ Muat ulang</button>
+      </div>
+      <div id="ds-view-alur">
+        <div class="hi-muted" style="margin:4px 0 14px">Dari permintaan sampai link desain diterima klien. 🔑 = titik keputusan Anda (muncul di Hari Ini + Telegram). ⚙️ = berjalan otomatis. Angka = jumlah yang sedang di tahap itu.</div>
+        <div class="pr-flow" id="ds-alur"></div>
+        <div class="hi-h">Cara kerjanya</div>
+        <div class="pr-agents">
+          <div class="pr-agent"><b>Mesin</b><div class="pr-isi" style="margin-top:6px">Workflow n8n <b>NADI 6 - Studio Desain</b>: tiap 2 menit mengambil maks. 2 tugas (agen berstatus uji/aktif dan budget harian masih ada), memanggil Claude, lalu menyimpan hasil. Tiap 1 menit mengirim & mengecek gambar/video di Higgsfield. Data di Supabase: <code>design_jobs</code>, <code>design_assets</code>, <code>office_tasks</code>.</div></div>
+          <div class="pr-agent"><b>Hemat token</b><div class="pr-isi" style="margin-top:6px">Agen hanya memakai token saat ada tugas. Instruksi kerja di-cache. Art Director memakai Opus (berpikir & menilai), desainer memakai Sonnet. Jatah gambar & video per job dibatasi; tugas gagal dicoba ulang maks 3x lalu job berhenti + Telegram.</div></div>
+          <div class="pr-agent"><b>Standar kualitas</b><div class="pr-isi" style="margin-top:6px">Disarikan dari skill impeccable & taste: ide harus khas bisnis klien (lolos uji pesaing), headline ≤2 baris, teks di gambar ≤6 kata, kontras ≥4.5:1, tanpa pola generik (eyebrow, nomor 01/02, kartu ikon seragam, teks gradasi, glow, emoji ikon). Brief/brand klien selalu menang.</div></div>
+          <div class="pr-agent"><b>Aturan tetap & batasan</b><div class="pr-isi" style="margin-top:6px">Tidak ada kiriman ke klien tanpa persetujuan Anda; materi klien tidak menyebut AI; tanpa testimoni/angka karangan. Canva belum otomatis (butuh Enterprise) — finishing manual. Teks di gambar tetap dicek ejaannya. URL gambar masih dari Higgsfield.</div></div>
+        </div>
+        <div class="hi-muted" style="margin-top:10px" id="ds-atur"></div>
+      </div>
+      <div id="ds-view-tim" style="display:none"><div class="pr-agents" id="ds-tim"></div></div>
+      <div id="ds-view-job" style="display:none">
+        <label class="hi-muted" style="display:inline-flex;gap:6px;align-items:center;margin-bottom:10px"><input type="checkbox" onchange="ds.semua=this.checked;dsRenderJob()"> tampilkan selesai/ditolak</label>
+        <div class="ds-joblist" id="ds-job"></div>
+      </div>
+      <div id="ds-view-baru" style="display:none">
+        <div class="hi-card" style="max-width:760px">
+          <div class="hi-h" style="margin-top:0">Job desain baru</div>
+          <div class="hi-muted">Dikirim ke Art Director. Hasil kembali ke menu ini untuk Anda setujui sebelum apa pun dikirim ke klien.</div>
+          <div class="hd-form">
+            <div class="wide"><div class="hi-muted" style="font-weight:600;margin-bottom:4px">Jenis pekerjaan</div>
+              <div class="ds-cek" id="ds-f-jenis">
+                <label><input type="checkbox" value="uiux"> UI/UX web &amp; app</label>
+                <label><input type="checkbox" value="brand"> Brand &amp; logo</label>
+                <label><input type="checkbox" value="konten"> Konten sosmed &amp; iklan</label>
+                <label><input type="checkbox" value="motion"> Video pendek</label>
+              </div></div>
+            <label class="wide">Dari brief klien (opsional)<select id="ds-f-brief" class="hi-input"><option value="">— tanpa brief / job internal NADI —</option></select></label>
+            <label class="wide">Judul job<input id="ds-f-judul" class="hi-input" maxlength="160" placeholder="mis. Landing page + 6 post promo Kopi Senja"></label>
+            <label>Nama usaha (jika tanpa brief)<input id="ds-f-usaha" class="hi-input" maxlength="120"></label>
+            <label>Nama PIC klien<input id="ds-f-pic" class="hi-input" maxlength="120"></label>
+            <label>No. WA klien (kosongkan untuk internal)<input id="ds-f-wa" class="hi-input" inputmode="tel" maxlength="20" placeholder="08…"></label>
+            <label>Tenggat<input id="ds-f-dl" class="hi-input" type="date"></label>
+            <label class="wide">Permintaan detail<textarea id="ds-f-desk" class="hi-input" rows="5" maxlength="3000" placeholder="Apa yang dibuat, untuk siapa, pesan utama, promo, CTA, hal yang harus / tidak boleh ada"></textarea></label>
+            <label class="wide">Referensi (link / gaya yang disukai)<input id="ds-f-ref" class="hi-input" maxlength="500"></label>
+            <label>Platform &amp; ukuran<input id="ds-f-uk" class="hi-input" maxlength="300" placeholder="IG feed 4:5, Reels 9:16, web desktop + HP"></label>
+            <label>Jumlah deliverable<input id="ds-f-jml" class="hi-input" maxlength="300" placeholder="6 post, 1 carousel 5 slide, 1 video 20 detik"></label>
+          </div>
+          <div class="hi-aksi-row" style="align-items:center"><button class="vo-btn hi-utama" onclick="dsKirimJob(this)">Kirim ke Art Director</button><span class="hi-muted" id="ds-f-hasil"></span></div>
+        </div>
+      </div>
+      <div id="ds-view-aktivitas" style="display:none">
+        <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Waktu</th><th>Agen</th><th>Level</th><th>Kejadian</th></tr></thead><tbody id="ds-akt"></tbody></table></div>
       </div>
     </div>
 
@@ -5396,6 +5487,7 @@
   <script src="/js/hari-ini.js"></script>
   <script src="/js/produksi-ui.js"></script>
   <script src="/js/konten.js"></script>
+  <script src="/js/desain-ui.js"></script>
 <script>
   // ── Auth (server-side: /api/auth/*, kredensial hanya di env Vercel) ──
   function enterDashboard() {
@@ -5493,6 +5585,7 @@
     'outreach-nadi':     { title: 'Outreach & Brief NADI',  sub: 'WA otomatis dari 0858 (n8n + Fonnte), balasan bot, brief brief.nagaraku.id, harga penawaran & bottom' },
     'penawaran':         { title: 'Penawaran & Kalkulator',  sub: 'Kalkulator harga NADI → penawaran bernomor → kirim WA lewat persetujuan → klien setujui online' },
     'helpdesk':          { title: 'Helpdesk',                sub: 'Tiket support klien NADI — SLA, draf balasan agen Rawat, kirim via WA/email' },
+    'desain':            { title: 'Studio Desain',          sub: 'Tim desainer: Art Director, UI/UX, Brand, Konten & iklan, Motion — alur, jobdesk, hasil desain & keputusan Anda' },
     'konten':            { title: 'Konten NADI',             sub: 'Tim Marketing: minta materi, review draf, visual Studio Desain, jadwal posting' },
   };
 
@@ -5537,6 +5630,7 @@
     if (name === 'hari-ini') hiInit();
     else if (typeof hiStop === 'function') hiStop();
     if (name === 'konten') ktInit();
+    if (name === 'desain') dsInit();
     else if (typeof ktStop === 'function') ktStop();
     if (name === 'outreach-nadi') onInit();
     else if (typeof onStop === 'function') onStop();

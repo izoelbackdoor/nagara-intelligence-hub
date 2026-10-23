@@ -79,6 +79,14 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 - `mkt_rencana.jenis`: `mingguan` (unik per minggu, dibuat `mkt_mulai_minggu`) atau `permintaan` (dari menu ini). Migrasi: `supabase/migrations/20261023_hub_konten.sql`.
 - Penulis dijalankan workflow n8n **NADI 7 - Marketing & Sales**; tanpa workflow itu permintaan hanya mengantre (halaman menampilkan peringatan).
 
+## Studio Desain (js/desain-ui.js)
+
+- Menu **Studio Desain** (unit `desain`: Art Director + UI/UX, Brand, Social & Ads, Motion): alur kerja 7 tahap, tim & jobdesk (termasuk system prompt), **Job & hasil** (mockup HTML di iframe, galeri gambar/video, caption, arah kreatif, review Art Director, jejak kerja + biaya), form **Job baru**, aktivitas.
+- Data: `GET /api/office/desain[?id=<uuid>]` → RPC `hub_desain(p_id)`. Aksi: `POST /api/office/desain-aksi {op: buat|putuskan|ulang}` → `hub_desain_aksi(p)` (memakai `desain_buat_job` / `desain_putuskan`). Setujui + ada nomor klien → link pratinjau dikirim via Fonnte dari server.
+- Mockup HTML: `GET /api/office/desain-aset?id=` (wajib login) disajikan dengan `Content-Security-Policy: sandbox allow-scripts allow-popups` — skrip agen tidak bisa membaca cookie dashboard. Jangan hapus header ini.
+- Link Telegram & "Menunggu Anda" di Hari Ini → `<hub_url>/#desain`. Link klien (hanya lihat) masih halaman webhook n8n `desain-lihat` sampai `klien.nagaraku.id` dibuat.
+- Mesin: workflow n8n **NADI 6 - Studio Desain** (Claude + Higgsfield). Migrasi: `supabase/migrations/20261023_hub_04_desain.sql`.
+
 ## Outreach & Brief NADI (n8n)
 
 - Halaman **Outreach & Brief NADI** (`js/sales-ui.js`, `on*`) membaca `GET /api/office/nadi-progress[?lead=id]` → view `nadi_v_ringkasan`, `nadi_v_progres`, `nadi_v_penawaran` (`supabase/migrations/20261022_nadi_progres_views.sql`) + `crm_messages`.

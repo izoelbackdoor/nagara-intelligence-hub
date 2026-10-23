@@ -13,6 +13,7 @@
  * Helpdesk:   GET tickets[?id] | POST ticket {op?: create|update|reply|from-lead}
  * Outreach NADI (n8n): GET nadi-progress[?lead=<id>] → ringkasan, calon klien, brief, aktivitas / percakapan
  * Konten NADI: GET konten[?id] (hub_konten / hub_konten_detail) | POST konten {op} (hub_konten_aksi)
+ * Studio Desain: GET desain[?id] | GET desain-aset?id (HTML mockup, CSP sandbox) | POST desain-aksi {op: buat|putuskan|ulang}
  *
  * Env (server saja): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OFFICE_INGEST_TOKEN
  */
@@ -221,6 +222,60 @@ async function kontenAksi(b, res) {
   return sendJson(res, r?.ok ? 200 : 409, r?.ok ? r : { error: r?.info || 'Gagal' });
 }
 
+// ── Studio Desain (RPC hub_desain*, migrasi 20261023_hub_04_desain.sql) ──
+// HTML mockup buatan agen disajikan dengan CSP sandbox: skripnya jalan, tapi di origin terisolasi
+// sehingga tidak bisa membaca cookie sesi dashboard.
+async function desainAset(id, res) {
+  if (!UUID_RE.test(String(id || ''))) return sendJson(res, 400, { error: 'id tidak valid' });
+  const r = await rpc('hub_desain_aset', { p_asset: id });
+  res.statusCode = r?.ok ? 200 : 404;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Robots-Tag', 'noindex');
+  res.setHeader('Content-Security-Policy', 'sandbox allow-scripts allow-popups');
+  return res.end(r?.ok ? String(r.html || '') : '<!doctype html><meta charset="utf-8"><p style="font-family:sans-serif">Aset tidak ditemukan.</p>');
+}
+
+const DESAIN_JENIS = ['uiux', 'brand', 'konten', 'motion'];
+async function desainAksi(b, res) {
+  const op = String(b.op || '');
+  if (op === 'buat') {
+    const j = b.job || {};
+    const jenis = (Array.isArray(j.jenis) ? j.jenis : []).filter(x => DESAIN_JENIS.includes(x));
+    if (!jenis.length) return sendJson(res, 400, { error: 'Pilih minimal satu jenis pekerjaan.' });
+    const deskripsi = clip(j.deskripsi, 3000).trim();
+    if (deskripsi.length < 10) return sendJson(res, 400, { error: 'Tulis permintaan detail (minimal 10 karakter).' });
+    if (j.brief_id && !UUID_RE.test(String(j.brief_id))) return sendJson(res, 400, { error: 'Brief tidak valid' });
+    const wa = j.no_wa ? normWa(j.no_wa) : null;
+    if (j.no_wa && !wa) return sendJson(res, 400, { error: 'Nomor WA klien tidak valid' });
+    const r = await rpc('hub_desain_aksi', { p: { op: 'buat', job: {
+      jenis, brief_id: j.brief_id || null, judul: clip(j.judul, 160) || null, nama_usaha: clip(j.nama_usaha, 120) || null,
+      nama_klien: clip(j.nama_klien, 120) || null, no_wa: wa,
+      input: { deskripsi, referensi: clip(j.referensi, 500), platform_ukuran: clip(j.platform, 300),
+               jumlah: clip(j.jumlah, 300), tenggat: /^\d{4}-\d{2}-\d{2}$/.test(String(j.tenggat || '')) ? j.tenggat : '' },
+    } } });
+    return r?.ok ? sendJson(res, 200, { ok: true, id: r.job_id, kode: r.kode, info: `${r.kode} masuk antrean Art Director.` })
+      : sendJson(res, 400, { error: r?.pesan || 'Gagal membuat job' });
+  }
+  if (!UUID_RE.test(String(b.id || ''))) return sendJson(res, 400, { error: 'id tidak valid' });
+  if (op === 'ulang') {
+    const r = await rpc('hub_desain_aksi', { p: { op, id: b.id } });
+    return r?.ok ? sendJson(res, 200, { ok: true, info: r.pesan }) : sendJson(res, 409, { error: r?.pesan || 'Gagal' });
+  }
+  if (op !== 'putuskan' || !['setujui', 'revisi', 'tolak'].includes(b.aksi)) return sendJson(res, 400, { error: 'aksi tidak valid' });
+  const r = await rpc('hub_desain_aksi', { p: { op, id: b.id, aksi: b.aksi, catatan: clip(b.catatan, 2000) } });
+  if (!r?.ok) return sendJson(res, 409, { error: r?.pesan || 'Gagal' });
+  // Disetujui + ada nomor klien → kirim link pratinjau via Fonnte dari server (pesan sudah tercatat di crm_messages oleh RPC)
+  if (r.wa && r.pesan_wa) {
+    try { await sendWa(r.wa, r.pesan_wa); }
+    catch (e) {
+      await sb('office_events', { method: 'POST', prefer: 'return=minimal', body: { unit_key: 'desain', desk_key: 'desain-ad', level: 'peringatan', message: `${r.kode}: disetujui, tapi WA ke klien gagal: ${e.message}`.slice(0, 500) } });
+      return sendJson(res, 200, { ok: true, info: `${r.kode} disetujui, tapi WA gagal terkirim (${e.message}). Kirim link klien manual.` });
+    }
+  }
+  return sendJson(res, 200, { ok: true, info: r.pesan });
+}
+
 async function putuskan(b, res) {
   const r = b.sumber === 'prod' ? await decideProd(b.id, b.aksi, b.nilai)
     : b.sumber === 'followup' ? await decideFollowup(b.id, b.aksi, b.pesan)
@@ -365,6 +420,14 @@ module.exports = async (req, res) => {
       return sendJson(res, 200, await rpc('hub_konten'));
     }
     if (action === 'konten' && req.method === 'POST') return await kontenAksi(body || {}, res);
+    if (action === 'desain' && req.method === 'GET') {                         // halaman Studio Desain
+      const id = req.query?.id;
+      if (id && !UUID_RE.test(String(id))) return sendJson(res, 400, { error: 'id tidak valid' });
+      const r = await rpc('hub_desain', { p_id: id || null });
+      return r ? sendJson(res, 200, r) : sendJson(res, 404, { error: 'Job desain tidak ditemukan' });
+    }
+    if (action === 'desain-aset' && req.method === 'GET') return await desainAset(req.query?.id, res);
+    if (action === 'desain-aksi' && req.method === 'POST') return await desainAksi(body || {}, res);
     // ── Penawaran & kalkulator ──
     if (action === 'quote-settings' && req.method === 'GET') return sendJson(res, 200, await sales.getSettings());
     if (action === 'quote-settings' && req.method === 'POST') return sendJson(res, 200, { ok: true, settings: await sales.saveSettings(body?.settings) });

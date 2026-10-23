@@ -35,6 +35,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "js/desain-ui.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "api/**/*.js",
       "use": "@vercel/node",
       "config": {
@@ -82,7 +86,7 @@
       "dest": "/api/auth.js?action=$1"
     },
     {
-      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view|nadi-progress|hari-ini|putuskan|produksi|konten)",
+      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view|nadi-progress|hari-ini|putuskan|produksi|konten|desain-aset|desain-aksi|desain)",
       "dest": "/api/office/state.js?action=$1"
     },
     {
@@ -116,6 +120,10 @@
     {
       "src": "/js/produksi-ui.js",
       "dest": "/js/produksi-ui.js"
+    },
+    {
+      "src": "/js/desain-ui.js",
+      "dest": "/js/desain-ui.js"
     },
     {
       "src": "/office/?",
