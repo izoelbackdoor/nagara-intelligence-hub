@@ -340,6 +340,12 @@ module.exports = async (req, res) => {
     if (action === 'approval' && req.method === 'POST') return await decideApproval(body || {}, res);
     if (action === 'hari-ini' && req.method === 'GET') return sendJson(res, 200, await rpc('hub_hari_ini'));
     if (action === 'putuskan' && req.method === 'POST') return await putuskan(body || {}, res);
+    if (action === 'produksi' && req.method === 'GET') {                       // halaman Tim Produksi
+      const id = req.query?.id;
+      if (id && !UUID_RE.test(String(id))) return sendJson(res, 400, { error: 'id tidak valid' });
+      const r = await rpc('hub_produksi', { p_id: id || null });
+      return r ? sendJson(res, 200, r) : sendJson(res, 404, { error: 'Proyek tidak ditemukan' });
+    }
     // ── Penawaran & kalkulator ──
     if (action === 'quote-settings' && req.method === 'GET') return sendJson(res, 200, await sales.getSettings());
     if (action === 'quote-settings' && req.method === 'POST') return sendJson(res, 200, { ok: true, settings: await sales.saveSettings(body?.settings) });

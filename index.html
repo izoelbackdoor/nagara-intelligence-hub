@@ -798,6 +798,31 @@
   .hi-hasil { font-size: 12px; margin-top: 6px; color: var(--sand-text2); }
   .hi-empty { background: var(--sand-card); border: 1px dashed var(--sand-border); border-radius: 12px; padding: 14px 16px; font-size: 12.5px; color: var(--sand-text2); }
   @media (max-width: 640px) { .hi-grid { grid-template-columns: 1fr; } }
+  /* Tim Produksi (js/produksi-ui.js) */
+  .pr-flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; }
+  .pr-step { position: relative; flex: 1 1 210px; max-width: 260px; background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 12px; padding: 14px 14px 12px; color: var(--ink); font-size: 12.5px; }
+  .pr-step-no { position: absolute; top: -9px; left: 12px; background: var(--brand-orange); color: #fff; font: 700 11px 'Space Grotesk', sans-serif; border-radius: 10px; padding: 1px 8px; }
+  .pr-step-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 13.5px; margin-top: 2px; }
+  .pr-siapa { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--brand-orange); margin: 4px 0 6px; }
+  .pr-isi { line-height: 1.45; }
+  .pr-gate { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--sand-border); font-size: 11.5px; color: var(--sand-text2); }
+  .pr-arrow { align-self: center; color: var(--sand-text2); font-size: 18px; }
+  .pr-count { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: #efe8da; color: var(--sand-text2); white-space: nowrap; }
+  .pr-count.on { background: rgba(255,122,46,.15); color: var(--brand-orange); }
+  .pr-agents { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .pr-agent { background: var(--sand-card); border: 1px solid var(--sand-border); border-radius: 12px; padding: 14px 16px; color: var(--ink); font-size: 12.5px; }
+  .pr-agent-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+  .pr-kv { font-size: 12px; margin: 3px 0; } .pr-kv span { display: inline-block; min-width: 54px; font-weight: 700; color: var(--sand-text2); text-transform: capitalize; margin-right: 6px; }
+  .pr-stat { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 11.5px; color: var(--sand-text2); } .pr-stat b { color: var(--ink); }
+  .pr-prompt { margin-top: 10px; font-size: 12px; } .pr-prompt summary { cursor: pointer; color: var(--brand-orange); }
+  .pr-prompt pre, .pr-pre { white-space: pre-wrap; background: #f6f1e7; border-radius: 8px; padding: 10px; font-size: 11.5px; max-height: 420px; overflow: auto; color: var(--ink); }
+  .pr-badge { font-size: 10.5px; font-weight: 700; padding: 2px 9px; border-radius: 10px; background: #efe8da; color: var(--sand-text2); white-space: nowrap; }
+  .pr-badge.pr-aktif { background: rgba(46,158,91,.14); color: #2e9e5b; } .pr-badge.pr-uji { background: rgba(255,122,46,.15); color: var(--brand-orange); }
+  .pr-badge.pr-gagal { background: rgba(192,57,43,.12); color: #c0392b; }
+  .pr-modal { font-size: 13px; color: var(--ink); max-width: 920px; } .pr-modal h3 { margin: 0 0 4px; }
+  .pr-sec { margin-top: 16px; } .pr-sec-h { font: 600 13.5px 'Space Grotesk', sans-serif; margin-bottom: 6px; }
+  .pr-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; } .pr-chips span { background: #f6f1e7; border-radius: 8px; padding: 3px 9px; font-size: 11.5px; }
+  .pr-putaran { margin-bottom: 8px; } .pr-uji, .pr-kep { display: flex; align-items: flex-start; gap: 8px; margin: 5px 0; } .pr-uji .pr-isi, .pr-kep .pr-isi { flex: 1; }
   .hd-nav-badge { display:inline-block; min-width:18px; padding:1px 6px; border-radius:10px; background: var(--brand-red); color:#fff; font-size:10.5px; text-align:center; margin-left:auto; }
   .hd-inbox { grid-template-columns: 340px 1fr; min-height: 560px; }
   .hd-inbox .wa-list, .hd-inbox .wa-thread { max-height: 680px; }
@@ -1203,6 +1228,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         CRM &amp; Pipeline
       </button>
+      <button class="nav-item" id="nav-produksi" onclick="showPage('produksi')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        Tim Produksi
+      </button>
       <button class="nav-item" id="nav-outreach-nadi" onclick="showPage('outreach-nadi')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
         Outreach &amp; Brief NADI
@@ -1284,6 +1313,40 @@
       <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Kode</th><th>Klien</th><th>Status</th><th>Tugas</th><th>Uji</th><th>Target</th><th></th></tr></thead><tbody id="hi-proyek"></tbody></table></div>
       <div class="hi-h">Agen & biaya token</div>
       <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Unit</th><th>Agen</th><th>Status</th><th style="text-align:right">Hari ini / budget</th><th style="text-align:right">7 hari</th><th style="text-align:right">Antre</th><th style="text-align:right">Gagal</th></tr></thead><tbody id="hi-biaya"></tbody></table></div>
+    </div>
+
+    <!-- ─── Page: Tim Produksi (js/produksi-ui.js) — alur, tim & jobdesk, proyek, hasil kerja ─── -->
+    <div id="page-produksi" class="page-section">
+      <div id="pr-error" class="aio-mock-banner" style="display:none"></div>
+      <div class="aio-kpis" id="pr-kpis"></div>
+      <div class="crm-views" id="pr-views">
+        <button class="crm-view-btn active" data-view="alur" onclick="prSetView('alur')">Alur kerja</button>
+        <button class="crm-view-btn" data-view="tim" onclick="prSetView('tim')">Tim &amp; jobdesk</button>
+        <button class="crm-view-btn" data-view="proyek" onclick="prSetView('proyek')">Proyek</button>
+        <button class="crm-view-btn" data-view="aktivitas" onclick="prSetView('aktivitas')">Aktivitas</button>
+        <span style="flex:1"></span>
+        <span class="crm-sub" id="pr-updated" style="align-self:center"></span>
+        <button class="vo-btn" style="margin:0 0 6px 8px" onclick="prLoad()">↻ Muat ulang</button>
+      </div>
+      <div id="pr-view-alur">
+        <div class="hi-muted" style="margin:4px 0 14px">Dari Deal sampai serah terima. 🔑 = titik keputusan Anda (muncul di halaman Hari Ini + Telegram). ⚙️ = berjalan otomatis. Angka = jumlah yang sedang di tahap itu.</div>
+        <div class="pr-flow" id="pr-alur"></div>
+        <div class="hi-h">Cara kerjanya</div>
+        <div class="pr-agents">
+          <div class="pr-agent"><b>Mesin</b><div class="pr-isi" style="margin-top:6px">Workflow n8n <b>NADI 6 - Produksi</b>: tiap 5 menit mengambil maks. 2 tugas yang siap (dependensi selesai, budget harian agen masih ada), memanggil Claude / PageSpeed, lalu menyimpan hasil. Tiap 2 menit mengirim antrean Telegram & WA. Sabtu 08.00 PM menyusun laporan mingguan.</div></div>
+          <div class="pr-agent"><b>Hemat token</b><div class="pr-isi" style="margin-top:6px">Agen hanya memakai token saat ada tugas. Instruksi kerja di-cache, Penguji Performa tanpa AI, tiap agen punya budget harian. Tugas gagal dicoba ulang maks 3x lalu ditahan + Telegram.</div></div>
+          <div class="pr-agent"><b>Aturan tetap</b><div class="pr-isi" style="margin-top:6px">Tidak ada pesan ke klien tanpa persetujuan Anda. Agen tidak menyebut harga, tidak menyebut AI ke klien, dan tidak mengarang testimoni/angka. Scope mengikuti brief; permintaan di luar brief dicatat sebagai perubahan scope.</div></div>
+          <div class="pr-agent"><b>Batasan saat ini</b><div class="pr-isi" style="margin-top:6px">Penguji membaca halaman (belum klik/isi form); skenario itu masuk cek manual saat UAT. Preview Vercel harus bisa dibuka publik. Brief Final, arsip Google Drive, BAST & invoice masih manual.</div></div>
+        </div>
+      </div>
+      <div id="pr-view-tim" style="display:none"><div class="pr-agents" id="pr-tim"></div></div>
+      <div id="pr-view-proyek" style="display:none">
+        <label class="hi-muted" style="display:inline-flex;gap:6px;align-items:center;margin-bottom:10px"><input type="checkbox" onchange="pr.semua=this.checked;prRenderProyek()"> tampilkan selesai/batal (termasuk contoh uji coba)</label>
+        <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Kode</th><th>Klien</th><th>Tahap</th><th>Tugas</th><th>Uji</th><th>Jadwal</th><th style="text-align:right">Biaya</th><th></th></tr></thead><tbody id="pr-proyek"></tbody></table></div>
+      </div>
+      <div id="pr-view-aktivitas" style="display:none">
+        <div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>Waktu</th><th>Agen</th><th>Level</th><th>Kejadian</th></tr></thead><tbody id="pr-akt"></tbody></table></div>
+      </div>
     </div>
 
     <div id="page-overview" class="page-section active">
@@ -5269,6 +5332,7 @@
   <script src="/js/quote-calc.js"></script>
   <script src="/js/sales-ui.js"></script>
   <script src="/js/hari-ini.js"></script>
+  <script src="/js/produksi-ui.js"></script>
 <script>
   // ── Auth (server-side: /api/auth/*, kredensial hanya di env Vercel) ──
   function enterDashboard() {
@@ -5353,6 +5417,7 @@
 
   // ── Navigation ──
   const PAGE_META = {
+    'produksi':          { title: 'Tim Produksi',           sub: 'Studio NADI — dari Deal & DP sampai UAT dan serah terima: alur, anggota tim, proyek & hasil kerja' },
     'hari-ini':          { title: 'Hari Ini',               sub: 'Semua yang menunggu keputusan Anda dari semua tim, biaya token, masalah, meeting & proyek' },
     'overview':          { title: 'Overview',               sub: 'Ringkasan seluruh business unit' },
     'portfolio':         { title: 'Portfolio Produk',        sub: 'Status governance & progres semua produk NGI' },
@@ -5404,6 +5469,7 @@
     if (name === 'ai-orchestration') aioRenderTable();
     if (name === 'virtual-office') { const f = document.getElementById('vo-frame'); if (f && !f.getAttribute('src')) f.src = '/office/'; }
     if (name === 'crm-pipeline') crmRender();
+    if (name === 'produksi') prInit();
     if (name === 'hari-ini') hiInit();
     else if (typeof hiStop === 'function') hiStop();
     if (name === 'outreach-nadi') onInit();

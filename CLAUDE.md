@@ -66,6 +66,12 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 - `decideApproval`: approval berproyek (`project_id`) **wajib** lewat `prod_aksi` — jangan hanya ditandai disetujui.
 - Tim lain (desain, konten, penawaran) tampil di "Menunggu Anda di tim lain" dengan tombol ke halaman review masing-masing. Link Telegram Produksi & follow-up mengarah ke `<hub_url>/#hari-ini` (`nadi_config.cfg.hub_url`). URL `/#<halaman>` membuka halaman itu setelah login.
 
+## Tim Produksi (js/produksi-ui.js)
+
+- Menu **Tim Produksi** (Studio NADI): alur kerja 7 tahap dengan jumlah proyek per tahap, tim & jobdesk (dari `office_desks`/`office_agents`, termasuk system prompt), daftar proyek + detail (rencana PM, tugas & hasil kerja, laporan uji per putaran, bug, keputusan, pesan WA), aktivitas.
+- Data: `GET /api/office/produksi[?id=<uuid>]` → RPC `hub_produksi(p_id)`. Hanya baca; keputusan tetap di **Hari Ini**.
+- Tim lain menambah menu dengan pola yang sama (satu file `js/<tim>-ui.js` + satu RPC `hub_<tim>()` + satu aksi di `state.js`).
+
 ## Outreach & Brief NADI (n8n)
 
 - Halaman **Outreach & Brief NADI** (`js/sales-ui.js`, `on*`) membaca `GET /api/office/nadi-progress[?lead=id]` → view `nadi_v_ringkasan`, `nadi_v_progres`, `nadi_v_penawaran` (`supabase/migrations/20261022_nadi_progres_views.sql`) + `crm_messages`.
