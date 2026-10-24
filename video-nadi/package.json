@@ -1,0 +1,21 @@
+{
+  "name": "video-nadi",
+  "private": true,
+  "description": "Template video Studio Desain NADI (Remotion). Dirender oleh GitHub Actions (.github/workflows/render-video.yml).",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render src/index.ts VideoNADI out/video.mp4 --props=props.json"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.538",
+    "@remotion/media": "^4.0.538",
+    "@remotion/transitions": "^4.0.538",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.538"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.8",
+    "typescript": "5.8.3"
+  }
+}

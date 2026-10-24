@@ -1,0 +1,48 @@
+# Render video Studio Desain NADI (Remotion) — dipicu n8n (workflow NADI 6) lewat workflow_dispatch.
+# Gratis: repo publik = menit GitHub Actions tanpa batas. Tidak butuh secret:
+#  - hasil diunggah ke Supabase Storage dengan signed upload URL sekali pakai,
+#  - laporan ke database lewat RPC desain_render_hasil yang memeriksa token per render.
+name: Render video desain
+
+on:
+  workflow_dispatch:
+    inputs:
+      payload:
+        description: 'JSON dari n8n: { id, token, props, upload_url, callback_url, anon_key }'
+        required: true
+        type: string
+
+concurrency:
+  group: render-video
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: video-nadi
+    env:
+      PAYLOAD: ${{ inputs.payload }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: video-nadi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: video-nadi/package-lock.json
+      - name: Pasang dependensi
+        run: npm ci --no-audit --no-fund
+      - name: Siapkan media & props
+        run: node scripts/siapkan.mjs
+      - name: Render
+        run: npx remotion render src/index.ts VideoNADI out/video.mp4 --props=props.json --concurrency=2 --log=info
+      - name: Unggah & lapor
+        if: success()
+        run: node scripts/lapor.mjs ok
+      - name: Lapor gagal
+        if: failure()
+        run: node scripts/lapor.mjs gagal

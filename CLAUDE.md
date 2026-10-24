@@ -109,6 +109,7 @@ Menu samping digabung per tim/area (24 Okt 2026). **Jangan menambah menu samping
 - Mockup HTML: `GET /api/office/desain-aset?id=` (wajib login) disajikan dengan `Content-Security-Policy: sandbox allow-scripts allow-popups` — skrip agen tidak bisa membaca cookie dashboard. Jangan hapus header ini.
 - Link Telegram & "Menunggu Anda" di Hari Ini → `<hub_url>/#desain`. Link klien (hanya lihat) masih halaman webhook n8n `desain-lihat` sampai `klien.nagaraku.id` dibuat.
 - Mesin: workflow n8n **NADI 6 - Studio Desain** (Claude + Higgsfield). Migrasi: `supabase/migrations/20261023_hub_04_desain.sql`.
+- **Video final (Remotion, gratis):** folder `video-nadi/` (template `VideoNADI` 1080×1920) dirender oleh GitHub Actions `.github/workflows/render-video.yml` (workflow_dispatch dari n8n, input `payload`). Tanpa secret di GitHub: hasil diunggah ke bucket Storage publik `desain` lewat signed upload URL, lalu laporan ke RPC `desain_render_hasil` (anon, dicek token per render). Aset `Video Final` (`media.endpoint = 'remotion'`) dibuat dari field `edit` Motion Designer dan baru dikirim setelah klip/keyframe di tugas yang sama tuntas; klip gagal → keyframe sumbernya. Migrasi: `supabase/migrations/20261024_desain_render_video.sql`. `video-nadi/` diabaikan Vercel (`.vercelignore`). Lisensi Remotion gratis selama NADI ≤3 karyawan.
 
 ## Outreach & Brief NADI (n8n)
 
