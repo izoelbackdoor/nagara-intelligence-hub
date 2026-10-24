@@ -597,3 +597,25 @@ ATURAN WAJIB
   · Bahasa Indonesia natural untuk pemilik UMKM: konkret, hangat, tanpa klise ("solusi terbaik", "era digital", "level berikutnya").
   · CTA yang boleh: chat WhatsApp NADI, DM, atau isi brief di brief.nagaraku.id (sekitar 5 menit, tidak mengikat).$p$
  where desk_key = 'mkt-ads';
+
+-- Konteks analis: bila 30 hari terakhir tanpa tayangan, sertakan metrik 30 hari terakhir saat iklan masih tayang
+do $$
+declare d text;
+begin
+  d := pg_get_functiondef('mkt_iklan_konteks(uuid)'::regprocedure);
+  if position('periode_aktif_terakhir' in d) = 0 then
+    d := replace(d, $q$'aturan_teks_iklan',$q$, $q$'periode_aktif_terakhir', (select case when max(tanggal) is null or max(tanggal) >= d1 - 29 then null else jsonb_build_object(
+        'catatan', 'Tidak ada tayangan dalam 30 hari terakhir. Ini metrik 30 hari terakhir saat iklan masih tayang, sebagai dasar analisis.',
+        'mulai', max(tanggal) - 29, 'selesai', max(tanggal),
+        'akun', mkt_iklan_metrik(max(tanggal) - 29, max(tanggal), 'akun', null),
+        'per_iklan', (select jsonb_agg(jsonb_build_object('id', e.id, 'nama', e.nama, 'adset_id', e.adset_id, 'm', mkt_iklan_metrik(x.t - 29, x.t, 'ad', e.id)))
+                      from mkt_iklan_entitas e, (select max(tanggal) t from mkt_iklan_harian where impresi > 0) x
+                      where e.level = 'ad' and exists (select 1 from mkt_iklan_harian h where h.ad_id = e.id and h.tanggal > x.t - 30)),
+        'harian', (select jsonb_agg(jsonb_build_object('tgl', tanggal, 'spend', s, 'impresi', i, 'klik', k, 'hasil', h) order by tanggal)
+                   from (select tanggal, sum(spend) s, sum(impresi) i, sum(klik) k, sum(hasil) h from mkt_iklan_harian group by tanggal) z
+                   where tanggal > (select max(tanggal) from mkt_iklan_harian where impresi > 0) - 30)) end
+      from mkt_iklan_harian where impresi > 0),
+    'aturan_teks_iklan',$q$);
+    execute d;
+  end if;
+end $$;
