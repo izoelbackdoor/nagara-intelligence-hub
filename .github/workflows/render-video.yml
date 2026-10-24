@@ -2,6 +2,7 @@
 # Gratis: repo publik = menit GitHub Actions tanpa batas. Tidak butuh secret:
 #  - hasil diunggah ke Supabase Storage dengan signed upload URL sekali pakai,
 #  - laporan ke database lewat RPC desain_render_hasil yang memeriksa token per render.
+# Payload dibaca skrip dari $GITHUB_EVENT_PATH (bukan env) supaya tidak tercetak di log publik.
 name: Render video desain
 
 on:
@@ -23,8 +24,6 @@ jobs:
     defaults:
       run:
         working-directory: video-nadi
-    env:
-      PAYLOAD: ${{ inputs.payload }}
     steps:
       - uses: actions/checkout@v4
         with:

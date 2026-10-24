@@ -1,13 +1,18 @@
 // Dipakai GitHub Actions sebelum render.
-// Input : env PAYLOAD (JSON dari n8n: { id, token, props, upload_url, callback_url, anon_key })
+// Input : inputs.payload dari file event GitHub ($GITHUB_EVENT_PATH) — sengaja tidak lewat env agar tidak tercetak di log
+//         repo publik. Lokal: env PAYLOAD. Isi: { id, token, props, upload_url, callback_url, anon_key }
 // Output: props.json (sumber media sudah diunduh ke public/media/*, path relatif) + meta.json (untuk upload & callback)
 // Media diunduh dulu supaya render tidak bergantung pada CORS CDN generator.
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
-const raw = process.env.PAYLOAD;
+const raw = process.env.GITHUB_EVENT_PATH
+  ? JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH, 'utf8'))?.inputs?.payload
+  : process.env.PAYLOAD;
 if (!raw) throw new Error('PAYLOAD kosong');
 const p = JSON.parse(raw);
 if (!p?.props || !p?.upload_url || !p?.callback_url) throw new Error('PAYLOAD tidak lengkap');
+// Samarkan nilai rahasia sekali pakai di log GitHub
+for (const v of [p.token, p.upload_url, String(p.upload_url).split('token=')[1]]) if (v) console.log('::add-mask::' + v);
 
 await mkdir('public/media', { recursive: true });
 const props = p.props;

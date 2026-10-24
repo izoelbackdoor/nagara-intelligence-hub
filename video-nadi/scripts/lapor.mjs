@@ -7,7 +7,8 @@ const status = process.argv[2] || 'gagal';
 let meta;
 try { meta = JSON.parse(await readFile('meta.json', 'utf8')); }
 catch {
-  const p = JSON.parse(process.env.PAYLOAD || '{}');
+  const ev = process.env.GITHUB_EVENT_PATH ? JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH, 'utf8')) : {};
+  const p = JSON.parse(ev?.inputs?.payload || process.env.PAYLOAD || '{}');
   meta = { id: p.id, token: p.token, upload_url: p.upload_url, callback_url: p.callback_url, anon_key: p.anon_key };
 }
 if (!meta?.callback_url) { console.log('Tidak ada callback_url'); process.exit(0); }
