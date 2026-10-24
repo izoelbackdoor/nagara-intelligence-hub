@@ -847,6 +847,18 @@
   .ds-teks { margin: 6px 0; } .ds-teks summary { cursor: pointer; font-size: 12.5px; margin-bottom: 4px; }
   .ds-cek { display: flex; flex-wrap: wrap; gap: 6px 16px; } .ds-cek label { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; font-size: 12.5px; color: var(--ink); }
   @media (max-width: 640px) { .ds-joblist { grid-template-columns: 1fr; } .ds-frame { height: 460px; } }
+  /* Iklan Meta (js/iklan-ui.js) */
+  .ik-alert { display: flex; gap: 12px; align-items: center; justify-content: space-between; background: #fbf3e8; border: 1px solid rgba(255,122,46,.35); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; color: var(--ink); }
+  .ik-svg { width: 100%; height: 120px; display: block; } .ik-sumbu { display: flex; justify-content: space-between; font-size: 11px; color: var(--sand-text2); margin: 2px 0 4px; }
+  .ik-table td.num, .ik-table th.num { text-align: right; white-space: nowrap; }
+  .ik-table tr.ik-l0 td { font-weight: 600; background: #fbf8f3; } .ik-table tr.ik-l2 td { font-size: 12px; }
+  .ik-rek { border: 1px solid var(--sand-border); border-radius: 10px; padding: 10px 12px; margin: 8px 0; background: var(--sand-card); }
+  .ik-rek.ik-done { opacity: .7; } .ik-rek-h { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 2px; }
+  .ik-vars { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .ik-var { border: 1px solid var(--sand-border); border-radius: 10px; padding: 10px 12px; background: #fff; }
+  .ik-var-h { font: 600 14px 'Space Grotesk', sans-serif; margin: 4px 0; } .ik-an-h { font: 600 14px 'Space Grotesk', sans-serif; margin: 6px 0; }
+  .ik-temuan { margin: 6px 0 6px 18px; font-size: 13px; }
+  @media (max-width: 640px) { .ik-alert { flex-direction: column; align-items: flex-start; } }
   /* Konten NADI (js/konten.js) */
   .kt-atas { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; margin-top: 12px; align-items: start; }
   .kt-kanal { display: grid; grid-template-columns: 150px 1fr 64px; gap: 8px; align-items: center; font-size: 12.5px; }
@@ -1846,31 +1858,45 @@
     <!-- ─── Page: Marketing & Content ─── -->
     <div id="page-marketing-content" class="page-section">
 
-      <div class="pf-section-title">Meta Ads Lead-Gen — NADI</div>
-      <div class="mc-snapshot-note">Data snapshot 27 Agustus 2026 (refresh manual) — sumber: Meta Ads Manager. Campaign ID 120247567388800474.</div>
-      <!-- Figures below are REAL, verified via direct Meta Ads API access
-           during planning (2026-08-27) for Campaign ID 120247567388800474
-           ("NADI - Lead Gen - AI Automation UMKM") — not placeholder data.
-           No live integration exists yet (see the implementation plan for
-           why); re-verify in Meta Ads Manager and update this block if it
-           goes stale. -->
-      <div class="ov-cards">
-        <div class="ov-card"><div class="ov-num mc-status-paused">Paused</div><div class="ov-label">Status Campaign</div></div>
-        <div class="ov-card"><div class="ov-num">Rp 0</div><div class="ov-label">Total Spend</div></div>
-        <div class="ov-card"><div class="ov-num">Belum Ada</div><div class="ov-label">Leads</div></div>
-        <div class="ov-card"><div class="ov-num">N/A</div><div class="ov-label">Cost per Lead</div></div>
+      <!-- Iklan Meta (js/iklan-ui.js) — data langsung Meta Marketing API (hanya baca) via n8n "NADI 7b - Iklan Meta" → mkt_iklan_* -->
+      <div class="crm-views" style="align-items:center">
+        <div class="pf-section-title" style="margin:0">Iklan Meta — NADI</div>
+        <span style="flex:1"></span>
+        <span class="crm-sub" id="ik-updated"></span>
+        <button class="vo-btn" style="margin:0 0 0 8px" onclick="ikLoad()">↻ Muat ulang</button>
       </div>
-      <!-- .ov-flag (not .pf-error) — these are persistent "action needed"
-           notices the owner must resolve in Meta's own dashboard, not a
-           retriable fetch failure, so the file's existing "governance gap"
-           styling fits better than the error/retry-button convention every
-           other .pf-error on this page follows. cursor overridden since
-           there's no click target here, unlike Overview's .ov-flag. -->
-      <div class="ov-flag" style="cursor:default;margin-bottom:10px;">
-        <span>⚠ Lead Generation ToS belum di-accept di halaman "Nagara Digital Lab Indonesia" — kemungkinan penyebab campaign belum menghasilkan leads. Accept di facebook.com/legal/leadgen/tos.</span>
+      <div id="ik-error" class="aio-mock-banner" style="display:none"></div>
+      <div class="crm-sub" id="ik-sinkron" style="margin:4px 0 10px"></div>
+      <div id="ik-peringatan"></div>
+      <div class="aio-kpis" id="ik-kpis"></div>
+      <div class="hi-card" style="margin-bottom:14px"><div class="hi-h" style="margin-top:0">Belanja harian 30 hari</div><div id="ik-grafik"></div></div>
+      <div class="crm-views" id="ik-periode" style="align-items:center">
+        <button class="crm-view-btn active" data-p="m7" onclick="ikSetPeriode('m7')">7 hari</button>
+        <button class="crm-view-btn" data-p="m30" onclick="ikSetPeriode('m30')">30 hari</button>
+        <button class="crm-view-btn" data-p="total" onclick="ikSetPeriode('total')">Seumur</button>
+        <span style="flex:1"></span>
+        <label class="hi-muted" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" onchange="ik.semua=this.checked;ikRenderTabel()"> tampilkan semua (termasuk dijeda)</label>
       </div>
-      <div class="ov-flag" style="cursor:default;">
-        <span>⚠ Meta Pixel belum di-setup di nagaraku.id (tercatat di Portfolio Produk) — tanpa pixel, tracking konversi website tidak akan akurat.</span>
+      <div class="pf-table-wrap"><table class="pf-table ik-table"><thead><tr><th>Kampanye / ad set / iklan</th><th>Status</th><th class="num">Belanja</th><th class="num">Impresi</th><th class="num">Klik</th><th class="num">CTR</th><th class="num">CPC</th><th class="num">Hasil</th><th class="num">Biaya/hasil</th></tr></thead><tbody id="ik-tabel"></tbody></table></div>
+
+      <div class="hi-card" style="margin-top:14px">
+        <div class="crm-views" style="align-items:center;margin-bottom:6px">
+          <div class="hi-h" style="margin:0">Analis Meta Ads</div><span style="flex:1"></span>
+          <button class="vo-btn hi-utama" onclick="ikAnalisis(this)">Analisis sekarang</button>
+        </div>
+        <div class="hi-muted" id="ik-agen"></div>
+        <div class="hi-muted" id="ik-an-info" style="margin:4px 0"></div>
+        <div id="ik-analisis"></div>
+        <div id="ik-riwayat" style="margin-top:10px"></div>
+      </div>
+
+      <div class="pr-agents" style="margin-top:14px">
+        <div class="pr-agent"><b>Cara kerja</b><div class="pr-isi" style="margin-top:6px">Workflow n8n <b>NADI 7b - Iklan Meta</b> tiap 6 jam membaca kampanye, ad set, iklan & insight harian 30 hari dari Meta Marketing API (credential n8n <b>Meta NADI</b>, izin <code>ads_read</code>) lalu menyimpannya ke Supabase. Senin 06.30 WIB Analis Meta Ads menganalisis 7 hari: maks. 5 rekomendasi + 3 variasi teks iklan; visual baru dikirim ke Studio Desain.</div></div>
+        <div class="pr-agent"><b>Peringatan otomatis → Hari Ini</b><div class="pr-isi" style="margin-top:6px">Kampanye berhenti / aktif tapi tidak tayang 3 hari, iklan ditolak atau tertahan pembayaran, belanja harian di atas batas (budget bulanan ÷ 30), biaya per hasil naik &gt;30% dari rata-rata 7 hari, token Meta kedaluwarsa, sinkron macet &gt;13 jam. Dicek tiap jam + Telegram saat baru.</div></div>
+        <div class="pr-agent"><b>Aturan tetap</b><div class="pr-isi" style="margin-top:6px">Agen hanya membaca. Tidak ada yang diubah di akun iklan dari Command Center — semua eksekusi Anda lakukan di <a href="https://adsmanager.facebook.com/" target="_blank" rel="noopener">Ads Manager</a>, lalu tandai di sini. Token Meta hanya di credential n8n, tidak di database/kode.</div></div>
+        <div class="pr-agent"><b>Batas belanja</b><div class="pr-isi" style="margin-top:6px">Budget bulanan (Rp) untuk peringatan belanja harian. Kosongkan untuk mematikan.</div>
+          <div class="hi-aksi-row" style="align-items:center"><input id="ik-budget" class="hi-input" inputmode="numeric" placeholder="mis. 1500000" style="max-width:170px"><button class="crm-btn-ghost" onclick="ikSimpanBudget(this)">Simpan</button></div>
+          <div class="hi-muted" id="ik-budget-info"></div></div>
       </div>
 
       <div class="pf-section-title" style="margin-top:2rem;">Content Production Engine — 11 Facebook Page</div>
@@ -5476,6 +5502,7 @@
   <script src="/js/produksi-ui.js"></script>
   <script src="/js/konten.js"></script>
   <script src="/js/desain-ui.js"></script>
+  <script src="/js/iklan-ui.js"></script>
 <script>
   // ── Auth (server-side: /api/auth/*, kredensial hanya di env Vercel) ──
   function enterDashboard() {
@@ -5589,7 +5616,7 @@
     'ai-orchestration':  { title: 'AI Agent Orchestration',  sub: 'Status & log aktivitas karyawan AI — data langsung dari database kantor' },
     'virtual-office':    { title: 'Virtual Office',          sub: 'Karyawan AI per zona — data langsung dari database kantor' },
     'crm-pipeline':      { title: 'CRM & Pipeline',          sub: 'Calon klien NADI & Nagara EduKit — data asli Airtable, skor otomatis, outreach dengan persetujuan' },
-    'marketing-content': { title: 'Marketing & Content',     sub: 'Meta Ads (snapshot) & antrian konten 11 Facebook Page' },
+    'marketing-content': { title: 'Marketing & Content',     sub: 'Iklan Meta langsung dari Meta (hanya baca) & antrian konten 11 Facebook Page' },
     'legal-compliance':  { title: 'Legal & Compliance',      sub: 'Checklist lisensi & UU PDP (sebagian data asli, sebagian ilustratif)' },
     'outreach-nadi':     { title: 'Outreach & Brief NADI',  sub: 'WA otomatis dari 0858 (n8n + Fonnte), balasan bot, brief brief.nagaraku.id, harga penawaran & bottom' },
     'penawaran':         { title: 'Penawaran & Kalkulator',  sub: 'Kalkulator harga NADI → penawaran bernomor → kirim WA lewat persetujuan → klien setujui online' },
@@ -5647,7 +5674,7 @@
     if (name === 'penawaran') qtInit();
     if (name === 'helpdesk') hdInit();
     if (name === 'legal-compliance') lcRenderTable();
-    if (name === 'marketing-content') mcInit();
+    if (name === 'marketing-content') { ikInit(); mcInit(); }
     if (name === 'finance')  finLoadData();
     if (name === 'analytics') loadTrending();
     if (name === 'keamanan') loadSecurityPage();

@@ -224,6 +224,20 @@ async function kontenAksi(b, res) {
   return sendJson(res, r?.ok ? 200 : 409, r?.ok ? r : { error: r?.info || 'Gagal' });
 }
 
+// ── Iklan Meta (RPC hub_iklan*, migrasi 20261024_iklan_meta.sql) — hanya baca dari Meta; keputusan dicatat ──
+const IKLAN_OP = ['analisis', 'rekomendasi', 'peringatan', 'budget'];
+async function iklanAksi(b, res) {
+  if (!IKLAN_OP.includes(b.op)) return sendJson(res, 400, { error: 'Aksi tidak dikenal' });
+  if (JSON.stringify(b).length > 2000) return sendJson(res, 413, { error: 'Isian terlalu panjang' });
+  if (b.op === 'rekomendasi') {
+    if (!UUID_RE.test(String(b.id || ''))) return sendJson(res, 400, { error: 'id tidak valid' });
+    if (!Number.isInteger(Number(b.idx)) || !['dijalankan', 'diabaikan', 'batal'].includes(b.status)) return sendJson(res, 400, { error: 'Isian tidak valid' });
+  }
+  if (b.op === 'peringatan' && !/^\d{1,12}$/.test(String(b.id || ''))) return sendJson(res, 400, { error: 'id tidak valid' });
+  const r = await rpc('hub_iklan_aksi', { p: b });
+  return sendJson(res, r?.ok ? 200 : 409, r?.ok ? r : { error: r?.info || 'Gagal' });
+}
+
 // ── Studio Desain (RPC hub_desain*, migrasi 20261023_hub_04_desain.sql) ──
 // HTML mockup buatan agen disajikan dengan CSP sandbox: skripnya jalan, tapi di origin terisolasi
 // sehingga tidak bisa membaca cookie sesi dashboard.
@@ -430,6 +444,8 @@ module.exports = async (req, res) => {
     }
     if (action === 'desain-aset' && req.method === 'GET') return await desainAset(req.query?.id, res);
     if (action === 'desain-aksi' && req.method === 'POST') return await desainAksi(body || {}, res);
+    if (action === 'iklan' && req.method === 'GET') return sendJson(res, 200, await rpc('hub_iklan'));   // tab Iklan Meta
+    if (action === 'iklan' && req.method === 'POST') return await iklanAksi(body || {}, res);
     // ── Penawaran & kalkulator ──
     if (action === 'quote-settings' && req.method === 'GET') return sendJson(res, 200, await sales.getSettings());
     if (action === 'quote-settings' && req.method === 'POST') return sendJson(res, 200, { ok: true, settings: await sales.saveSettings(body?.settings) });

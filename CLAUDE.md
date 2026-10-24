@@ -16,6 +16,7 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 | `index.html` | Seluruh dashboard (±10.000 baris, HTML+CSS+JS vanilla, tanpa build step) |
 | `js/quote-calc.js` | Kalkulator harga NADI (murni, browser + server) — port dari `Kalkulator_Harga_Website_NADI.xlsx`. Tes: `js/quote-calc.test.js` |
 | `js/sales-ui.js` | UI halaman **Penawaran & Kalkulator** dan **Helpdesk** (dimuat index.html) |
+| `js/iklan-ui.js` | Tab **Iklan Meta & 11 Page FB** (halaman `marketing-content`): data iklan Meta langsung + Analis Meta Ads |
 | `office/` | Virtual Office hasil build (statis). **Jangan edit langsung** — sumbernya `office-src/` |
 | `office-src/` | Vite + React + TS, fork Claude Office (MIT). Build: `npm install && npm run build`, salin `dist/*` ke `../office/` (pertahankan `office/3d.html` & `LICENSE-claude-office.txt`) |
 | `api/` | Vercel Node functions (CommonJS, `module.exports = async (req, res)`) |
@@ -115,6 +116,15 @@ Menu samping digabung per tim/area (24 Okt 2026). **Jangan menambah menu samping
 
 - Halaman **Outreach & Brief NADI** (`js/sales-ui.js`, `on*`) membaca `GET /api/office/nadi-progress[?lead=id]` → view `nadi_v_ringkasan`, `nadi_v_progres`, `nadi_v_penawaran` (`supabase/migrations/20261022_nadi_progres_views.sql`) + `crm_messages`.
 - Hanya baca. Outreach WA dari 0858, balasan bot, dan kirim penawaran berjalan di n8n (n8n.nagaraku.id, workflow NADI 2/3/4) + form brief.nagaraku.id — bukan lewat antrean persetujuan dashboard.
+
+## Iklan Meta (js/iklan-ui.js, lib/agents/iklan.js) — tim Marketing NADI
+
+- Tab **Iklan Meta & 11 Page FB** (menu Konten & Marketing, halaman `marketing-content`): kampanye/ad set/iklan dengan status, belanja, impresi, klik, CTR, CPC, hasil, biaya per hasil (7 hari · 30 hari · seumur), grafik harian 30 hari, peringatan, rekomendasi analis. Bagian "11 Facebook Page" di bawahnya tidak berubah (`mc*`).
+- Data: `GET /api/office/iklan` → RPC `hub_iklan()`; aksi `POST /api/office/iklan {op: rekomendasi|peringatan|budget}` → `hub_iklan_aksi`. Tabel `mkt_iklan_entitas`, `mkt_iklan_harian` (per iklan per hari), `mkt_iklan_sinkron`, `mkt_iklan_peringatan`, `mkt_iklan_analisis` (migrasi `20261024_iklan_meta.sql`).
+- Sinkron: workflow n8n **NADI 7b - Iklan Meta** tiap 6 jam (`mkt_iklan_sinkron_mulai` → GET Graph API → `mkt_iklan_ingest`). Akun = `nadi_config.cfg.tim.marketing.ads.act_id`. Token Meta **hanya** di credential n8n "Meta NADI" (`ads_read`), tidak di database/kode/env Vercel.
+- **Hanya baca.** Tidak ada kode yang menulis ke akun iklan. Rekomendasi hanya ditandai "sudah dijalankan/diabaikan"; eksekusi oleh pemilik di Ads Manager.
+- Peringatan (`mkt_iklan_cek_peringatan`, pg_cron tiap jam + setiap ingest): kampanye berhenti / ACTIVE tapi tidak tayang N hari, iklan ditolak/bermasalah/tertahan pembayaran, belanja kemarin > `ads.budget_bulanan`/30, biaya per hasil naik > `ads.cpr_naik_persen` (30%) dari rata-rata 7 hari, token kedaluwarsa (kode 190), sinkron macet > 13 jam. Tampil di **Hari Ini** (`cc_tim_nadi` → tim "Iklan Meta") + Telegram saat baru.
+- Analis Meta Ads (meja `mkt-ads`, model dari `office_agents`): pg_cron Senin 06.30 WIB → `mkt_iklan_mulai_analisis` (office_task jenis `iklan_analisis`). Dikerjakan n8n NADI 7 (`tim_antrian`) atau, bila masih antre > 20 menit, oleh cron `arah`; tombol "Analisis sekarang" = `POST /api/agents/iklan` (login). Hasil: maks 5 rekomendasi (alasan berangka) + 3 variasi teks iklan (dicek `tim_cek_teks`); variasi yang perlu visual → satu job Studio Desain internal. Biaya token dicatat `tim_selesai` → `office_costs`.
 
 ## WhatsApp
 

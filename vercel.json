@@ -39,12 +39,17 @@
       "use": "@vercel/static"
     },
     {
+      "src": "js/iklan-ui.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "api/**/*.js",
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
           "kb/**"
-        ]
+        ],
+        "maxDuration": 60
       }
     }
   ],
@@ -86,11 +91,11 @@
       "dest": "/api/auth.js?action=$1"
     },
     {
-      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view|nadi-progress|hari-ini|putuskan|produksi|konten|desain-aset|desain-aksi|desain)",
+      "src": "/api/office/(state|leads|leads-sync|lead|approval|conversations|wa-inbound|quote-settings|quotes|quote|tickets|ticket|quote-view|nadi-progress|hari-ini|putuskan|produksi|konten|desain-aset|desain-aksi|desain|iklan)",
       "dest": "/api/office/state.js?action=$1"
     },
     {
-      "src": "/api/agents/(arah|usul|rawat)",
+      "src": "/api/agents/(arah|usul|rawat|iklan)",
       "dest": "/api/agents/run.js?agent=$1"
     },
     {
@@ -124,6 +129,10 @@
     {
       "src": "/js/desain-ui.js",
       "dest": "/js/desain-ui.js"
+    },
+    {
+      "src": "/js/iklan-ui.js",
+      "dest": "/js/iklan-ui.js"
     },
     {
       "src": "/office/?",
