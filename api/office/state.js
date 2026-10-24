@@ -225,7 +225,7 @@ async function kontenAksi(b, res) {
 }
 
 // ── Iklan Meta (RPC hub_iklan*, migrasi 20261024_iklan_meta.sql) — hanya baca dari Meta; keputusan dicatat ──
-const IKLAN_OP = ['analisis', 'rekomendasi', 'peringatan', 'budget'];
+const IKLAN_OP = ['analisis', 'rekomendasi', 'peringatan', 'budget', 'pixel'];
 async function iklanAksi(b, res) {
   if (!IKLAN_OP.includes(b.op)) return sendJson(res, 400, { error: 'Aksi tidak dikenal' });
   if (JSON.stringify(b).length > 2000) return sendJson(res, 413, { error: 'Isian terlalu panjang' });
@@ -234,7 +234,19 @@ async function iklanAksi(b, res) {
     if (!Number.isInteger(Number(b.idx)) || !['dijalankan', 'diabaikan', 'batal'].includes(b.status)) return sendJson(res, 400, { error: 'Isian tidak valid' });
   }
   if (b.op === 'peringatan' && !/^\d{1,12}$/.test(String(b.id || ''))) return sendJson(res, 400, { error: 'id tidak valid' });
+  if (b.op === 'pixel' && (!/^\d{0,20}$/.test(String(b.pixel_id ?? '')) || !/^[A-Za-z0-9]{0,20}$/.test(String(b.test_event_code ?? '')))) return sendJson(res, 400, { error: 'Pixel ID harus angka; kode uji huruf/angka' });
   const r = await rpc('hub_iklan_aksi', { p: b });
+  return sendJson(res, r?.ok ? 200 : 409, r?.ok ? r : { error: r?.info || 'Gagal' });
+}
+
+// ── Sumber klien / link pelacak (RPC hub_sumber*, migrasi 20261024_link_pelacak.sql) ──
+const SUMBER_OP = ['buat', 'nonaktif', 'aktif'];
+const TGL_RE = /^\d{4}-\d{2}-\d{2}$/;
+async function sumberAksi(b, res) {
+  if (!SUMBER_OP.includes(b.op)) return sendJson(res, 400, { error: 'Aksi tidak dikenal' });
+  if (JSON.stringify(b).length > 2000) return sendJson(res, 413, { error: 'Isian terlalu panjang' });
+  if (b.op !== 'buat' && !/^\d{1,12}$/.test(String(b.id || ''))) return sendJson(res, 400, { error: 'id tidak valid' });
+  const r = await rpc('hub_sumber_aksi', { p: b });
   return sendJson(res, r?.ok ? 200 : 409, r?.ok ? r : { error: r?.info || 'Gagal' });
 }
 
@@ -446,6 +458,12 @@ module.exports = async (req, res) => {
     if (action === 'desain-aksi' && req.method === 'POST') return await desainAksi(body || {}, res);
     if (action === 'iklan' && req.method === 'GET') return sendJson(res, 200, await rpc('hub_iklan'));   // tab Iklan Meta
     if (action === 'iklan' && req.method === 'POST') return await iklanAksi(body || {}, res);
+    if (action === 'sumber' && req.method === 'GET') {                          // tab Sumber klien
+      const q = req.query || {};
+      const dari = TGL_RE.test(String(q.dari || '')) ? q.dari : null, sampai = TGL_RE.test(String(q.sampai || '')) ? q.sampai : null;
+      return sendJson(res, 200, await rpc('hub_sumber', { p_dari: dari, p_sampai: sampai, p_uji: q.uji === '1' }));
+    }
+    if (action === 'sumber' && req.method === 'POST') return await sumberAksi(body || {}, res);
     // ── Penawaran & kalkulator ──
     if (action === 'quote-settings' && req.method === 'GET') return sendJson(res, 200, await sales.getSettings());
     if (action === 'quote-settings' && req.method === 'POST') return sendJson(res, 200, { ok: true, settings: await sales.saveSettings(body?.settings) });

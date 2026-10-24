@@ -84,6 +84,7 @@ function ikRender() {
   ikRenderGrafik();
   ikRenderTabel();
   ikRenderAnalisis();
+  ikRenderPixel(d.pixel || {});
 
   const ag = d.agen || {};
   ikEl('ik-agen').textContent = `Analis Meta Ads · ${ag.model || '-'} · status ${ag.status || '-'} · biaya hari ini ${ikUsd(ag.usd_hari_ini)} (batas $${Number(ag.budget || 0).toFixed(2)}/hari) · 30 hari ${ikUsd(ag.usd_30h)}`;
@@ -231,4 +232,40 @@ async function ikAnalisis(btn) {
 function ikSalin(btn) {
   const t = btn.dataset.t || '';
   (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { btn.textContent = 'Tersalin ✓'; }, () => { btn.textContent = 'Gagal menyalin'; });
+}
+
+// ── Status Meta Pixel & Conversions API (migrasi 20261024_meta_konversi.sql)
+function ikRenderPixel(px) {
+  const box = ikEl('ik-pixel');
+  if (!box) return;
+  const ev = ['Lead', 'Schedule', 'Purchase'];
+  const c = px.capi_7h || {};
+  const meta = (px.meta && px.meta.data) || null;
+  const statMeta = meta && Array.isArray(meta.stats) ? meta.stats : null;
+  const pi = ikEl('ik-pixel-id'), tc = ikEl('ik-pixel-test');
+  if (pi && document.activeElement !== pi) pi.value = px.pixel_id || '';
+  if (tc && document.activeElement !== tc) tc.value = px.test_event_code || '';
+  const b7 = px.brief_7h || {};
+  box.innerHTML = `
+    <div class="hi-muted">${px.pixel_id ? `Pixel <b>${escapeHtml(px.pixel_id)}</b> aktif di nagaraku.id & form brief (hanya setelah pengunjung setuju cookie).` : '<b style="color:var(--brand-orange)">Pixel belum diisi</b> — buat Pixel/Dataset di Events Manager lalu tempel ID-nya di bawah.'}
+      ${px.test_event_code ? ` · <b>mode uji</b> ${escapeHtml(px.test_event_code)} (event server tampil di tab Test events)` : ''}</div>
+    <div class="pf-table-wrap" style="margin-top:8px"><table class="pf-table ik-table"><thead><tr><th>Event server (Conversions API) 7 hari</th><th class="num">Terkirim</th><th class="num">Antre</th><th class="num">Gagal</th></tr></thead><tbody>
+      ${ev.map(e => { const x = c[e] || {}; return `<tr><td>${e}${x.uji ? ` <span class="hi-muted">(${x.uji} uji)</span>` : ''}</td><td class="num">${ikN(x.terkirim || 0)}</td><td class="num">${ikN(x.antre || 0)}</td><td class="num">${x.gagal ? `<b style="color:#c0392b">${ikN(x.gagal)}</b>` : 0}</td></tr>`; }).join('')}
+    </tbody></table></div>
+    <div class="hi-muted" style="margin-top:6px">Brief 7 hari: ${ikN(b7.total || 0)}, ${ikN(b7.izin || 0)} dengan persetujuan cookie (hanya ini yang dikirim ke Meta).
+      ${px.terkirim_terakhir ? ' · terakhir terkirim ' + escapeHtml(officeAgo(px.terkirim_terakhir)) : ''}</div>
+    ${px.error_terakhir ? `<div class="hi-muted" style="color:#c0392b">Error terakhir (${escapeHtml(px.error_terakhir.event)} · ${escapeHtml(officeAgo(px.error_terakhir.waktu))}): ${escapeHtml(px.error_terakhir.error || '')}</div>` : ''}
+    ${statMeta ? `<div class="hi-muted" style="margin-top:6px"><b>Diterima Meta 7 hari</b> (browser + server): ${statMeta.map(s => `${escapeHtml(s.event)} ${ikN(s.count)}`).join(' · ') || 'belum ada'} · diperbarui ${escapeHtml(officeAgo(px.meta.diperbarui))}</div>`
+      : (px.meta && px.meta.error ? `<div class="hi-muted" style="color:#c0392b">Statistik Meta: ${escapeHtml(px.meta.error)}</div>` : '<div class="hi-muted">Statistik dari Meta muncul setelah workflow n8n "NADI 7d - Konversi Meta" aktif.</div>')}`;
+}
+
+async function ikSimpanPixel(btn) {
+  btn.disabled = true;
+  const info = ikEl('ik-pixel-info');
+  try {
+    const r = await ikPost({ op: 'pixel', pixel_id: ikEl('ik-pixel-id').value.trim(), test_event_code: ikEl('ik-pixel-test').value.trim() });
+    info.textContent = r.info || 'Tersimpan.';
+    await ikLoad();
+  } catch (e) { info.textContent = e.message; }
+  btn.disabled = false;
 }
