@@ -867,6 +867,11 @@
   .kt-keputusan { border-top: 1px solid var(--sand-border); margin-top: 10px; padding-top: 8px; }
   .kt-toast { position: fixed; right: 20px; bottom: 20px; background: var(--ink); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 13px; z-index: 50; max-width: 420px; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
   .kt-toast.gagal { background: #b0362a; }
+  .kt-buf-ch { display: grid; grid-template-columns: 1fr 120px auto; gap: 8px; align-items: center; font-size: 12.5px; padding: 6px 0; border-top: 1px solid var(--sand-border); }
+  .kt-buf-ch select { border: 1px solid var(--sand-border); border-radius: 8px; padding: 4px 6px; font: inherit; font-size: 12px; background: #fff; color: var(--ink); }
+  .kt-buf-tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin: 2px 4px 0 0; background: rgba(36,30,26,.08); color: var(--sand-text2); }
+  .kt-buf-tag.terjadwal { background: rgba(59,130,246,.14); color: #1d5fc2; } .kt-buf-tag.terbit { background: rgba(46,158,91,.15); color: #1f7a45; }
+  .kt-buf-tag.gagal { background: rgba(212,63,46,.15); color: #b0362a; }
   @media (max-width: 900px) { .kt-atas, .kt-detail-grid { grid-template-columns: 1fr; } .kt-kanal { grid-template-columns: 1fr 1fr 56px; } }
   .cc-subnav { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; padding-bottom:10px; border-bottom:1px solid var(--sand-border, rgba(0,0,0,.08)); }
   .cc-subnav-btn { background:transparent; border:1px solid var(--sand-border, rgba(0,0,0,.12)); color:var(--sand-text2, #555); border-radius:20px; padding:6px 14px; font:600 12.5px inherit; font-family:inherit; cursor:pointer; }
@@ -1467,9 +1472,15 @@
             <span class="hi-muted" id="kt-f-total"></span></div>
           <div class="hi-muted" style="margin-top:6px">Aturan tetap berlaku: tanpa kata AI, tanpa harga/diskon, tanpa klaim yang tidak bisa dibuktikan. Satu materi per hari mulai tanggal di atas.</div>
         </div>
-        <div class="hi-card">
-          <div class="hi-h" style="margin-top:0">Rencana mingguan</div>
-          <div id="kt-mingguan"></div>
+        <div style="display:grid;gap:12px">
+          <div class="hi-card">
+            <div class="hi-h" style="margin-top:0">Rencana mingguan</div>
+            <div id="kt-mingguan"></div>
+          </div>
+          <div class="hi-card">
+            <div class="hi-h" style="margin-top:0">Posting via Buffer</div>
+            <div id="kt-buffer"></div>
+          </div>
         </div>
       </div>
       <div class="hi-h">Konten</div>

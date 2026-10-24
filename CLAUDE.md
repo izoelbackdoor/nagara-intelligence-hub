@@ -100,6 +100,7 @@ Menu samping digabung per tim/area (24 Okt 2026). **Jangan menambah menu samping
 - Data: `GET /api/office/konten[?id=<uuid>]` → RPC `hub_konten()` / `hub_konten_detail(p_id)`. Aksi: `POST /api/office/konten {op}` → `hub_konten_aksi(p)`; keputusan draf memakai logika `tim_aksi` yang sama dengan halaman n8n.
 - `mkt_rencana.jenis`: `mingguan` (unik per minggu, dibuat `mkt_mulai_minggu`) atau `permintaan` (dari menu ini). Migrasi: `supabase/migrations/20261023_hub_konten.sql`.
 - Penulis dijalankan workflow n8n **NADI 7 - Marketing & Sales**; tanpa workflow itu permintaan hanya mengantre (halaman menampilkan peringatan).
+- **Buffer** (kartu "Posting via Buffer"): konten `siap_terbit` dijadwalkan ke channel Buffer sesuai kanal (`ig_fb` → Instagram+Facebook, `tiktok` → TikTok+YouTube, `linkedin`). Tabel `mkt_buffer_channel` / `mkt_buffer_post`, fungsi `buffer_*`, pengaturan `cfg.tim.marketing.buffer` (default mati). Panggilan API Buffer dilakukan workflow n8n **NADI 7c - Buffer** (credential `Buffer NADI`, tidak ada token di repo/database). Gagal di Buffer → Telegram + kembali ke paket manual. Aksi `buffer` / `buffer_channel` di `POST /api/office/konten`. Migrasi: `supabase/migrations/20261023_buffer.sql`.
 
 ## Studio Desain (js/desain-ui.js)
 

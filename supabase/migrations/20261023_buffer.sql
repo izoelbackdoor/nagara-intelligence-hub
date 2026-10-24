@@ -52,6 +52,7 @@ do $$ begin
   end if;
 end $$;
 
+-- Diterapkan ke Supabase 24 Okt 2026 (migrasi buffer_1 … buffer_7).
 -- Pengaturan default (tidak menimpa yang sudah ada)
 update nadi_config set cfg = jsonb_set(cfg, '{tim,marketing,buffer}',
   jsonb_build_object('aktif', false, 'youtube_kategori', '22', 'label_ai_video', true, 'jeda_menit', 10)
@@ -156,6 +157,9 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare hasil jsonb;
 begin
   if not coalesce((buffer_cfg()->>'aktif')::boolean, false) then return '[]'::jsonb; end if;
+  -- konten yang sudah tidak siap_terbit (ditandai terbit manual / ditolak): batalkan antreannya
+  update mkt_buffer_post b set status = 'batal', updated_at = now()
+    from mkt_konten k where k.id = b.konten_id and b.status in ('antre', 'dikirim') and k.status <> 'siap_terbit';
   update mkt_buffer_post set status = 'antre', klaim_at = null, updated_at = now()
    where status = 'dikirim' and klaim_at < now() - interval '10 minutes' and percobaan < 3;
   update mkt_buffer_post set status = 'gagal', error = coalesce(error, 'Tidak ada jawaban dari Buffer 3x'), updated_at = now()
@@ -231,7 +235,7 @@ begin
              'at', coalesce(p->>'sentAt', now()::text), 'via', 'buffer')),
            url_terbit = coalesce(url_terbit, nullif(p->>'externalLink', '')), updated_at = now()
      where id = b.konten_id returning * into k;
-    if not exists (select 1 from mkt_buffer_post where konten_id = k.id and status in ('antre', 'dikirim', 'terjadwal'))
+    if not exists (select 1 from mkt_buffer_post where konten_id = k.id and status in ('antre', 'dikirim', 'terjadwal', 'gagal'))
        and k.status = 'siap_terbit' then
       update mkt_konten set status = 'terbit', terbit_at = now(), terbit_klaim_at = null where id = k.id;
       insert into office_events (unit_key, desk_key, message, meta)
@@ -280,27 +284,16 @@ begin
   for k in select * from mkt_konten where status = ''siap_terbit''');
     d2 := replace(d2, 'and not (terbit ? ''manual_at'')',
       'and not (terbit ? ''manual_at'')
-            and not (exists (select 1 from mkt_buffer_post b where b.konten_id = mkt_konten.id)
+            and not (exists (select 1 from mkt_buffer_post b where b.konten_id = mkt_konten.id and b.status <> ''batal'')
                      and not exists (select 1 from mkt_buffer_post b where b.konten_id = mkt_konten.id and b.status = ''gagal''))');
-    if d2 = d or d2 not like '%perform buffer_siapkan();%' or d2 not like '%mkt_buffer_post b where b.konten_id = mkt_konten.id and b.status%' then
+    if d2 = d or d2 not like '%perform buffer_siapkan();%' or d2 not like '%b.status = ''gagal''%' then
       raise exception 'tambal mkt_terbit_antrian gagal';
     end if;
     execute d2;
   end if;
 end $patch$;
 
--- Tandai "sudah diposting" manual: batalkan antrean Buffer yang belum terkirim
-create or replace function buffer_batal_konten()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  if new.status in ('terbit', 'ditolak', 'gagal') and old.status is distinct from new.status then
-    update mkt_buffer_post set status = 'batal', updated_at = now()
-     where konten_id = new.id and status in ('antre', 'dikirim');
-  end if;
-  return new;
-end $$;
-drop trigger if exists mkt_konten_buffer_batal on mkt_konten;
-create trigger mkt_konten_buffer_batal after update of status on mkt_konten for each row execute function buffer_batal_konten();
+-- Konten yang ditandai terbit manual / ditolak: antrean Buffer-nya dibatalkan oleh buffer_antrian() (tanpa trigger).
 
 revoke all on function buffer_cfg(), buffer_kanal_default(text), buffer_waktu(timestamptz), buffer_input(mkt_konten, mkt_buffer_channel),
   buffer_siapkan(), buffer_antrian(int), buffer_gagal(mkt_buffer_post, text), buffer_hasil(bigint, jsonb),
@@ -317,13 +310,13 @@ begin
     d2 := replace(d, $p$'putaran', k.putaran, 'catatan_imam', k.catatan_imam, 'url_terbit', k.url_terbit)$p$,
       $p$'putaran', k.putaran, 'catatan_imam', k.catatan_imam, 'url_terbit', k.url_terbit,
       'buffer', (select coalesce(jsonb_agg(jsonb_build_object('service', b.service, 'status', b.status, 'link', b.link,
-                   'error', b.error, 'due_at', b.due_at) order by b.service), '[]') from mkt_buffer_post b where b.konten_id = k.id))$p$);
+                   'error', b.error, 'due_at', b.due_at) order by b.service), '[]') from mkt_buffer_post b where b.konten_id = k.id and b.status <> 'batal'))$p$);
     d2 := replace(d2, $p$'batch', batch, 'konten', konten);$p$,
       $p$'batch', batch, 'konten', konten,
     'buffer', jsonb_build_object('aktif', coalesce((buffer_cfg()->>'aktif')::boolean, false),
       'label_ai_video', coalesce((buffer_cfg()->>'label_ai_video')::boolean, true),
-      'channel', (select coalesce(jsonb_agg(jsonb_build_object('id', id, 'service', service, 'nama', nama, 'avatar', avatar,
-                   'kanal', kanal, 'aktif', aktif, 'terhubung', terhubung, 'diperbarui', updated_at) order by service, nama), '[]') from mkt_buffer_channel),
+      'channel', (select coalesce(jsonb_agg(jsonb_build_object('id', ch.id, 'service', ch.service, 'nama', ch.nama, 'avatar', ch.avatar,
+                   'kanal', ch.kanal, 'aktif', ch.aktif, 'terhubung', ch.terhubung, 'diperbarui', ch.updated_at) order by ch.service, ch.nama), '[]') from mkt_buffer_channel ch),
       'terjadwal', (select count(*) from mkt_buffer_post where status in ('antre', 'dikirim', 'terjadwal')),
       'terbit_7h', (select count(*) from mkt_buffer_post where status = 'terbit' and updated_at > now() - interval '7 days'),
       'gagal_7h', (select count(*) from mkt_buffer_post where status = 'gagal' and updated_at > now() - interval '7 days')));$p$);
@@ -339,7 +332,7 @@ begin
              '{tim,marketing,buffer,label_ai_video}', to_jsonb(coalesce((p->>'label_ai_video')::boolean, coalesce((buffer_cfg()->>'label_ai_video')::boolean, true))), true)
      where id = 1;
     if coalesce((p->>'aktif')::boolean, false) and not exists (select 1 from mkt_buffer_channel where aktif and terhubung and kanal is not null) then
-      return jsonb_build_object('ok', true, 'info', 'Buffer diaktifkan, tapi belum ada channel. Jalankan workflow NADI 7c (Sinkron channel) setelah menghubungkan akun di Buffer.');
+      return jsonb_build_object('ok', true, 'info', 'Buffer diaktifkan, tapi belum ada channel. Jalankan "Sinkron channel" di workflow NADI 7c setelah menghubungkan akun di Buffer.');
     end if;
     return jsonb_build_object('ok', true, 'info', case when (p->>'aktif')::boolean then 'Buffer aktif: konten yang disetujui dijadwalkan otomatis ke channel Buffer.' else 'Buffer dimatikan: posting kembali lewat paket manual.' end);
 

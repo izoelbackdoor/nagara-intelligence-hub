@@ -213,11 +213,13 @@ async function decideFollowup(id, aksi, pesan) {
 }
 
 // ── Konten NADI (tim Marketing): minta materi, keputusan draf, tandai terbit ──
-const KONTEN_OP = ['minta', 'setujui', 'revisi', 'tolak', 'setujui_semua', 'terbit', 'mulai_minggu', 'arahan'];
+const KONTEN_OP = ['minta', 'setujui', 'revisi', 'tolak', 'setujui_semua', 'terbit', 'mulai_minggu', 'arahan', 'buffer', 'buffer_channel'];
 async function kontenAksi(b, res) {
   if (!KONTEN_OP.includes(b.op)) return sendJson(res, 400, { error: 'Aksi tidak dikenal' });
   if (JSON.stringify(b).length > 8000) return sendJson(res, 413, { error: 'Isian terlalu panjang' });
-  for (const k of ['id', 'rencana_id']) if (b[k] != null && !UUID_RE.test(String(b[k]))) return sendJson(res, 400, { error: k + ' tidak valid' });
+  if (b.op === 'buffer_channel') {                                   // id = channelId Buffer, bukan uuid
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(String(b.id || ''))) return sendJson(res, 400, { error: 'id channel tidak valid' });
+  } else for (const k of ['id', 'rencana_id']) if (b[k] != null && !UUID_RE.test(String(b[k]))) return sendJson(res, 400, { error: k + ' tidak valid' });
   const r = await rpc('hub_konten_aksi', { p: b });
   return sendJson(res, r?.ok ? 200 : 409, r?.ok ? r : { error: r?.info || 'Gagal' });
 }

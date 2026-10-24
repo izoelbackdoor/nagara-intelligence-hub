@@ -86,6 +86,8 @@ function ktRender() {
     <div class="hi-muted" style="margin-top:8px">Visual otomatis ke Studio Desain: <b>${p.visual_otomatis ? 'aktif' : 'mati'}</b> ·
       Posting FB/IG otomatis: <b>${p.auto_terbit ? 'aktif' : 'manual (paket siap tempel)'}</b></div>`;
 
+  ktRenderBuffer(d.buffer);
+
   // Batch (permintaan & rencana mingguan) + kontennya
   const batch = d.batch || [];
   ktEl('kt-batch').innerHTML = batch.length ? batch.map(b => {
@@ -116,6 +118,41 @@ function ktRender() {
   if (kt.buka) ktTampilDetail(kt.buka, true);
 }
 
+// ── Buffer: jalur posting otomatis (IG, FB, TikTok, YouTube, LinkedIn) ──
+const KT_SVC = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', youtube: 'YouTube', linkedin: 'LinkedIn',
+  twitter: 'X', threads: 'Threads', bluesky: 'Bluesky', pinterest: 'Pinterest', googlebusiness: 'Google Business' };
+const KT_BUF = { antre: 'antre Buffer', dikirim: 'dikirim ke Buffer', terjadwal: 'terjadwal', terbit: 'terbit', gagal: 'gagal', batal: 'batal' };
+function ktBufTags(list) {
+  return (list || []).map(b => {
+    const label = `${KT_SVC[b.service] || b.service}: ${KT_BUF[b.status] || b.status}`;
+    const isi = b.link ? `<a href="${escapeHtml(b.link)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>` : escapeHtml(label);
+    return `<span class="kt-buf-tag ${escapeHtml(b.status)}" title="${escapeHtml(b.error || '')}">${isi}</span>`;
+  }).join('');
+}
+function ktRenderBuffer(bf) {
+  const el = ktEl('kt-buffer');
+  if (!el) return;
+  if (!bf) { el.innerHTML = '<div class="hi-muted">Migrasi Buffer belum dijalankan.</div>'; return; }
+  const ch = bf.channel || [];
+  const pilihan = (v) => ['', 'ig_fb', 'tiktok', 'linkedin'].map(k => `<option value="${k}" ${k === (v || '') ? 'selected' : ''}>${k ? escapeHtml(KT_KANAL[k].label) : 'Tidak dipakai'}</option>`).join('');
+  el.innerHTML = `
+    <div class="hi-muted">Konten yang sudah Anda setujui dijadwalkan otomatis ke Buffer sesuai jadwal tayangnya. Konten tanpa media yang dibutuhkan (mis. TikTok tanpa video) tetap jadi paket posting manual.</div>
+    <div style="margin:8px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <b>${bf.aktif ? 'Aktif' : 'Mati'}</b>
+      <button class="vo-btn ${bf.aktif ? '' : 'hi-utama'}" onclick="${bf.aktif ? '' : "if(!confirm('Aktifkan Buffer? Konten yang sudah Anda setujui akan dijadwalkan dan terbit otomatis di channel Buffer.'))return;"}ktAksi({op:'buffer', aktif:${!bf.aktif}}, this)">${bf.aktif ? 'Matikan' : 'Aktifkan Buffer'}</button>
+      <span class="hi-muted">${bf.terjadwal} antre/terjadwal · ${bf.terbit_7h} terbit 7h${bf.gagal_7h ? ` · <b style="color:#c0392b">${bf.gagal_7h} gagal</b>` : ''}</span>
+    </div>
+    <label class="hi-muted" style="display:flex;gap:6px;align-items:center"><input type="checkbox" ${bf.label_ai_video ? 'checked' : ''}
+      onchange="ktAksi({op:'buffer', aktif:${!!bf.aktif}, label_ai_video:this.checked}, null)"> Tandai video buatan generator sebagai konten AI (label platform TikTok/YouTube/Reels)</label>
+    ${ch.length ? ch.map(c => `<div class="kt-buf-ch">
+        <div><b>${escapeHtml(KT_SVC[c.service] || c.service)}</b> · ${escapeHtml(c.nama || c.id)}${c.terhubung ? '' : ' <span class="hi-warn">terputus di Buffer</span>'}</div>
+        <select onchange="ktAksi({op:'buffer_channel', id:'${escapeHtml(c.id)}', kanal:this.value, aktif:${!!c.aktif}}, null)">${pilihan(c.kanal)}</select>
+        <label class="hi-muted" style="display:flex;gap:4px;align-items:center"><input type="checkbox" ${c.aktif ? 'checked' : ''}
+          onchange="ktAksi({op:'buffer_channel', id:'${escapeHtml(c.id)}', kanal:'${escapeHtml(c.kanal || '')}', aktif:this.checked}, null)"> pakai</label>
+      </div>`).join('')
+      : '<div class="hi-muted" style="margin-top:6px">Belum ada channel. Hubungkan akun di buffer.com, lalu jalankan <b>Sinkron channel</b> di workflow n8n <b>NADI 7c - Buffer</b>.</div>'}`;
+}
+
 function ktBaris(k) {
   const kanal = KT_KANAL[k.kanal];
   const aksi = k.status === 'menunggu_review'
@@ -129,7 +166,7 @@ function ktBaris(k) {
       ${(k.cek || []).length ? `<div class="hi-warn">⚠️ ${escapeHtml(k.cek.join('; '))}</div>` : ''}
       ${k.status === 'siap_terbit' && k.perlu_visual && !k.aset ? '<div class="hi-warn">Belum punya visual</div>' : ''}</td>
     <td style="white-space:nowrap">${escapeHtml(ktJam(k.jadwal))}</td>
-    <td>${ktTag(k.status)}${k.putaran ? `<div class="hi-muted">revisi ${k.putaran}x</div>` : ''}${k.url_terbit ? `<div><a href="${escapeHtml(k.url_terbit)}" target="_blank" rel="noopener">Lihat posting</a></div>` : ''}</td>
+    <td>${ktTag(k.status)}${ktBufTags(k.buffer)}${k.putaran ? `<div class="hi-muted">revisi ${k.putaran}x</div>` : ''}${k.url_terbit ? `<div><a href="${escapeHtml(k.url_terbit)}" target="_blank" rel="noopener">Lihat posting</a></div>` : ''}</td>
     <td class="kt-aksi">${aksi}</td></tr>
     <tr class="kt-detail-row" id="kt-det-${k.id}" style="display:none"><td colspan="6"><div id="kt-detail-${k.id}" class="kt-detail">Memuat…</div></td></tr>`;
 }
