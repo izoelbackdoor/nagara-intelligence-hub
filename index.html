@@ -868,6 +868,9 @@
   .kt-toast { position: fixed; right: 20px; bottom: 20px; background: var(--ink); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 13px; z-index: 50; max-width: 420px; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
   .kt-toast.gagal { background: #b0362a; }
   @media (max-width: 900px) { .kt-atas, .kt-detail-grid { grid-template-columns: 1fr; } .kt-kanal { grid-template-columns: 1fr 1fr 56px; } }
+  .cc-subnav { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; padding-bottom:10px; border-bottom:1px solid var(--sand-border, rgba(0,0,0,.08)); }
+  .cc-subnav-btn { background:transparent; border:1px solid var(--sand-border, rgba(0,0,0,.12)); color:var(--sand-text2, #555); border-radius:20px; padding:6px 14px; font:600 12.5px inherit; font-family:inherit; cursor:pointer; }
+  .cc-subnav-btn.active { background:var(--ink, #241e1a); border-color:var(--ink, #241e1a); color:#fff; }
   .hd-nav-badge { display:inline-block; min-width:18px; padding:1px 6px; border-radius:10px; background: var(--brand-red); color:#fff; font-size:10.5px; text-align:center; margin-left:auto; }
   .hd-inbox { grid-template-columns: 340px 1fr; min-height: 560px; }
   .hd-inbox .wa-list, .hd-inbox .wa-thread { max-height: 680px; }
@@ -1245,65 +1248,38 @@
     </div>
 
     <div class="nav-section">
+      <!-- Menu digabung per tim (MENU_GROUPS): satu menu = beberapa halaman lewat tab di atas halaman -->
       <button class="nav-item" id="nav-hari-ini" onclick="showPage('hari-ini')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         Hari Ini <span id="hi-nav-badge" class="hd-nav-badge" style="display:none"></span>
       </button>
-      <button class="nav-item active" id="nav-overview" onclick="showPage('overview')">
+      <button class="nav-item" id="nav-g-ngi" onclick="showPage('overview')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        Overview
+        Overview NGI
       </button>
-      <button class="nav-item" id="nav-portfolio" onclick="showPage('portfolio')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        Portfolio Produk
-      </button>
-      <button class="nav-item" id="nav-business-unit" onclick="showPage('business-unit')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-        Business Unit Monitor
-      </button>
-      <button class="nav-item" id="nav-ai-orchestration" onclick="showPage('ai-orchestration')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        AI Agent Orchestration
-      </button>
-      <button class="nav-item" id="nav-virtual-office" onclick="showPage('virtual-office')">
+      <button class="nav-item" id="nav-g-kantor" onclick="showPage('virtual-office')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><rect x="9" y="12" width="6" height="9"/></svg>
-        Virtual Office
+        Kantor AI
       </button>
-      <button class="nav-item" id="nav-crm-pipeline" onclick="showPage('crm-pipeline')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        CRM &amp; Pipeline
+      <button class="nav-item" id="nav-g-sales" onclick="showPage('outreach-nadi')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+        Sales NADI
       </button>
       <button class="nav-item" id="nav-produksi" onclick="showPage('produksi')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
         Tim Produksi
       </button>
-      <button class="nav-item" id="nav-outreach-nadi" onclick="showPage('outreach-nadi')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
-        Outreach &amp; Brief NADI
-      </button>
-      <button class="nav-item" id="nav-penawaran" onclick="showPage('penawaran')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
-        Penawaran &amp; Kalkulator
-      </button>
-      <button class="nav-item" id="nav-helpdesk" onclick="showPage('helpdesk')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-        Helpdesk <span id="hd-nav-badge" class="hd-nav-badge" style="display:none"></span>
-      </button>
       <button class="nav-item" id="nav-desain" onclick="showPage('desain')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
         Studio Desain <span id="ds-nav-badge" class="hd-nav-badge" style="display:none"></span>
       </button>
-      <button class="nav-item" id="nav-konten" onclick="showPage('konten')">
+      <button class="nav-item" id="nav-g-konten" onclick="showPage('konten')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-        Konten NADI <span id="kt-nav-badge" class="hd-nav-badge" style="display:none"></span>
+        Konten &amp; Marketing <span id="kt-nav-badge" class="hd-nav-badge" style="display:none"></span>
       </button>
-      <button class="nav-item" id="nav-marketing-content" onclick="showPage('marketing-content')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-        Marketing &amp; Content
-      </button>
-      <button class="nav-item" id="nav-legal-compliance" onclick="showPage('legal-compliance')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Legal &amp; Compliance
+      <button class="nav-item" id="nav-helpdesk" onclick="showPage('helpdesk')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+        Helpdesk <span id="hd-nav-badge" class="hd-nav-badge" style="display:none"></span>
       </button>
     </div>
 
@@ -1344,6 +1320,7 @@
     </div>
 
     <!-- ══ PAGES ══ -->
+    <div id="cc-subnav" class="cc-subnav" style="display:none"></div>
 
     <!-- ─── Page: Overview ─── -->
     <!-- ─── Page: Hari Ini (js/hari-ini.js) — semua keputusan dari semua tim, satu tempat ─── -->
@@ -5571,6 +5548,27 @@
   }
 
   // ── Navigation ──
+  // ── Menu digabung: satu menu samping = satu tim/area, halamannya jadi tab di atas ──
+  // Id halaman tetap sama, jadi link lama (#konten, #outreach-nadi, showPage('penawaran')) tetap jalan.
+  // Tim baru: tambah halaman ke grup yang sesuai, jangan buat menu samping baru untuk hal yang sama.
+  const MENU_GROUPS = [
+    { key: 'ngi',    pages: [['overview', 'Ringkasan'], ['portfolio', 'Portfolio produk'], ['business-unit', 'Per business unit'], ['legal-compliance', 'Lisensi & UU PDP']] },
+    { key: 'kantor', pages: [['virtual-office', 'Kantor'], ['ai-orchestration', 'Daftar agen & log']] },
+    { key: 'sales',  pages: [['outreach-nadi', 'Outreach & brief'], ['crm-pipeline', 'CRM & percakapan WA'], ['penawaran', 'Penawaran & kalkulator']] },
+    { key: 'konten', pages: [['konten', 'Konten NADI'], ['marketing-content', 'Iklan Meta & 11 Page FB']] },
+  ];
+  function ccRenderSubnav(name) {
+    const el = document.getElementById('cc-subnav');
+    const g = MENU_GROUPS.find(x => x.pages.some(p => p[0] === name));
+    if (!el) return;
+    if (!g) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    const nav = document.getElementById('nav-g-' + g.key);
+    if (nav) { nav.classList.add('active'); nav.setAttribute('onclick', `showPage('${name}')`); }
+    el.innerHTML = g.pages.map(([id, label]) =>
+      `<button class="cc-subnav-btn${id === name ? ' active' : ''}" onclick="showPage('${id}')">${label}</button>`).join('');
+    el.style.display = '';
+  }
+
   const PAGE_META = {
     'produksi':          { title: 'Tim Produksi',           sub: 'Studio NADI — dari Deal & DP sampai UAT dan serah terima: alur, anggota tim, proyek & hasil kerja' },
     'hari-ini':          { title: 'Hari Ini',               sub: 'Semua yang menunggu keputusan Anda dari semua tim, biaya token, masalah, meeting & proyek' },
@@ -5605,6 +5603,7 @@
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     const navBtn = document.getElementById('nav-' + name);
     if (navBtn) navBtn.classList.add('active');
+    ccRenderSubnav(name);
 
     // Update topbar
     const meta = PAGE_META[name] || { title: name, sub: null };
@@ -5630,8 +5629,8 @@
     if (name === 'hari-ini') hiInit();
     else if (typeof hiStop === 'function') hiStop();
     if (name === 'konten') ktInit();
-    if (name === 'desain') dsInit();
     else if (typeof ktStop === 'function') ktStop();
+    if (name === 'desain') dsInit();
     if (name === 'outreach-nadi') onInit();
     else if (typeof onStop === 'function') onStop();
     if (name === 'penawaran') qtInit();

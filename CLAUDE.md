@@ -59,6 +59,27 @@ Pemilik & satu-satunya user: Aa Imam. Bahasa UI, pesan error, komentar, dan comm
 - SLA = batas balasan kita berikutnya sejak pesan klien terakhir (urgent 2j · tinggi 4j · normal 24j · rendah 48j); dikosongkan saat kita membalas / menunggu klien.
 - Balasan WA/email hanya lewat klik pemilik (`op: reply`); kontak `jangan_hubungi` diblok.
 
+## Struktur menu (wajib diikuti semua tim)
+
+Menu samping digabung per tim/area (24 Okt 2026). **Jangan menambah menu samping baru untuk hal yang sudah punya tempat** — tambahkan sebagai halaman/tab di grup yang sesuai.
+
+| Menu samping | Halaman (tab di atas halaman) |
+|---|---|
+| Hari Ini | `hari-ini` — semua keputusan dari semua tim |
+| Overview NGI | `overview` Ringkasan · `portfolio` Portfolio produk · `business-unit` Per business unit · `legal-compliance` Lisensi & UU PDP |
+| Kantor AI | `virtual-office` Kantor · `ai-orchestration` Daftar agen & log |
+| Sales NADI | `outreach-nadi` Outreach & brief · `crm-pipeline` CRM & percakapan WA · `penawaran` Penawaran & kalkulator |
+| Tim Produksi | `produksi` |
+| Studio Desain | `desain` |
+| Konten & Marketing | `konten` Konten NADI · `marketing-content` Iklan Meta & 11 Page FB |
+| Helpdesk | `helpdesk` |
+
+- Grup diatur di `MENU_GROUPS` (index.html, dekat `PAGE_META`); tab dirender `ccRenderSubnav()` ke `#cc-subnav`. Tombol menu grup ber-id `nav-g-<grup>`. Id halaman tidak berubah, jadi `showPage('<id>')` dan link `/#<id>` tetap jalan.
+- Halaman tim baru: buat `<div id="page-<id>" class="page-section">`, daftarkan di `PAGE_META` + loader di `showPage`, lalu **masukkan ke grup** di `MENU_GROUPS`. Menu samping baru hanya untuk tim yang benar-benar baru (mis. Keuangan, Legal) — satu tim satu menu.
+- Sebelum membuat halaman, cek dulu apakah isinya beririsan dengan halaman yang ada (daftar agen, biaya token, approval, meeting, penawaran, konten). Kalau beririsan, perluas halaman yang ada.
+- Keputusan pemilik selalu tampil di **Hari Ini** (lewat `cc_tim_nadi()` / `hub_hari_ini()`), bukan dibuat ulang per menu.
+- Halaman lama tersembunyi (`page-nadi`, `page-agent-ai`, `page-finance`, `page-crm`, `page-legal`, `page-marketing`, `page-inbox`, dll.) tidak ada di menu; jangan dihidupkan lagi tanpa digabung ke grup.
+
 ## Hari Ini (js/hari-ini.js) — halaman pembuka setelah login
 
 - Satu tempat untuk semua yang menunggu keputusan pemilik dari semua tim (standar: Project doc `claude/standar-command-center.md` — satu pintu, tidak ada subdomain per tim).
